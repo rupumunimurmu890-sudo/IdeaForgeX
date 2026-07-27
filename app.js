@@ -1,33 +1,19 @@
-const express = require("express");
+function generateIdea() {
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+    let idea = document.getElementById("ideaInput").value;
+    let result = document.getElementById("result");
 
-app.get("/", (req, res) => {
-  res.send("Hello, GitHub!");
-});
+    if (idea.trim() === "") {
+        result.innerHTML = "Please enter your startup idea.";
+        return;
+    }
 
-app.get("/api", (req, res) => {
-  res.json({
-    message: "Welcome to the API",
-    status: "success"
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-{
-  "name": "my-app",
-  "version": "1.0.0",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
-  }
+    result.innerHTML = `
+    <h3>🚀 AI Startup Analysis</h3>
+    <p><b>Idea:</b> ${idea}</p>
+    <p>✅ Problem: Identify customer problems</p>
+    <p>💡 Solution: Build a useful product</p>
+    <p>💰 Revenue: Subscription, Services, Premium Features</p>
+    <p>📈 Growth: Marketing + User Feedback</p>
+    `;
 }
-
-npm install
-npm start
