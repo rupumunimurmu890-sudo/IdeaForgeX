@@ -1,12 +1,15 @@
 {
   "name": "ideaforge-ai",
   "version": "1.0.0",
-  "description": "A simple Node.js and Express application.",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
-  }
+  "description": "AI startup idea generator website built with HTML, CSS and JavaScript.",
+  "main": "index.html",
+  "scripts": {},
+  "keywords": [
+    "AI",
+    "startup",
+    "business",
+    "idea-generator"
+  ],
+  "author": "IdeaForge AI",
+  "license": "MIT"
 }
