@@ -12,7 +12,7 @@ async function generateIdea() {
 
     try {
 
-        const response = await fetch("/.netlify/functions/analyze", {
+        const response = await fetch("/.netlify/functions/generate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
