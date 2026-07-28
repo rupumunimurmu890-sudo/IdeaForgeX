@@ -4,6 +4,9 @@
   "description": "AI startup idea generator website built with HTML, CSS and JavaScript.",
   "main": "index.html",
   "scripts": {},
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
   "keywords": [
     "AI",
     "startup",
