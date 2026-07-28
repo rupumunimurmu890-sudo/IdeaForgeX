@@ -24,9 +24,21 @@ async function generateIdea() {
 
         const data = await response.json();
 
-        result.innerHTML = data.result;
+        if (response.ok) {
+            result.innerHTML = `
+                <h3>💡 Startup Idea</h3>
+                <p>${data.result}</p>
+            `;
+        } else {
+            result.innerHTML = `
+                ❌ AI Error: ${data.error || data.result}
+            `;
+        }
 
     } catch (error) {
-        result.innerHTML = "❌ Error connecting to AI.";
+        result.innerHTML = `
+            ❌ Error connecting to AI.<br>
+            ${error.message}
+        `;
     }
 }
