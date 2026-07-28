@@ -15,22 +15,28 @@ exports.handler = async function (event) {
           role: "user",
           content: `Generate a startup idea based on: ${idea}`
         }
-      ],
+      ]
     });
 
     return {
       statusCode: 200,
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         result: response.choices[0].message.content
-      }),
+      })
     };
 
   } catch (error) {
     return {
       statusCode: 500,
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         result: "Error: " + error.message
-      }),
+      })
     };
   }
 };
