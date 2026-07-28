@@ -29,7 +29,7 @@ exports.handler = async function (event) {
     return {
       statusCode: 500,
       body: JSON.stringify({
-        error: error.message
+        result: "Error: " + error.message
       }),
     };
   }
