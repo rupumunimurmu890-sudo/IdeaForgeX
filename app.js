@@ -11,7 +11,6 @@ async function generateIdea() {
     result.innerHTML = "⏳ AI is analyzing your startup idea...";
 
     try {
-
         const response = await fetch("/.netlify/functions/generate", {
             method: "POST",
             headers: {
@@ -24,21 +23,17 @@ async function generateIdea() {
 
         const data = await response.json();
 
-        if (response.ok) {
-            result.innerHTML = `
-                <h3>💡 Startup Idea</h3>
-                <p>${data.result}</p>
-            `;
-        } else {
-            result.innerHTML = `
-                ❌ AI Error: ${data.error || data.result}
-            `;
+        if (!response.ok) {
+            result.innerHTML = `❌ ${data.result || data.error || "AI function error"}`;
+            return;
         }
 
-    } catch (error) {
         result.innerHTML = `
-            ❌ Error connecting to AI.<br>
-            ${error.message}
+            <h3>💡 AI Startup Plan</h3>
+            <p>${data.result || "No AI response received."}</p>
         `;
+
+    } catch (error) {
+        result.innerHTML = `❌ Connection Error: ${error.message}`;
     }
 }
