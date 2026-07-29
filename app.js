@@ -1,17 +1,20 @@
 async function generateIdea() {
-
-    const idea = document.getElementById("ideaInput").value;
+    const idea = document.getElementById("ideaInput").value.trim();
     const result = document.getElementById("result");
+    const loader = document.getElementById("loader");
+    const button = document.getElementById("generateBtn");
 
-    if (!idea.trim()) {
-        result.innerHTML = "Please enter your startup idea.";
+    if (!idea) {
+        result.innerHTML = "<p>Please enter your startup idea.</p>";
         return;
     }
 
-    result.innerHTML = "⏳ AI is analyzing your startup idea...";
+    loader.classList.remove("hidden");
+    button.disabled = true;
+    result.innerHTML = "";
 
     try {
-        const response = await fetch("/.netlify/functions/generate", {
+        const response = await fetch("/.netlify/functions/analyze", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -24,16 +27,20 @@ async function generateIdea() {
         const data = await response.json();
 
         if (!response.ok) {
-            result.innerHTML = `❌ ${data.result || data.error || "AI function error"}`;
-            return;
+            throw new Error(data.result || "AI request failed");
         }
 
         result.innerHTML = `
-            <h3>💡 AI Startup Plan</h3>
-            <p>${data.result || "No AI response received."}</p>
+            <h3>🚀 IdeaForgeX AI Startup Analysis</h3>
+            <div style="white-space: pre-wrap;">${data.result}</div>
         `;
 
     } catch (error) {
-        result.innerHTML = `❌ Connection Error: ${error.message}`;
+        result.innerHTML = `
+            <p>❌ Error: ${error.message}</p>
+        `;
+    } finally {
+        loader.classList.add("hidden");
+        button.disabled = false;
     }
 }
