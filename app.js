@@ -1,46 +1,122 @@
-async function generateIdea() {
-    const idea = document.getElementById("ideaInput").value.trim();
-    const result = document.getElementById("result");
-    const loader = document.getElementById("loader");
-    const button = document.getElementById("generateBtn");
+const taskInput = document.getElementById("taskInput");
+const askButton = document.getElementById("askButton");
+const language = document.getElementById("language");
 
-    if (!idea) {
-        result.innerHTML = "<p>Please enter your startup idea.</p>";
-        return;
+const loading = document.getElementById("loading");
+const resultSection = document.getElementById("resultSection");
+const resultText = document.getElementById("resultText");
+
+const copyButton = document.getElementById("copyButton");
+const shareButton = document.getElementById("shareButton");
+const newButton = document.getElementById("newButton");
+
+const charCount = document.getElementById("charCount");
+
+taskInput.addEventListener("input", () => {
+  charCount.textContent = `${taskInput.value.length} / 5000`;
+});
+
+document.querySelectorAll(".example").forEach(button => {
+  button.addEventListener("click", () => {
+    taskInput.value = button.textContent;
+    taskInput.dispatchEvent(new Event("input"));
+    taskInput.focus();
+  });
+});
+
+askButton.addEventListener("click", async () => {
+
+  const task = taskInput.value.trim();
+
+  if (!task) {
+    alert("Please tell us what you need help with.");
+    return;
+  }
+
+  loading.classList.remove("hidden");
+  resultSection.classList.add("hidden");
+
+  askButton.disabled = true;
+
+  try {
+
+    const response = await fetch("/api/task", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        task,
+        language: language.value
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Something went wrong.");
     }
 
-    loader.classList.remove("hidden");
-    button.disabled = true;
-    result.innerHTML = "";
+    resultText.textContent = data.result;
 
-    try {
-        const response = await fetch("/.netlify/functions/analyze", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                idea: idea
-            })
-        });
+    resultSection.classList.remove("hidden");
 
-        const data = await response.json();
+    resultSection.scrollIntoView({
+      behavior: "smooth"
+    });
 
-        if (!response.ok) {
-            throw new Error(data.result || "AI request failed");
-        }
+  } catch (error) {
 
-        result.innerHTML = `
-            <h3>🚀 IdeaForgeX AI Startup Analysis</h3>
-            <div style="white-space: pre-wrap;">${data.result}</div>
-        `;
+    alert(error.message);
 
-    } catch (error) {
-        result.innerHTML = `
-            <p>❌ Error: ${error.message}</p>
-        `;
-    } finally {
-        loader.classList.add("hidden");
-        button.disabled = false;
-    }
-}
+  } finally {
+
+    loading.classList.add("hidden");
+    askButton.disabled = false;
+  }
+});
+
+copyButton.addEventListener("click", async () => {
+
+  await navigator.clipboard.writeText(resultText.textContent);
+
+  copyButton.textContent = "✅ Copied";
+
+  setTimeout(() => {
+    copyButton.textContent = "📋 Copy";
+  }, 1500);
+});
+
+shareButton.addEventListener("click", async () => {
+
+  const text = resultText.textContent;
+
+  if (navigator.share) {
+
+    await navigator.share({
+      title: "My AI Result",
+      text
+    });
+
+  } else {
+
+    await navigator.clipboard.writeText(text);
+
+    alert("Result copied. You can now share it.");
+  }
+});
+
+newButton.addEventListener("click", () => {
+
+  taskInput.value = "";
+  charCount.textContent = "0 / 5000";
+
+  resultSection.classList.add("hidden");
+
+  taskInput.focus();
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+});
