@@ -1,18 +1,1 @@
-{
-  "name": "ideaforge-ai",
-  "version": "1.0.0",
-  "description": "AI startup idea generator website built with HTML, CSS and JavaScript.",
-  "main": "index.html",
-  "scripts": {},
-  "dependencies": {
-    "openai": "^4.0.0"
-  },
-  "keywords": [
-    "AI",
-    "startup",
-    "business",
-    "idea-generator"
-  ],
-  "author": "IdeaForge AI",
-  "license": "MIT"
-}
+
