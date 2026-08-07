@@ -1,1 +1,21 @@
-
+{
+  "name": "universal-helper",
+  "version": "1.0.0",
+  "description": "Universal Helper - AI-powered daily task assistant",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "start": "netlify dev"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "task",
+    "productivity",
+    "universal-helper"
+  ],
+  "author": "Santosh Marandi",
+  "license": "MIT",
+  "dependencies": {}
+}
