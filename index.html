@@ -1,85 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IdeaForgeX | AI Startup Idea Generator</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Universal Helper</title>
+  <meta name="description" content="Tell us what you need. Get help with your everyday tasks.">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header class="hero">
-    <h1>🚀 IdeaForgeX</h1>
-    <p>Transform Your Startup Ideas Into Real Business Opportunities With AI</p>
-</header>
+  <main class="app">
 
-<main class="container">
+    <header class="topbar">
+      <div class="logo">
+        <span>✦</span>
+        <strong>Universal Helper</strong>
+      </div>
 
-    <div class="card">
-        <h2>Generate Your Startup Plan</h2>
+      <select id="language">
+        <option value="auto">🌐 Auto</option>
+        <option value="English">English</option>
+        <option value="Hindi">हिंदी</option>
+        <option value="Santali">Santali</option>
+        <option value="Bengali">বাংলা</option>
+      </select>
+    </header>
+
+    <section class="hero">
+      <div class="badge">AI Daily Helper</div>
+
+      <h1>What do you need help with?</h1>
+
+      <p>
+        Just tell us what you want to do.
+        We'll help you get it done.
+      </p>
+
+      <div class="input-box">
 
         <textarea
-            id="ideaInput"
-            placeholder="Describe your startup idea or business concept..."
+          id="taskInput"
+          placeholder="Example: Write a leave application for my school..."
+          maxlength="5000"
         ></textarea>
 
-        <button id="generateBtn" onclick="generateIdea()">
-            Generate AI Analysis
-        </button>
+        <div class="input-footer">
+          <span id="charCount">0 / 5000</span>
 
-        <div id="loader" class="hidden">
-            <p>⏳ AI is generating your business analysis...</p>
+          <button id="askButton">
+            ✨ Help me
+          </button>
         </div>
 
-        <div id="result"></div>
+      </div>
 
-    </div>
+      <div class="examples">
+        <button class="example">Write a leave application</button>
+        <button class="example">Explain this in simple language</button>
+        <button class="example">Create an advertisement</button>
+      </div>
+    </section>
 
+    <section id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Understanding your task...</p>
+    </section>
 
-    <section class="features">
+    <section id="resultSection" class="result hidden">
 
-        <div class="feature">
-            <h3>💡 Startup Idea</h3>
-            <p>Generate innovative startup concepts.</p>
-        </div>
+      <div class="result-header">
+        <h2>✅ Your Result</h2>
+      </div>
 
-        <div class="feature">
-            <h3>📊 Market Analysis</h3>
-            <p>Understand your target audience and market.</p>
-        </div>
+      <div id="resultText" class="result-text"></div>
 
-        <div class="feature">
-            <h3>💰 Revenue Model</h3>
-            <p>Discover profitable monetization strategies.</p>
-        </div>
-
-        <div class="feature">
-            <h3>⚔️ SWOT Analysis</h3>
-            <p>Identify strengths, weaknesses, opportunities and threats.</p>
-        </div>
-
-        <div class="feature">
-            <h3>🚀 Launch Roadmap</h3>
-            <p>Get a step-by-step startup launch plan.</p>
-        </div>
-
-        <div class="feature">
-            <h3>🎤 Investor Pitch</h3>
-            <p>Create investor-ready business presentations.</p>
-        </div>
+      <div class="result-actions">
+        <button id="copyButton">📋 Copy</button>
+        <button id="shareButton">📤 Share</button>
+        <button id="newButton">🔄 New Task</button>
+      </div>
 
     </section>
 
-</main>
+    <footer>
+      <p>Free to use • More powerful features coming soon</p>
+    </footer>
 
+  </main>
 
-<footer>
-    <p>© 2026 IdeaForgeX. All Rights Reserved.</p>
-</footer>
-
-
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 </body>
 </html>
