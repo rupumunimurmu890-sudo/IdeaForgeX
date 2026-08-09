@@ -4,93 +4,463 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Universal Helper</title>
-  <meta name="description" content="Tell us what you need. Get help with your everyday tasks.">
+  <title>Universal Helper - AI Tools for Everyone</title>
 
-  <link rel="stylesheet" href="style.css">
+  <meta name="description"
+    content="Universal Helper is a multilingual AI utility app for translation, writing, calculations, ideas and everyday tasks.">
+
+  <meta name="theme-color" content="#6d28d9">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4c1d95, #7c3aed);
+      color: white;
+      padding: 22px 16px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,.15);
+    }
+
+    header h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 14px;
+      opacity: .9;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 18px;
+    }
+
+    .language-box {
+      background: white;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.08);
+      margin-bottom: 18px;
+    }
+
+    .language-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    select,
+    textarea,
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 15px;
+      background: white;
+      outline: none;
+    }
+
+    select:focus,
+    textarea:focus,
+    input:focus {
+      border-color: #7c3aed;
+    }
+
+    .swap {
+      width: 45px;
+      height: 45px;
+      border: none;
+      border-radius: 50%;
+      background: #7c3aed;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .tools-title {
+      margin: 22px 0 12px;
+      font-size: 20px;
+    }
+
+    .tools {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .tool {
+      background: white;
+      border: none;
+      border-radius: 15px;
+      padding: 18px;
+      text-align: left;
+      box-shadow: 0 4px 14px rgba(0,0,0,.07);
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .tool:hover {
+      transform: translateY(-2px);
+    }
+
+    .tool-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .tool h3 {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .tool p {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .workspace {
+      background: white;
+      padding: 18px;
+      margin-top: 18px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.08);
+    }
+
+    .workspace h2 {
+      margin-bottom: 12px;
+      font-size: 20px;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .primary-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6d28d9, #7c3aed);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      min-height: 80px;
+      border-radius: 10px;
+      background: #f5f3ff;
+      border: 1px solid #ddd6fe;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .actions button {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px 10px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .language-row {
+        grid-template-columns: 1fr;
+      }
+
+      .swap {
+        margin: auto;
+        transform: rotate(90deg);
+      }
+
+      .tools {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-  <main class="app">
+<header>
+  <h1>🌍 Universal Helper</h1>
+  <p>One AI helper for everyday tasks</p>
+</header>
 
-    <header class="topbar">
-      <div class="logo">
-        <span>✦</span>
-        <strong>Universal Helper</strong>
-      </div>
+<main class="container">
 
-      <select id="language">
-        <option value="auto">🌐 Auto</option>
+  <section class="language-box">
+    <div class="language-row">
+
+      <select id="fromLanguage">
+        <option value="auto">Detect Language</option>
         <option value="English">English</option>
         <option value="Hindi">हिंदी</option>
-        <option value="Santali">Santali</option>
         <option value="Bengali">বাংলা</option>
+        <option value="Santali">Santali</option>
+        <option value="Odia">ଓଡ଼ିଆ</option>
+        <option value="Tamil">தமிழ்</option>
+        <option value="Telugu">తెలుగు</option>
+        <option value="Marathi">मराठी</option>
+        <option value="Gujarati">ગુજરાતી</option>
+        <option value="Punjabi">ਪੰਜਾਬੀ</option>
+        <option value="Kannada">ಕನ್ನಡ</option>
+        <option value="Malayalam">മലയാളം</option>
+        <option value="Assamese">অসমীয়া</option>
+        <option value="Urdu">اردو</option>
+        <option value="Arabic">العربية</option>
+        <option value="Chinese">中文</option>
+        <option value="Japanese">日本語</option>
+        <option value="Korean">한국어</option>
+        <option value="French">Français</option>
+        <option value="German">Deutsch</option>
+        <option value="Spanish">Español</option>
+        <option value="Portuguese">Português</option>
+        <option value="Russian">Русский</option>
+        <option value="Italian">Italiano</option>
+        <option value="Turkish">Türkçe</option>
+        <option value="Indonesian">Bahasa Indonesia</option>
+        <option value="Vietnamese">Tiếng Việt</option>
       </select>
-    </header>
 
-    <section class="hero">
-      <div class="badge">AI Daily Helper</div>
+      <button class="swap" onclick="swapLanguages()">↔</button>
 
-      <h1>What do you need help with?</h1>
+      <select id="toLanguage">
+        <option value="Hindi">हिंदी</option>
+        <option value="English">English</option>
+        <option value="Bengali">বাংলা</option>
+        <option value="Santali">Santali</option>
+        <option value="Odia">ଓଡ଼ିଆ</option>
+        <option value="Tamil">தமிழ்</option>
+        <option value="Telugu">తెలుగు</option>
+        <option value="Marathi">मराठी</option>
+        <option value="Gujarati">ગુજરાતી</option>
+        <option value="Punjabi">ਪੰਜਾਬੀ</option>
+        <option value="Arabic">العربية</option>
+        <option value="Chinese">中文</option>
+        <option value="Japanese">日本語</option>
+        <option value="Korean">한국어</option>
+        <option value="French">Français</option>
+        <option value="German">Deutsch</option>
+        <option value="Spanish">Español</option>
+        <option value="Portuguese">Português</option>
+        <option value="Russian">Русский</option>
+        <option value="Italian">Italiano</option>
+        <option value="Turkish">Türkçe</option>
+        <option value="Indonesian">Bahasa Indonesia</option>
+        <option value="Vietnamese">Tiếng Việt</option>
+      </select>
 
-      <p>
-        Just tell us what you want to do.
-        We'll help you get it done.
-      </p>
+    </div>
+  </section>
 
-      <div class="input-box">
+  <h2 class="tools-title">🛠️ What do you want to do?</h2>
 
-        <textarea
-          id="taskInput"
-          placeholder="Example: Write a leave application for my school..."
-          maxlength="5000"
-        ></textarea>
+  <section class="tools">
 
-        <div class="input-footer">
-          <span id="charCount">0 / 5000</span>
+    <button class="tool" onclick="selectTool('Translate')">
+      <div class="tool-icon">🌐</div>
+      <h3>Translate</h3>
+      <p>Translate between languages</p>
+    </button>
 
-          <button id="askButton">
-            ✨ Help me
-          </button>
-        </div>
+    <button class="tool" onclick="selectTool('AI Helper')">
+      <div class="tool-icon">🤖</div>
+      <h3>AI Helper</h3>
+      <p>Ask questions and get help</p>
+    </button>
 
-      </div>
+    <button class="tool" onclick="selectTool('Writing')">
+      <div class="tool-icon">✍️</div>
+      <h3>Writing Helper</h3>
+      <p>Write messages, applications and posts</p>
+    </button>
 
-      <div class="examples">
-        <button class="example">Write a leave application</button>
-        <button class="example">Explain this in simple language</button>
-        <button class="example">Create an advertisement</button>
-      </div>
-    </section>
+    <button class="tool" onclick="selectTool('Calculator')">
+      <div class="tool-icon">🧮</div>
+      <h3>Calculator</h3>
+      <p>Calculate everyday numbers</p>
+    </button>
 
-    <section id="loading" class="loading hidden">
-      <div class="spinner"></div>
-      <p>Understanding your task...</p>
-    </section>
+    <button class="tool" onclick="selectTool('Ideas')">
+      <div class="tool-icon">💡</div>
+      <h3>Idea Generator</h3>
+      <p>Generate useful ideas</p>
+    </button>
 
-    <section id="resultSection" class="result hidden">
+    <button class="tool" onclick="selectTool('Advertisement')">
+      <div class="tool-icon">📢</div>
+      <h3>Advertisement</h3>
+      <p>Create promotional content</p>
+    </button>
 
-      <div class="result-header">
-        <h2>✅ Your Result</h2>
-      </div>
+  </section>
 
-      <div id="resultText" class="result-text"></div>
+  <section class="workspace">
 
-      <div class="result-actions">
-        <button id="copyButton">📋 Copy</button>
-        <button id="shareButton">📤 Share</button>
-        <button id="newButton">🔄 New Task</button>
-      </div>
+    <h2 id="workspaceTitle">🌐 Translation / AI Workspace</h2>
 
-    </section>
+    <textarea
+      id="userInput"
+      placeholder="Type or paste your text here..."
+    ></textarea>
 
-    <footer>
-      <p>Free to use • More powerful features coming soon</p>
-    </footer>
+    <button class="primary-btn" onclick="processTask()">
+      ✨ Generate Result
+    </button>
 
-  </main>
+    <div id="result" class="result"></div>
 
-  <script src="app.js"></script>
+    <div class="actions">
+      <button onclick="copyResult()">📋 Copy</button>
+      <button onclick="shareResult()">📤 Share</button>
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  🌍 Universal Helper — Built for everyone, everywhere
+</footer>
+
+<script>
+
+  let currentTool = "Translate";
+
+  function selectTool(tool) {
+    currentTool = tool;
+
+    const title = document.getElementById("workspaceTitle");
+
+    const icons = {
+      "Translate": "🌐",
+      "AI Helper": "🤖",
+      "Writing": "✍️",
+      "Calculator": "🧮",
+      "Ideas": "💡",
+      "Advertisement": "📢"
+    };
+
+    title.textContent = icons[tool] + " " + tool + " Workspace";
+
+    document.getElementById("userInput").focus();
+  }
+
+  function swapLanguages() {
+    const from = document.getElementById("fromLanguage");
+    const to = document.getElementById("toLanguage");
+
+    if (from.value === "auto") {
+      from.value = "English";
+    }
+
+    const temp = from.value;
+    from.value = to.value;
+    to.value = temp;
+  }
+
+  async function processTask() {
+
+    const input = document.getElementById("userInput").value.trim();
+    const result = document.getElementById("result");
+
+    if (!input) {
+      alert("Please enter some text first.");
+      return;
+    }
+
+    result.style.display = "block";
+    result.textContent = "⏳ Processing...";
+
+    /*
+      AI BACKEND WILL BE CONNECTED HERE.
+
+      Later this function will send:
+      - currentTool
+      - input
+      - fromLanguage
+      - toLanguage
+
+      to Netlify Functions.
+    */
+
+    setTimeout(() => {
+
+      const from = document.getElementById("fromLanguage").value;
+      const to = document.getElementById("toLanguage").value;
+
+      result.textContent =
+        "Tool: " + currentTool +
+        "\nFrom: " + from +
+        "\nTo: " + to +
+        "\n\nYour AI result will appear here after the backend is connected.";
+
+    }, 700);
+  }
+
+  function copyResult() {
+    const text = document.getElementById("result").textContent;
+
+    if (!text) return;
+
+    navigator.clipboard.writeText(text);
+
+    alert("Result copied!");
+  }
+
+  async function shareResult() {
+
+    const text = document.getElementById("result").textContent;
+
+    if (!text) return;
+
+    if (navigator.share) {
+      await navigator.share({
+        title: "Universal Helper",
+        text: text
+      });
+    } else {
+      navigator.clipboard.writeText(text);
+      alert("Result copied. You can share it anywhere.");
+    }
+  }
+
+</script>
+
 </body>
 </html>
