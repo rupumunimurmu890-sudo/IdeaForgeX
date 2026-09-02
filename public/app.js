@@ -259,7 +259,19 @@ async function generateReport() {
     const data = await response.json();
 
     if (!response.ok || !data.success || !data.report) {
-      throw new Error(data?.error || "Report generate nahi ho paya.");
+
+      // 🆕 Debug info bhi console mein aur ek visible jagah dikhao
+      // taaki bina Cloudflare logs dekhe screenshot se hi pata chal jaye
+      console.error("Debug info:", data?.debug);
+
+      let debugText = "";
+      if (data?.debug) {
+        debugText =
+          " [aiError: " + (data.debug.aiError || "none") +
+          ", textLen: " + data.debug.rawTextLength + "]";
+      }
+
+      throw new Error((data?.error || "Report generate nahi ho paya.") + debugText);
     }
 
     currentReport = data.report;
