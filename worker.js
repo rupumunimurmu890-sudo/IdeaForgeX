@@ -1,172 +1,267 @@
+// ========================================
+// IdeaForgeX Worker — AI Startup Idea Generator
+// Powered by Cloudflare Workers AI
+// ========================================
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type"
+};
+
+// ------------------------------------
+// 🎯 Section markers — AI se isi format mein
+// output maangte hain, taaki parse karna aasan ho
+// ------------------------------------
+
+const SECTION_KEYS = [
+  "IDEA",
+  "TARGET_CUSTOMERS",
+  "CUSTOMER_PROBLEM",
+  "REVENUE_MODEL",
+  "MARKET_ANALYSIS",
+  "COMPETITOR_ANALYSIS",
+  "SWOT_STRENGTHS",
+  "SWOT_WEAKNESSES",
+  "SWOT_OPPORTUNITIES",
+  "SWOT_THREATS",
+  "MARKETING_STRATEGY",
+  "STARTUP_COST",
+  "ONE_YEAR_PROJECTION",
+  "RISKS",
+  "GROWTH_STRATEGY"
+];
+
+function buildReportPrompt(idea, language) {
+
+  const languageLine =
+    language && language !== "auto"
+      ? `Respond entirely in ${language}.`
+      : "Detect the language the user wrote their idea in, and respond entirely in that same language.";
+
+  return `
+You are IdeaForgeX, an expert startup analyst and business consultant AI.
+
+A user has described a business idea:
+"${idea}"
+
+${languageLine}
+
+Analyze this idea and produce a COMPLETE startup report in EXACTLY the
+format below. Do not add any extra commentary, headers, markdown
+symbols (no **, no #), or explanation outside this format. Use plain
+text only, with short paragraphs or bullet lines (using "- ") where
+listed.
+
+SCORE_MARKET:<integer 0-100, how strong is market demand>
+SCORE_COMPETITION:<integer 0-100, higher = LESS competitive/easier to compete>
+SCORE_PROFIT:<integer 0-100, profit potential>
+SCORE_DIFFICULTY:<integer 0-100, higher = EASIER to start, lower = harder>
+SCORE_OVERALL:<integer 0-100, overall viability score>
+###IDEA###
+A polished 1-2 sentence restatement of the business idea.
+###TARGET_CUSTOMERS###
+Who exactly this is for (2-3 sentences or bullet lines).
+###CUSTOMER_PROBLEM###
+The core problem/pain point this solves (2-3 sentences).
+###REVENUE_MODEL###
+How this makes money (2-4 bullet lines starting with "- ").
+###MARKET_ANALYSIS###
+Market size, trends, and opportunity (3-4 sentences).
+###COMPETITOR_ANALYSIS###
+3-4 bullet lines, each naming a type of existing competitor/alternative,
+their strength, their weakness, and how this idea can differentiate.
+###SWOT_STRENGTHS###
+3-4 bullet lines.
+###SWOT_WEAKNESSES###
+3-4 bullet lines.
+###SWOT_OPPORTUNITIES###
+3-4 bullet lines.
+###SWOT_THREATS###
+3-4 bullet lines.
+###MARKETING_STRATEGY###
+3-4 bullet lines of practical, low-budget-friendly marketing tactics.
+###STARTUP_COST###
+An estimated starting budget range (in Indian Rupees ₹ unless the idea
+clearly targets another country) with a short breakdown, 3-4 bullet lines.
+###ONE_YEAR_PROJECTION###
+A realistic 1-year revenue/growth projection narrative (3-4 sentences).
+###RISKS###
+3-4 bullet lines of key risks.
+###GROWTH_STRATEGY###
+3-4 bullet lines on how to scale after initial traction.
+
+Be specific to the idea given — never generic or vague. Keep the tone
+practical and encouraging but honest about real risks.
+`;
+}
+
+// ------------------------------------
+// 📄 AI response ko structured object mein parse karo
+// ------------------------------------
+
+function parseReport(rawText) {
+
+  if (!rawText) return null;
+
+  const scoreMatch = function (key) {
+    const re = new RegExp(key + "\\s*:\\s*(\\d{1,3})");
+    const m = rawText.match(re);
+    return m ? Math.max(0, Math.min(100, parseInt(m[1], 10))) : null;
+  };
+
+  const score = {
+    market: scoreMatch("SCORE_MARKET"),
+    competition: scoreMatch("SCORE_COMPETITION"),
+    profit: scoreMatch("SCORE_PROFIT"),
+    difficulty: scoreMatch("SCORE_DIFFICULTY"),
+    overall: scoreMatch("SCORE_OVERALL")
+  };
+
+  const sections = {};
+
+  for (let i = 0; i < SECTION_KEYS.length; i++) {
+
+    const key = SECTION_KEYS[i];
+    const nextKey = SECTION_KEYS[i + 1];
+
+    const startMarker = "###" + key + "###";
+    const startIdx = rawText.indexOf(startMarker);
+
+    if (startIdx === -1) {
+      sections[key] = "";
+      continue;
+    }
+
+    const contentStart = startIdx + startMarker.length;
+
+    let endIdx = rawText.length;
+
+    if (nextKey) {
+      const nextMarker = "###" + nextKey + "###";
+      const nextIdx = rawText.indexOf(nextMarker, contentStart);
+      if (nextIdx !== -1) endIdx = nextIdx;
+    }
+
+    sections[key] = rawText.slice(contentStart, endIdx).trim();
+  }
+
+  // Kam se kam idea aur overall score hone chahiye,
+  // warna parsing fail maano
+  if (!sections.IDEA || score.overall === null) {
+    return null;
+  }
+
+  return { score, sections };
+}
+
 export default {
   async fetch(request, env) {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
-    };
+
+    const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders
-      });
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    if (request.method !== "POST") {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          app: "Universal Helper",
-          status: "online"
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
+    // ========================================
+    // 📊 GENERATE COMPLETE STARTUP REPORT
+    // ========================================
+
+    if (
+      url.pathname === "/api/generate-report" &&
+      request.method === "POST"
+    ) {
+
+      try {
+
+        const body = await request.json();
+        const idea = (body.idea || "").trim();
+        const language = body.language || "auto";
+
+        if (!idea) {
+
+          return Response.json(
+            { success: false, error: "Please describe your idea first." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        if (idea.length > 2000) {
+
+          return Response.json(
+            { success: false, error: "Idea description is too long (max 2000 characters)." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const prompt = buildReportPrompt(idea, language);
+
+        let parsed = null;
+
+        // 🆕 Retry up to 3 times — kabhi kabhi AI format follow
+        // nahi karta, tab dobara try karte hain
+        for (let attempt = 0; attempt < 3; attempt++) {
+
+          try {
+
+            const result = await env.AI.run(
+              "@cf/meta/llama-3.1-8b-instruct",
+              {
+                messages: [{ role: "user", content: prompt }],
+                max_tokens: 2048,
+                temperature: 0.7
+              }
+            );
+
+            const rawText = result?.response || "";
+            parsed = parseReport(rawText);
+
+            if (parsed) break;
+
+          } catch (aiError) {
+
+            console.error("AI attempt " + attempt + " failed:", aiError);
           }
         }
-      );
-    }
 
-    try {
-      const body = await request.json();
+        if (!parsed) {
 
-      const tool = body.tool || "AI Helper";
-      const input = body.input || "";
-      const fromLanguage = body.fromLanguage || "auto";
-      const toLanguage = body.toLanguage || "English";
-
-      if (!input.trim()) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Please enter some text."
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
-
-      if (!env.GEMINI_API_KEY) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "GEMINI_API_KEY is not configured."
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
-
-      const prompt = `
-You are Universal Helper, a helpful multilingual AI assistant.
-
-Tool: ${tool}
-Source language: ${fromLanguage}
-Target language: ${toLanguage}
-
-User request:
-${input}
-
-Instructions:
-- Give a clear, useful and accurate answer.
-- For Translate, translate naturally into the target language.
-- For AI Helper, answer the user's question directly.
-- For Writing, create polished writing suitable for the request.
-- For Calculator, calculate carefully and show the result clearly.
-- For Ideas, provide practical and useful ideas.
-- For Advertisement, create attractive promotional content.
-- If the target language is specified, respond in that language when appropriate.
-`;
-
-      const apiUrl =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
-
-      const aiResponse = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          contents: [
+          // 🆕 200 status — handled/expected failure, retry
+          // suggest karo, server crash nahi
+          return Response.json(
             {
-              role: "user",
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-  maxOutputTokens: 1000
-          }
-        })
-      });
+              success: false,
+              error: "Report generate nahi ho paya, कृपया फिर से try करें।"
+            },
+            { status: 200, headers: corsHeaders }
+          );
+        }
 
-      const data = await aiResponse.json();
+        return Response.json(
+          { success: true, report: parsed },
+          { status: 200, headers: corsHeaders }
+        );
 
-      if (!aiResponse.ok) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: data?.error?.message || "Gemini API request failed."
-          }),
-          {
-            status: aiResponse.status,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
+      } catch (error) {
+
+        console.error("Report generation error:", error);
+
+        return Response.json(
+          { success: false, error: error?.message || "Something went wrong." },
+          { status: 200, headers: corsHeaders }
         );
       }
-
-      const text =
-        data?.candidates?.[0]?.content?.parts
-          ?.map(part => part.text || "")
-          .join("")
-          .trim() || "No response generated.";
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          result: text
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
-
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: error.message || "Server error."
-        }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
     }
+
+    // ------------------------------------
+    // 🌐 WEBSITE FILES
+    // ------------------------------------
+
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response("IdeaForgeX Worker is running.", { status: 200 });
   }
 };
