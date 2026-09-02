@@ -234,6 +234,8 @@ export default {
         const prompt = buildReportPrompt(idea, language);
 
         let parsed = null;
+        let lastRawText = "";
+        let lastAiError = "";
 
         // 🆕 Retry up to 3 times — kabhi kabhi AI format follow
         // nahi karta, tab dobara try karte hain
@@ -245,18 +247,20 @@ export default {
               "@cf/meta/llama-3.1-8b-instruct",
               {
                 messages: [{ role: "user", content: prompt }],
-                max_tokens: 3200,
+                max_tokens: 2048,
                 temperature: 0.6
               }
             );
 
             const rawText = result?.response || "";
+            lastRawText = rawText;
             parsed = parseReport(rawText);
 
             if (parsed) break;
 
           } catch (aiError) {
 
+            lastAiError = aiError?.message || String(aiError);
             console.error("AI attempt " + attempt + " failed:", aiError);
           }
         }
@@ -265,10 +269,17 @@ export default {
 
           // 🆕 200 status — handled/expected failure, retry
           // suggest karo, server crash nahi
+          // 🆕 DEBUG info bhi bhej rahe hain (temporary) taaki
+          // bina Cloudflare logs dekhe asli wajah pata chal sake
           return Response.json(
             {
               success: false,
-              error: "Report generate nahi ho paya, कृपया फिर से try करें।"
+              error: "Report generate nahi ho paya, कृपया फिर से try करें।",
+              debug: {
+                aiError: lastAiError || null,
+                rawTextLength: lastRawText.length,
+                rawTextPreview: lastRawText.slice(0, 300)
+              }
             },
             { status: 200, headers: corsHeaders }
           );
