@@ -102,10 +102,10 @@ practical and encouraging but honest about real risks.
 
 function parseReport(rawText) {
 
-  if (!rawText) return null;
+  if (!rawText || rawText.trim().length < 20) return null;
 
   const scoreMatch = function (key) {
-    const re = new RegExp(key + "\\s*:\\s*(\\d{1,3})");
+    const re = new RegExp(key + "\\s*:?\\s*(\\d{1,3})");
     const m = rawText.match(re);
     return m ? Math.max(0, Math.min(100, parseInt(m[1], 10))) : null;
   };
@@ -118,7 +118,22 @@ function parseReport(rawText) {
     overall: scoreMatch("SCORE_OVERALL")
   };
 
+  // 🆕 Agar overall score nahi mila, lekin baaki scores mil gaye,
+  // unka average nikal ke overall bana do (bilkul fail mat karo)
+  if (score.overall === null) {
+
+    const available = [score.market, score.competition, score.profit, score.difficulty]
+      .filter(function (v) { return typeof v === "number"; });
+
+    if (available.length > 0) {
+      score.overall = Math.round(
+        available.reduce(function (a, b) { return a + b; }, 0) / available.length
+      );
+    }
+  }
+
   const sections = {};
+  let anyMarkerFound = false;
 
   for (let i = 0; i < SECTION_KEYS.length; i++) {
 
@@ -133,23 +148,44 @@ function parseReport(rawText) {
       continue;
     }
 
+    anyMarkerFound = true;
+
     const contentStart = startIdx + startMarker.length;
 
     let endIdx = rawText.length;
 
-    if (nextKey) {
-      const nextMarker = "###" + nextKey + "###";
-      const nextIdx = rawText.indexOf(nextMarker, contentStart);
-      if (nextIdx !== -1) endIdx = nextIdx;
+    // 🆕 Agla milne wala koi bhi marker dhoondo (sirf immediate
+    // next nahi), taaki agar AI ne beech ka koi section skip kar
+    // diya ho, tab bhi content sahi se cut ho
+    for (let j = i + 1; j < SECTION_KEYS.length; j++) {
+
+      const laterMarker = "###" + SECTION_KEYS[j] + "###";
+      const laterIdx = rawText.indexOf(laterMarker, contentStart);
+
+      if (laterIdx !== -1) {
+        endIdx = laterIdx;
+        break;
+      }
     }
 
     sections[key] = rawText.slice(contentStart, endIdx).trim();
   }
 
-  // Kam se kam idea aur overall score hone chahiye,
-  // warna parsing fail maano
-  if (!sections.IDEA || score.overall === null) {
-    return null;
+  // 🆕 Agar AI ne bilkul bhi ###MARKER### format follow nahi kiya,
+  // toh poora raw text hi "IDEA" section mein daal do — kam se
+  // kam user ko kuch toh useful dikhega, khaali error nahi
+  if (!anyMarkerFound) {
+
+    // Score/marker lines hata ke saaf text banao
+    const cleaned = rawText
+      .replace(/SCORE_[A-Z]+\s*:?\s*\d{1,3}/g, "")
+      .trim();
+
+    sections.IDEA = cleaned || rawText.trim();
+  }
+
+  if (!sections.IDEA) {
+    sections.IDEA = "Report generate hua hai, neeche sections dekhein.";
   }
 
   return { score, sections };
@@ -209,8 +245,8 @@ export default {
               "@cf/meta/llama-3.1-8b-instruct",
               {
                 messages: [{ role: "user", content: prompt }],
-                max_tokens: 2048,
-                temperature: 0.7
+                max_tokens: 3200,
+                temperature: 0.6
               }
             );
 
