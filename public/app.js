@@ -559,6 +559,105 @@ async function generatePitchDeck() {
 }
 
 // ------------------------------------
+// 🆕 IdeaForge-AI Hub — AI Assistant, Writing,
+// Translate, Calculator, Student
+// ------------------------------------
+
+let currentToolResult = "";
+let activeTool = "assistant";
+
+const TOOL_TITLES = {
+  assistant: "🤖 AI Assistant",
+  writing: "✍️ Writing Assistant",
+  translate: "🌐 Translate",
+  calculator: "🧮 Calculator",
+  student: "📚 Student Helper"
+};
+
+function openToolWorkspace(tool) {
+
+  activeTool = tool;
+
+  document.querySelectorAll(".hubChip").forEach(function (c) {
+    c.classList.remove("active");
+  });
+
+  const activeChip = document.querySelector('.hubChip[data-tool="' + tool + '"]');
+  if (activeChip) activeChip.classList.add("active");
+
+  document.getElementById("toolWorkspaceTitle").textContent = TOOL_TITLES[tool] || "🤖 AI Assistant";
+
+  document.getElementById("writingOptions").style.display = tool === "writing" ? "flex" : "none";
+  document.getElementById("translateOptions").style.display = tool === "translate" ? "flex" : "none";
+
+  const workspace = document.getElementById("toolWorkspace");
+  workspace.style.display = "block";
+  workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  document.getElementById("toolInput").focus();
+}
+
+async function runAiTool(input, tool) {
+
+  const btn = document.getElementById("toolGenerateBtn");
+  const resultBox = document.getElementById("toolResult");
+  const resultActions = document.getElementById("toolResultActions");
+
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> सोच रहे हैं...';
+
+  resultBox.style.display = "none";
+  resultActions.style.display = "none";
+
+  try {
+
+    const payload = {
+      tool: tool,
+      input: input,
+      language: document.getElementById("languageSelect")?.value || "auto"
+    };
+
+    if (tool === "writing") {
+      payload.writingType = document.getElementById("writingTypeSelect")?.value || "";
+      payload.tone = document.getElementById("toneSelect")?.value || "";
+    }
+
+    if (tool === "translate") {
+      payload.fromLanguage = document.getElementById("fromLanguageSelect")?.value || "auto";
+      payload.toLanguage = document.getElementById("toLanguageSelect")?.value || "English";
+    }
+
+    const response = await fetch("/api/ai-tool", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.result) {
+      throw new Error(data?.error || "Result generate nahi ho paya.");
+    }
+
+    currentToolResult = data.result;
+    resultBox.textContent = data.result;
+    resultBox.style.display = "block";
+    resultActions.style.display = "flex";
+
+  } catch (error) {
+
+    console.error("AI tool error:", error);
+    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
+
+  } finally {
+
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+// ------------------------------------
 // Init
 // ------------------------------------
 
@@ -713,6 +812,89 @@ document.addEventListener("DOMContentLoaded", function () {
     sharePitchDeckBtn.addEventListener("click", function () {
       if (!currentPitchDeck) return;
       sharePlainText("IdeaForgeX Pitch Deck", sectionsToPlainText("IdeaForgeX — Investor Pitch Deck", PITCH_DECK_DISPLAY, currentPitchDeck));
+    });
+  }
+
+  // 🆕 Hub category chips
+  document.querySelectorAll(".hubChip").forEach(function (chip) {
+
+    chip.addEventListener("click", function () {
+
+      const tool = chip.getAttribute("data-tool");
+      const scrollTarget = chip.getAttribute("data-scroll");
+      const externalUrl = chip.getAttribute("data-external");
+      const isSoon = chip.getAttribute("data-soon");
+
+      if (tool) {
+        openToolWorkspace(tool);
+        return;
+      }
+
+      if (scrollTarget) {
+        const el = document.getElementById(scrollTarget);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+
+      if (externalUrl) {
+        window.open(externalUrl, "_blank");
+        return;
+      }
+
+      if (isSoon) {
+        showToast("Yeh feature jald aa raha hai! ✨", "info");
+        return;
+      }
+    });
+  });
+
+  // 🆕 Hub "Ask AI" — seedha hub box se auto tool
+  const hubAskBtn = document.getElementById("hubAskBtn");
+  if (hubAskBtn) {
+    hubAskBtn.addEventListener("click", function () {
+
+      const text = document.getElementById("hubInput").value.trim();
+
+      if (!text) {
+        showToast("Pehle kuch likhein.", "error");
+        return;
+      }
+
+      openToolWorkspace("assistant");
+      document.getElementById("toolInput").value = text;
+      runAiTool(text, "assistant");
+    });
+  }
+
+  // 🆕 Tool workspace Generate button
+  const toolGenerateBtn = document.getElementById("toolGenerateBtn");
+  if (toolGenerateBtn) {
+    toolGenerateBtn.addEventListener("click", function () {
+
+      const text = document.getElementById("toolInput").value.trim();
+
+      if (!text) {
+        showToast("Pehle kuch likhein.", "error");
+        return;
+      }
+
+      runAiTool(text, activeTool);
+    });
+  }
+
+  const toolCopyBtn = document.getElementById("toolCopyBtn");
+  if (toolCopyBtn) {
+    toolCopyBtn.addEventListener("click", function () {
+      if (!currentToolResult) return;
+      copyPlainText(currentToolResult);
+    });
+  }
+
+  const toolShareBtn = document.getElementById("toolShareBtn");
+  if (toolShareBtn) {
+    toolShareBtn.addEventListener("click", function () {
+      if (!currentToolResult) return;
+      sharePlainText("IdeaForge-AI", currentToolResult);
     });
   }
 
