@@ -335,6 +335,100 @@ function extractScores(rawText) {
   return score;
 }
 
+// ------------------------------------
+// 🤖 IdeaForge-AI hub tools — flexible prompt builder
+// ------------------------------------
+
+function buildToolPrompt(tool, input, opts) {
+
+  const langLine =
+    opts.language && opts.language !== "auto"
+      ? `Respond in ${opts.language}.`
+      : "Respond in the same language the user wrote in.";
+
+  if (tool === "writing") {
+
+    const typeLine = opts.writingType ? `Type of writing: ${opts.writingType}.` : "";
+    const toneLine = opts.tone ? `Tone: ${opts.tone}.` : "";
+
+    return `
+You are IdeaForge-AI's writing assistant.
+${typeLine}
+${toneLine}
+${langLine}
+
+Write the following based on the user's request. Output ONLY the
+finished piece of writing — no preamble, no explanation, no
+commentary before or after.
+
+User's request:
+${input}
+`;
+  }
+
+  if (tool === "translate") {
+
+    return `
+You are IdeaForge-AI's translator.
+
+Translate the following text from ${opts.fromLanguage} to ${opts.toLanguage}.
+Keep the meaning and tone natural, not word-for-word robotic. Output
+ONLY the translated text — no preamble, no explanation, no original
+text repeated.
+
+Text:
+${input}
+`;
+  }
+
+  if (tool === "calculator") {
+
+    return `
+You are IdeaForge-AI's calculator assistant.
+
+Carefully calculate the answer to this, showing the calculation
+briefly, then the final answer clearly on its own line at the end
+prefixed with "Answer: ".
+${langLine}
+
+Problem:
+${input}
+`;
+  }
+
+  if (tool === "student") {
+
+    return `
+You are IdeaForge-AI's student helper — focused on helping the user
+actually understand a topic, not just copy an answer.
+${langLine}
+
+Give a clear, well-structured explanation/answer for the following
+academic request. Use short paragraphs or bullet points where helpful.
+
+Request:
+${input}
+`;
+  }
+
+  // tool === "auto" or "assistant" — general purpose
+  return `
+You are IdeaForge-AI, a helpful multilingual AI assistant that can
+help with writing, translation, calculations, business ideas,
+studying, or general questions.
+${langLine}
+
+Understand what the user is asking for and give a direct, well
+formatted, useful answer. If it's a writing request, write it
+directly. If it's a calculation, solve it and show the answer clearly.
+If it's a translation request, translate it. Otherwise just answer
+the question helpfully.
+
+User's request:
+${input}
+`;
+}
+
 export default {
   async fetch(request, env) {
 
@@ -508,6 +602,89 @@ export default {
       } catch (error) {
 
         console.error("Pitch deck generation error:", error);
+
+        return Response.json(
+          { success: false, error: error?.message || "Something went wrong." },
+          { status: 200, headers: corsHeaders }
+        );
+      }
+    }
+
+    // ========================================
+    // 🤖 AI TOOL — Assistant / Writing / Translate /
+    // Calculator / Student (IdeaForge-AI hub tools)
+    // ========================================
+
+    if (url.pathname === "/api/ai-tool" && request.method === "POST") {
+
+      try {
+
+        const body = await request.json();
+
+        const tool = body.tool || "auto";
+        const input = (body.input || "").trim();
+        const language = body.language || "auto";
+        const writingType = body.writingType || "";
+        const tone = body.tone || "";
+        const fromLanguage = body.fromLanguage || "auto";
+        const toLanguage = body.toLanguage || "English";
+
+        if (!input) {
+          return Response.json(
+            { success: false, error: "Please enter something first." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        if (input.length > 3000) {
+          return Response.json(
+            { success: false, error: "Input is too long (max 3000 characters)." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const prompt = buildToolPrompt(tool, input, {
+          language, writingType, tone, fromLanguage, toLanguage
+        });
+
+        let resultText = "";
+        let lastError = null;
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+
+          try {
+
+            const result = await env.AI.run(AI_MODEL, {
+              messages: [{ role: "user", content: prompt }],
+              max_tokens: 1200,
+              temperature: tool === "calculator" ? 0.2 : 0.7
+            });
+
+            resultText = (result?.response || "").trim();
+
+            if (resultText.length > 3) break;
+
+          } catch (aiError) {
+            lastError = aiError;
+            console.error("AI tool attempt " + attempt + " failed:", aiError);
+          }
+        }
+
+        if (!resultText) {
+          return Response.json(
+            { success: false, error: "Result generate nahi ho paya, कृपया फिर से try करें।" },
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        return Response.json(
+          { success: true, result: resultText },
+          { status: 200, headers: corsHeaders }
+        );
+
+      } catch (error) {
+
+        console.error("AI tool error:", error);
 
         return Response.json(
           { success: false, error: error?.message || "Something went wrong." },
