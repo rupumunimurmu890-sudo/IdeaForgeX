@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#4c1d95">
 
-<title>IdeaForgeX - AI Startup Idea Generator</title>
-<meta name="description" content="Turn your idea into a business — AI-generated idea score, market analysis, competitor research, SWOT, and full startup report in seconds.">
+<title>IdeaForge-AI - AI Tools for Everyone</title>
+<meta name="description" content="IdeaForge-AI — one AI hub for business ideas, writing, translation, calculations and more.">
 
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
@@ -18,13 +18,106 @@
     <div class="brand">
       <span class="brandMark">💡</span>
       <div>
-        <div class="brandName">IdeaForgeX</div>
-        <div class="brandTag">Turn Your Idea Into a Business</div>
+        <div class="brandName">IdeaForge-AI</div>
+        <div class="brandTag">AI Tools for Everyone</div>
       </div>
     </div>
   </header>
 
   <main class="layout">
+
+    <!-- ================= HUB: Auto-ask + Categories ================= -->
+    <section class="panel hubPanel">
+
+      <label for="hubInput" class="fieldLabel">✨ आप क्या करना चाहते हैं? (What do you want to do?)</label>
+      <textarea id="hubInput" placeholder="Example: मेरे लिए बैंक में देने की application लिखो / Translate this to English / ₹800 प्रति घंटे के हिसाब से 2 घंटे 35 मिनट का हिसाब करो" maxlength="3000"></textarea>
+
+      <button type="button" id="hubAskBtn" class="primaryBtn">➤ Ask AI</button>
+
+      <div class="hubCategories" id="hubCategories">
+        <button type="button" class="hubChip" data-tool="assistant">🤖 AI Assistant</button>
+        <button type="button" class="hubChip" data-tool="writing">✍️ Writing</button>
+        <button type="button" class="hubChip" data-tool="translate">🌐 Translate</button>
+        <button type="button" class="hubChip" data-tool="calculator">🧮 Calculator</button>
+        <button type="button" class="hubChip" data-scroll="businessSection">💼 Business</button>
+        <button type="button" class="hubChip" data-tool="student">📚 Student</button>
+        <button type="button" class="hubChip" data-external="https://statuscraft-ai.rupumunimurmu890.workers.dev">🎨 Status</button>
+        <button type="button" class="hubChip" data-external="https://admakerai-new.rupumunimurmu890.workers.dev">📢 Advertisement</button>
+        <button type="button" class="hubChip" data-soon="true">📸 Image Tools</button>
+        <button type="button" class="hubChip" data-soon="true">🎤 Voice AI</button>
+      </div>
+
+      <!-- Generic tool workspace — Writing/Translate/Calculator/Student/Assistant -->
+      <div id="toolWorkspace" class="toolWorkspace" style="display:none;">
+
+        <div id="toolWorkspaceTitle" class="subReportTitle">🤖 AI Assistant</div>
+
+        <div id="writingOptions" class="toolExtraFields" style="display:none;">
+          <select id="writingTypeSelect">
+            <option value="">Type: General</option>
+            <option value="WhatsApp Message">WhatsApp Message</option>
+            <option value="Application">Application</option>
+            <option value="Letter">Letter</option>
+            <option value="Email">Email</option>
+            <option value="Caption">Caption</option>
+            <option value="YouTube Description">YouTube Description</option>
+            <option value="Instagram Caption">Instagram Caption</option>
+            <option value="Speech">Speech</option>
+            <option value="Story">Story</option>
+            <option value="Shayari">Shayari</option>
+            <option value="Business Description">Business Description</option>
+          </select>
+          <select id="toneSelect">
+            <option value="">Tone: Simple</option>
+            <option value="Professional">Professional</option>
+            <option value="Friendly">Friendly</option>
+            <option value="Emotional">Emotional</option>
+          </select>
+        </div>
+
+        <div id="translateOptions" class="toolExtraFields" style="display:none;">
+          <select id="fromLanguageSelect">
+            <option value="auto">Detect Language</option>
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Bengali">Bengali</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Telugu">Telugu</option>
+            <option value="Marathi">Marathi</option>
+            <option value="Gujarati">Gujarati</option>
+            <option value="Punjabi">Punjabi</option>
+            <option value="Urdu">Urdu</option>
+          </select>
+          <span class="swapArrow">→</span>
+          <select id="toLanguageSelect">
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Bengali">Bengali</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Telugu">Telugu</option>
+            <option value="Marathi">Marathi</option>
+            <option value="Gujarati">Gujarati</option>
+            <option value="Punjabi">Punjabi</option>
+            <option value="Urdu">Urdu</option>
+          </select>
+        </div>
+
+        <textarea id="toolInput" placeholder="Type your request here..." maxlength="3000"></textarea>
+
+        <button type="button" id="toolGenerateBtn" class="primaryBtn">✨ Generate</button>
+
+        <div id="toolResult" class="toolResultBox" style="display:none;"></div>
+
+        <div id="toolResultActions" class="reportActions" style="display:none;">
+          <button type="button" id="toolCopyBtn" class="actionBtn">📋 Copy</button>
+          <button type="button" id="toolShareBtn" class="actionBtn">📤 Share</button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="businessSection">
 
     <section class="panel inputPanel">
 
@@ -137,9 +230,11 @@
       </div>
     </section>
 
+    </section>
+
   </main>
 
-  <p class="footer">💡 IdeaForgeX &nbsp;·&nbsp; © 2026</p>
+  <p class="footer">💡 IdeaForge-AI &nbsp;·&nbsp; © 2026</p>
 
   <div id="toastContainer"></div>
 
