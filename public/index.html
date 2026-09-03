@@ -57,6 +57,9 @@
         <option value="Russian">Russian</option>
       </select>
 
+      <label for="budgetInput" class="fieldLabel">💰 Your Starting Budget (optional, for Launch Plan)</label>
+      <input type="text" id="budgetInput" placeholder="Example: ₹50,000">
+
       <button type="button" id="generateBtn" class="primaryBtn">
         🚀 Generate Complete Startup Report
       </button>
@@ -107,6 +110,31 @@
         <button type="button" id="newIdeaBtn" class="actionBtn">✨ New Idea</button>
       </div>
 
+      <div class="reportActions" style="margin-top:8px;">
+        <button type="button" id="generateLaunchPlanBtn" class="actionBtn actionHighlight">🚀 Generate Launch Plan</button>
+        <button type="button" id="generatePitchDeckBtn" class="actionBtn actionHighlight">🎤 Generate Pitch Deck</button>
+      </div>
+
+    </section>
+
+    <section id="launchPlanSection" class="panel reportPanel" style="display:none;">
+      <div class="subReportTitle">🚀 30-Day Launch Plan</div>
+      <div class="reportSections" id="launchPlanSections"></div>
+      <div class="reportActions">
+        <button type="button" id="downloadLaunchPlanPdfBtn" class="actionBtn">📄 Download PDF</button>
+        <button type="button" id="copyLaunchPlanBtn" class="actionBtn">📋 Copy</button>
+        <button type="button" id="shareLaunchPlanBtn" class="actionBtn">📤 Share</button>
+      </div>
+    </section>
+
+    <section id="pitchDeckSection" class="panel reportPanel" style="display:none;">
+      <div class="subReportTitle">🎤 Investor Pitch Deck</div>
+      <div class="pitchDeckSlides" id="pitchDeckSlides"></div>
+      <div class="reportActions">
+        <button type="button" id="downloadPitchDeckPdfBtn" class="actionBtn">📄 Download PDF</button>
+        <button type="button" id="copyPitchDeckBtn" class="actionBtn">📋 Copy</button>
+        <button type="button" id="sharePitchDeckBtn" class="actionBtn">📤 Share</button>
+      </div>
     </section>
 
   </main>
