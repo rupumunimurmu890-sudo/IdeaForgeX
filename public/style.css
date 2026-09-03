@@ -263,6 +263,45 @@ select#languageSelect {
 }
 .actionBtn:hover { background: #faf9ff; }
 
+.actionHighlight {
+  background: linear-gradient(135deg, #6d28d9, #9333ea);
+  color: #fff;
+  border-color: transparent;
+}
+.actionHighlight:hover { opacity: 0.92; background: linear-gradient(135deg, #6d28d9, #9333ea); }
+
+.subReportTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #4c1d95;
+  margin-bottom: 14px;
+}
+
+.pitchDeckSlides {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pitchSlide {
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+  color: #fff;
+}
+.pitchSlideTitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+.pitchSlideBody {
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .footer {
   text-align: center;
   padding: 20px;
