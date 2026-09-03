@@ -302,6 +302,85 @@ document.addEventListener("DOMContentLoaded", function () {
     generateBtn.addEventListener("click", generateReport);
   }
 
+  // ------------------------------------
+  // 🆕 Download PDF — reportSection ka screenshot
+  // lekar multi-page PDF banate hain (isse Hindi/Tamil/
+  // koi bhi language sahi dikhti hai, font embedding
+  // ki zaroorat nahi padti)
+  // ------------------------------------
+
+  const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+
+  if (downloadPdfBtn) {
+
+    downloadPdfBtn.addEventListener("click", async function () {
+
+      if (!currentReport) return;
+
+      const reportSection = document.getElementById("reportSection");
+
+      if (!window.html2canvas || !window.jspdf) {
+        showToast("PDF library load nahi hui, phir try करें।", "error");
+        return;
+      }
+
+      const originalHtml = downloadPdfBtn.innerHTML;
+      downloadPdfBtn.disabled = true;
+      downloadPdfBtn.innerHTML = '<span class="spinner"></span> PDF बना रहे हैं...';
+
+      try {
+
+        const canvas = await window.html2canvas(reportSection, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          useCORS: true
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "mm", "a4");
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        const fileName =
+          "IdeaForgeX-Report-" + Date.now() + ".pdf";
+
+        pdf.save(fileName);
+
+        showToast("PDF download ho gaya!", "success");
+
+      } catch (error) {
+
+        console.error("PDF generation error:", error);
+        showToast("PDF banane mein समस्या हुई।", "error");
+
+      } finally {
+
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.innerHTML = originalHtml;
+      }
+    });
+  }
+
   const copyReportBtn = document.getElementById("copyReportBtn");
   if (copyReportBtn) {
     copyReportBtn.addEventListener("click", async function () {
