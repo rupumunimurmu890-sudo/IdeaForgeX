@@ -302,6 +302,89 @@ select#languageSelect {
   white-space: pre-wrap;
 }
 
+/* 🆕 Hub panel */
+.hubPanel textarea#hubInput {
+  width: 100%;
+  min-height: 90px;
+  padding: 13px;
+  border: 1.5px solid #ddd6fe;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  margin-bottom: 10px;
+}
+.hubPanel textarea#hubInput:focus { border-color: #7c3aed; }
+
+.hubCategories {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+@media (min-width: 640px) {
+  .hubCategories { grid-template-columns: repeat(5, 1fr); }
+}
+.hubChip {
+  padding: 12px 10px;
+  border: 1.5px solid #ede9fe;
+  background: #faf9ff;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4c1d95;
+  cursor: pointer;
+  text-align: center;
+}
+.hubChip:hover { background: #f3f0ff; }
+.hubChip.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+
+.toolWorkspace {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ede9fe;
+}
+.toolExtraFields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.toolExtraFields select {
+  flex: 1;
+  padding: 10px;
+  border: 1.5px solid #ddd6fe;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+}
+.swapArrow { font-weight: 800; color: #7c3aed; }
+
+#toolInput {
+  width: 100%;
+  min-height: 90px;
+  padding: 13px;
+  border: 1.5px solid #ddd6fe;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+.toolResultBox {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #faf9ff;
+  border: 1px solid #ede9fe;
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .footer {
   text-align: center;
   padding: 20px;
