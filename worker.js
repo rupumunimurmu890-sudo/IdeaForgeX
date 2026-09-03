@@ -9,43 +9,59 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type"
 };
 
+const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
 // ------------------------------------
-// 🎯 Section markers — AI se isi format mein
-// output maangte hain, taaki parse karna aasan ho
+// 🎯 Section markers for each report type
 // ------------------------------------
 
-const SECTION_KEYS = [
-  "IDEA",
-  "TARGET_CUSTOMERS",
-  "CUSTOMER_PROBLEM",
-  "REVENUE_MODEL",
-  "MARKET_ANALYSIS",
-  "COMPETITOR_ANALYSIS",
-  "SWOT_STRENGTHS",
-  "SWOT_WEAKNESSES",
-  "SWOT_OPPORTUNITIES",
-  "SWOT_THREATS",
-  "MARKETING_STRATEGY",
-  "STARTUP_COST",
-  "ONE_YEAR_PROJECTION",
-  "RISKS",
-  "GROWTH_STRATEGY"
+const REPORT_SECTION_KEYS = [
+  "IDEA", "TARGET_CUSTOMERS", "CUSTOMER_PROBLEM", "REVENUE_MODEL",
+  "MARKET_ANALYSIS", "COMPETITOR_ANALYSIS",
+  "SWOT_STRENGTHS", "SWOT_WEAKNESSES", "SWOT_OPPORTUNITIES", "SWOT_THREATS",
+  "MARKETING_STRATEGY", "STARTUP_COST", "ONE_YEAR_PROJECTION",
+  "RISKS", "GROWTH_STRATEGY"
 ];
 
+const LAUNCH_PLAN_SECTION_KEYS = [
+  "BUDGET_BREAKDOWN",
+  "PREPARATION",
+  "PRODUCT_DEVELOPMENT",
+  "BRANDING",
+  "MARKETING_LAUNCH",
+  "LAUNCH_WEEK",
+  "PRODUCT_IDEAS",
+  "PRICING",
+  "EXPECTED_SALES"
+];
+
+const PITCH_DECK_SECTION_KEYS = [
+  "PROBLEM", "SOLUTION", "MARKET", "PRODUCT", "BUSINESS_MODEL",
+  "COMPETITION", "FINANCIALS", "GROWTH", "FUNDING_REQUIREMENT"
+];
+
+// ------------------------------------
+// 🌐 Language instruction helper
+// ------------------------------------
+
+function languageLine(language) {
+  return language && language !== "auto"
+    ? `Respond entirely in ${language}.`
+    : "Detect the language the user wrote their idea in, and respond entirely in that same language.";
+}
+
+// ------------------------------------
+// 📊 STARTUP REPORT prompt
+// ------------------------------------
+
 function buildReportPrompt(idea, language) {
-
-  const languageLine =
-    language && language !== "auto"
-      ? `Respond entirely in ${language}.`
-      : "Detect the language the user wrote their idea in, and respond entirely in that same language.";
-
   return `
 You are IdeaForgeX, an expert startup analyst and business consultant AI.
 
 A user has described a business idea:
 "${idea}"
 
-${languageLine}
+${languageLine(language)}
 
 Analyze this idea and produce a COMPLETE startup report in EXACTLY the
 format below. Do not add any extra commentary, headers, markdown
@@ -97,12 +113,198 @@ practical and encouraging but honest about real risks.
 }
 
 // ------------------------------------
-// 📄 AI response ko structured object mein parse karo
+// 🚀 LAUNCH PLAN prompt
 // ------------------------------------
 
-function parseReport(rawText) {
+function buildLaunchPlanPrompt(idea, budget, language) {
+
+  const budgetLine = budget
+    ? `The user's available starting budget is: ${budget}.`
+    : "The user did not specify a budget — assume a modest, realistic bootstrapped budget appropriate for this idea.";
+
+  return `
+You are IdeaForgeX, an expert startup launch strategist.
+
+A user wants an actionable 30-day launch plan for this business idea:
+"${idea}"
+
+${budgetLine}
+${languageLine(language)}
+
+Produce a COMPLETE 30-day launch plan in EXACTLY the format below. No
+extra commentary, no markdown symbols (no **, no #). Plain text only,
+with bullet lines (using "- ") where listed.
+
+###BUDGET_BREAKDOWN###
+4-6 bullet lines breaking the budget down into concrete categories
+with approximate amounts (use ₹ unless the idea clearly targets
+another country). Amounts should add up sensibly to the stated (or
+assumed) budget.
+###PREPARATION###
+Day 1-7: 3-5 bullet lines of concrete preparation tasks (research,
+sourcing, legal/registration basics, setup).
+###PRODUCT_DEVELOPMENT###
+Day 8-15: 3-5 bullet lines on building/preparing the actual
+product or service.
+###BRANDING###
+Day 16-20: 3-5 bullet lines on naming, logo, packaging, online
+presence basics.
+###MARKETING_LAUNCH###
+Day 21-25: 3-5 bullet lines of specific, low-budget marketing actions
+to build initial awareness.
+###LAUNCH_WEEK###
+Day 26-30: 3-5 bullet lines on the actual launch — first sales push,
+offers, what to track.
+###PRODUCT_IDEAS###
+3-5 bullet lines of specific product/service variations or add-ons
+this business could offer.
+###PRICING###
+3-4 bullet lines with concrete suggested price points or pricing
+strategy.
+###EXPECTED_SALES###
+A realistic narrative (3-4 sentences) estimating expected sales/
+revenue in the first 30 days based on the given budget and idea.
+
+Be specific and numeric wherever possible — avoid vague advice.
+`;
+}
+
+// ------------------------------------
+// 🎤 INVESTOR PITCH DECK prompt
+// ------------------------------------
+
+function buildPitchDeckPrompt(idea, language) {
+
+  return `
+You are IdeaForgeX, an expert startup pitch consultant who has helped
+founders raise funding.
+
+Create investor pitch deck content for this business idea:
+"${idea}"
+
+${languageLine(language)}
+
+Produce COMPLETE pitch deck content in EXACTLY the format below, as if
+each section were one slide. No extra commentary, no markdown symbols
+(no **, no #). Plain text only, with short punchy bullet lines (using
+"- ") where listed — pitch decks should be concise, not paragraphs of
+text.
+
+###PROBLEM###
+2-3 bullet lines stating the problem clearly and compellingly.
+###SOLUTION###
+2-3 bullet lines on how this idea solves it.
+###MARKET###
+2-3 bullet lines on market size and opportunity (include a rough
+number/estimate if reasonable).
+###PRODUCT###
+2-3 bullet lines describing the product/service and what makes it work.
+###BUSINESS_MODEL###
+2-3 bullet lines on how this makes money.
+###COMPETITION###
+2-3 bullet lines naming competitor types and this idea's edge.
+###FINANCIALS###
+2-3 bullet lines with rough projected numbers (revenue estimate,
+margins, or unit economics) — keep realistic.
+###GROWTH###
+2-3 bullet lines on the growth/scaling plan.
+###FUNDING_REQUIREMENT###
+2-3 bullet lines: how much funding this idea would realistically need
+to get started/scale, and what it would be used for (use ₹ unless the
+idea clearly targets another country).
+
+Keep every line punchy and investor-ready — no fluff.
+`;
+}
+
+// ------------------------------------
+// 📄 Generic lenient section parser — kisi bhi
+// ###KEY### format wale AI response ko parse karta hai
+// ------------------------------------
+
+function parseSections(rawText, sectionKeys) {
 
   if (!rawText || rawText.trim().length < 20) return null;
+
+  const sections = {};
+  let anyMarkerFound = false;
+
+  for (let i = 0; i < sectionKeys.length; i++) {
+
+    const key = sectionKeys[i];
+    const startMarker = "###" + key + "###";
+    const startIdx = rawText.indexOf(startMarker);
+
+    if (startIdx === -1) {
+      sections[key] = "";
+      continue;
+    }
+
+    anyMarkerFound = true;
+
+    const contentStart = startIdx + startMarker.length;
+    let endIdx = rawText.length;
+
+    for (let j = i + 1; j < sectionKeys.length; j++) {
+
+      const laterMarker = "###" + sectionKeys[j] + "###";
+      const laterIdx = rawText.indexOf(laterMarker, contentStart);
+
+      if (laterIdx !== -1) {
+        endIdx = laterIdx;
+        break;
+      }
+    }
+
+    sections[key] = rawText.slice(contentStart, endIdx).trim();
+  }
+
+  if (!anyMarkerFound) {
+
+    const cleaned = rawText
+      .replace(/SCORE_[A-Z]+\s*:?\s*\d{1,3}/g, "")
+      .trim();
+
+    sections[sectionKeys[0]] = cleaned || rawText.trim();
+  }
+
+  return { sections, anyMarkerFound };
+}
+
+// ------------------------------------
+// 🤖 Generic AI call with retry — kisi bhi prompt +
+// section list ke liye reuse hota hai
+// ------------------------------------
+
+async function generateSectioned(env, prompt, sectionKeys, maxTokens) {
+
+  let parsed = null;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+
+    try {
+
+      const result = await env.AI.run(AI_MODEL, {
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: maxTokens || 2048,
+        temperature: 0.6
+      });
+
+      const rawText = result?.response || "";
+      parsed = parseSections(rawText, sectionKeys);
+
+      if (parsed) break;
+
+    } catch (aiError) {
+
+      console.error("AI attempt " + attempt + " failed:", aiError);
+    }
+  }
+
+  return parsed;
+}
+
+function extractScores(rawText) {
 
   const scoreMatch = function (key) {
     const re = new RegExp(key + "\\s*:?\\s*(\\d{1,3})");
@@ -118,8 +320,6 @@ function parseReport(rawText) {
     overall: scoreMatch("SCORE_OVERALL")
   };
 
-  // 🆕 Agar overall score nahi mila, lekin baaki scores mil gaye,
-  // unka average nikal ke overall bana do (bilkul fail mat karo)
   if (score.overall === null) {
 
     const available = [score.market, score.competition, score.profit, score.difficulty]
@@ -132,63 +332,7 @@ function parseReport(rawText) {
     }
   }
 
-  const sections = {};
-  let anyMarkerFound = false;
-
-  for (let i = 0; i < SECTION_KEYS.length; i++) {
-
-    const key = SECTION_KEYS[i];
-    const nextKey = SECTION_KEYS[i + 1];
-
-    const startMarker = "###" + key + "###";
-    const startIdx = rawText.indexOf(startMarker);
-
-    if (startIdx === -1) {
-      sections[key] = "";
-      continue;
-    }
-
-    anyMarkerFound = true;
-
-    const contentStart = startIdx + startMarker.length;
-
-    let endIdx = rawText.length;
-
-    // 🆕 Agla milne wala koi bhi marker dhoondo (sirf immediate
-    // next nahi), taaki agar AI ne beech ka koi section skip kar
-    // diya ho, tab bhi content sahi se cut ho
-    for (let j = i + 1; j < SECTION_KEYS.length; j++) {
-
-      const laterMarker = "###" + SECTION_KEYS[j] + "###";
-      const laterIdx = rawText.indexOf(laterMarker, contentStart);
-
-      if (laterIdx !== -1) {
-        endIdx = laterIdx;
-        break;
-      }
-    }
-
-    sections[key] = rawText.slice(contentStart, endIdx).trim();
-  }
-
-  // 🆕 Agar AI ne bilkul bhi ###MARKER### format follow nahi kiya,
-  // toh poora raw text hi "IDEA" section mein daal do — kam se
-  // kam user ko kuch toh useful dikhega, khaali error nahi
-  if (!anyMarkerFound) {
-
-    // Score/marker lines hata ke saaf text banao
-    const cleaned = rawText
-      .replace(/SCORE_[A-Z]+\s*:?\s*\d{1,3}/g, "")
-      .trim();
-
-    sections.IDEA = cleaned || rawText.trim();
-  }
-
-  if (!sections.IDEA) {
-    sections.IDEA = "Report generate hua hai, neeche sections dekhein.";
-  }
-
-  return { score, sections };
+  return score;
 }
 
 export default {
@@ -204,10 +348,7 @@ export default {
     // 📊 GENERATE COMPLETE STARTUP REPORT
     // ========================================
 
-    if (
-      url.pathname === "/api/generate-report" &&
-      request.method === "POST"
-    ) {
+    if (url.pathname === "/api/generate-report" && request.method === "POST") {
 
       try {
 
@@ -216,7 +357,6 @@ export default {
         const language = body.language || "auto";
 
         if (!idea) {
-
           return Response.json(
             { success: false, error: "Please describe your idea first." },
             { status: 400, headers: corsHeaders }
@@ -224,7 +364,6 @@ export default {
         }
 
         if (idea.length > 2000) {
-
           return Response.json(
             { success: false, error: "Idea description is too long (max 2000 characters)." },
             { status: 400, headers: corsHeaders }
@@ -232,54 +371,143 @@ export default {
         }
 
         const prompt = buildReportPrompt(idea, language);
+        let lastRawForScore = "";
 
         let parsed = null;
 
-        // Retry up to 3 times — kabhi kabhi AI format follow
-        // nahi karta, tab dobara try karte hain
         for (let attempt = 0; attempt < 3; attempt++) {
 
           try {
 
-            const result = await env.AI.run(
-              "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-              {
-                messages: [{ role: "user", content: prompt }],
-                max_tokens: 2048,
-                temperature: 0.6
-              }
-            );
+            const result = await env.AI.run(AI_MODEL, {
+              messages: [{ role: "user", content: prompt }],
+              max_tokens: 2048,
+              temperature: 0.6
+            });
 
             const rawText = result?.response || "";
-            parsed = parseReport(rawText);
+            lastRawForScore = rawText;
+            parsed = parseSections(rawText, REPORT_SECTION_KEYS);
 
             if (parsed) break;
 
           } catch (aiError) {
-
             console.error("AI attempt " + attempt + " failed:", aiError);
           }
         }
 
         if (!parsed) {
-
           return Response.json(
-            {
-              success: false,
-              error: "Report generate nahi ho paya, कृपया फिर से try करें।"
-            },
+            { success: false, error: "Report generate nahi ho paya, कृपया फिर से try करें।" },
             { status: 200, headers: corsHeaders }
           );
         }
 
+        const score = extractScores(lastRawForScore);
+
+        if (!parsed.sections.IDEA) {
+          parsed.sections.IDEA = "Report generate hua hai, neeche sections dekhein.";
+        }
+
         return Response.json(
-          { success: true, report: parsed },
+          { success: true, report: { score, sections: parsed.sections } },
           { status: 200, headers: corsHeaders }
         );
 
       } catch (error) {
 
         console.error("Report generation error:", error);
+
+        return Response.json(
+          { success: false, error: error?.message || "Something went wrong." },
+          { status: 200, headers: corsHeaders }
+        );
+      }
+    }
+
+    // ========================================
+    // 🚀 GENERATE LAUNCH PLAN
+    // ========================================
+
+    if (url.pathname === "/api/generate-launch-plan" && request.method === "POST") {
+
+      try {
+
+        const body = await request.json();
+        const idea = (body.idea || "").trim();
+        const budget = (body.budget || "").trim();
+        const language = body.language || "auto";
+
+        if (!idea) {
+          return Response.json(
+            { success: false, error: "Please describe your idea first." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const prompt = buildLaunchPlanPrompt(idea, budget, language);
+        const parsed = await generateSectioned(env, prompt, LAUNCH_PLAN_SECTION_KEYS, 2048);
+
+        if (!parsed) {
+          return Response.json(
+            { success: false, error: "Launch plan generate nahi ho paya, कृपया फिर से try करें।" },
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        return Response.json(
+          { success: true, plan: parsed.sections },
+          { status: 200, headers: corsHeaders }
+        );
+
+      } catch (error) {
+
+        console.error("Launch plan generation error:", error);
+
+        return Response.json(
+          { success: false, error: error?.message || "Something went wrong." },
+          { status: 200, headers: corsHeaders }
+        );
+      }
+    }
+
+    // ========================================
+    // 🎤 GENERATE INVESTOR PITCH DECK
+    // ========================================
+
+    if (url.pathname === "/api/generate-pitch-deck" && request.method === "POST") {
+
+      try {
+
+        const body = await request.json();
+        const idea = (body.idea || "").trim();
+        const language = body.language || "auto";
+
+        if (!idea) {
+          return Response.json(
+            { success: false, error: "Please describe your idea first." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const prompt = buildPitchDeckPrompt(idea, language);
+        const parsed = await generateSectioned(env, prompt, PITCH_DECK_SECTION_KEYS, 2048);
+
+        if (!parsed) {
+          return Response.json(
+            { success: false, error: "Pitch deck generate nahi ho paya, कृपया फिर से try करें।" },
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
+        return Response.json(
+          { success: true, deck: parsed.sections },
+          { status: 200, headers: corsHeaders }
+        );
+
+      } catch (error) {
+
+        console.error("Pitch deck generation error:", error);
 
         return Response.json(
           { success: false, error: error?.message || "Something went wrong." },
