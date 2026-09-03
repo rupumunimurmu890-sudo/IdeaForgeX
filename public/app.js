@@ -281,6 +281,284 @@ async function generateReport() {
 }
 
 // ------------------------------------
+// 🆕 Generic PDF generator — kisi bhi section element
+// ka screenshot lekar multi-page PDF banata hai
+// ------------------------------------
+
+async function downloadElementAsPdf(elementId, filePrefix, button) {
+
+  const el = document.getElementById(elementId);
+
+  if (!window.html2canvas || !window.jspdf) {
+    showToast("PDF library load nahi hui, phir try करें।", "error");
+    return;
+  }
+
+  const originalHtml = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<span class="spinner"></span> PDF बना रहे हैं...';
+
+  try {
+
+    const canvas = await window.html2canvas(el, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(filePrefix + "-" + Date.now() + ".pdf");
+    showToast("PDF download ho gaya!", "success");
+
+  } catch (error) {
+
+    console.error("PDF generation error:", error);
+    showToast("PDF banane mein समस्या हुई।", "error");
+
+  } finally {
+
+    button.disabled = false;
+    button.innerHTML = originalHtml;
+  }
+}
+
+async function copyPlainText(text) {
+
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Copy ho gaya!", "success");
+  } catch (error) {
+    showToast("Copy nahi ho paya।", "error");
+  }
+}
+
+async function sharePlainText(title, text) {
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text });
+    } catch (error) {
+      // user cancelled — ignore
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("Copy ho gaya, ab share kar sakte ho।", "info");
+    } catch (error) {
+      showToast("Share/copy nahi ho paya।", "error");
+    }
+  }
+}
+
+// ------------------------------------
+// 🚀 LAUNCH PLAN
+// ------------------------------------
+
+let currentLaunchPlan = null;
+
+const LAUNCH_PLAN_DISPLAY = [
+  { key: "BUDGET_BREAKDOWN", title: "💰 Budget Breakdown" },
+  { key: "PREPARATION", title: "📋 Day 1–7: Preparation" },
+  { key: "PRODUCT_DEVELOPMENT", title: "🛠️ Day 8–15: Product Development" },
+  { key: "BRANDING", title: "🎨 Day 16–20: Branding" },
+  { key: "MARKETING_LAUNCH", title: "📣 Day 21–25: Marketing" },
+  { key: "LAUNCH_WEEK", title: "🚀 Day 26–30: Launch Week" },
+  { key: "PRODUCT_IDEAS", title: "💡 Product Ideas" },
+  { key: "PRICING", title: "🏷️ Pricing" },
+  { key: "EXPECTED_SALES", title: "📈 Expected Sales (First 30 Days)" }
+];
+
+function renderSectionsInto(containerId, sectionsSpec, data) {
+
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  sectionsSpec.forEach(function (item) {
+
+    const content = data[item.key] || "";
+    if (!content) return;
+
+    const card = document.createElement("div");
+    card.className = "reportCard";
+    card.innerHTML =
+      '<div class="reportCardTitle">' + item.title + '</div>' +
+      '<div class="reportCardBody">' + escapeHtml(content) + '</div>';
+    container.appendChild(card);
+  });
+}
+
+function sectionsToPlainText(title, sectionsSpec, data) {
+
+  let text = title + "\n\n";
+
+  sectionsSpec.forEach(function (item) {
+    const content = data[item.key];
+    if (!content) return;
+    text += item.title.replace(/^[^\w]+/, "").trim() + "\n" + content + "\n\n";
+  });
+
+  return text.trim();
+}
+
+async function generateLaunchPlan() {
+
+  if (!currentIdeaText) {
+    showToast("Pehle ek idea se report generate karein.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("generateLaunchPlanBtn");
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Launch plan बना रहे हैं...';
+
+  try {
+
+    const response = await fetch("/api/generate-launch-plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idea: currentIdeaText,
+        budget: document.getElementById("budgetInput")?.value.trim() || "",
+        language: document.getElementById("languageSelect")?.value || "auto"
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.plan) {
+      throw new Error(data?.error || "Launch plan generate nahi ho paya.");
+    }
+
+    currentLaunchPlan = data.plan;
+
+    renderSectionsInto("launchPlanSections", LAUNCH_PLAN_DISPLAY, data.plan);
+
+    const section = document.getElementById("launchPlanSection");
+    section.style.display = "block";
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  } catch (error) {
+
+    console.error("Launch plan error:", error);
+    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
+
+  } finally {
+
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+// ------------------------------------
+// 🎤 PITCH DECK
+// ------------------------------------
+
+let currentPitchDeck = null;
+
+const PITCH_DECK_DISPLAY = [
+  { key: "PROBLEM", title: "Problem" },
+  { key: "SOLUTION", title: "Solution" },
+  { key: "MARKET", title: "Market" },
+  { key: "PRODUCT", title: "Product" },
+  { key: "BUSINESS_MODEL", title: "Business Model" },
+  { key: "COMPETITION", title: "Competition" },
+  { key: "FINANCIALS", title: "Financials" },
+  { key: "GROWTH", title: "Growth Plan" },
+  { key: "FUNDING_REQUIREMENT", title: "Funding Requirement" }
+];
+
+function renderPitchDeck(data) {
+
+  const container = document.getElementById("pitchDeckSlides");
+  container.innerHTML = "";
+
+  PITCH_DECK_DISPLAY.forEach(function (item) {
+
+    const content = data[item.key] || "";
+    if (!content) return;
+
+    const slide = document.createElement("div");
+    slide.className = "pitchSlide";
+    slide.innerHTML =
+      '<div class="pitchSlideTitle">' + item.title + '</div>' +
+      '<div class="pitchSlideBody">' + escapeHtml(content) + '</div>';
+    container.appendChild(slide);
+  });
+}
+
+async function generatePitchDeck() {
+
+  if (!currentIdeaText) {
+    showToast("Pehle ek idea se report generate karein.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("generatePitchDeckBtn");
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Pitch deck बना रहे हैं...';
+
+  try {
+
+    const response = await fetch("/api/generate-pitch-deck", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idea: currentIdeaText,
+        language: document.getElementById("languageSelect")?.value || "auto"
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.deck) {
+      throw new Error(data?.error || "Pitch deck generate nahi ho paya.");
+    }
+
+    currentPitchDeck = data.deck;
+
+    renderPitchDeck(data.deck);
+
+    const section = document.getElementById("pitchDeckSection");
+    section.style.display = "block";
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  } catch (error) {
+
+    console.error("Pitch deck error:", error);
+    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
+
+  } finally {
+
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+// ------------------------------------
 // Init
 // ------------------------------------
 
@@ -303,81 +581,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ------------------------------------
-  // 🆕 Download PDF — reportSection ka screenshot
-  // lekar multi-page PDF banate hain (isse Hindi/Tamil/
-  // koi bhi language sahi dikhti hai, font embedding
-  // ki zaroorat nahi padti)
+  // Download PDF — reportSection ka screenshot lekar
+  // multi-page PDF banate hain (isse Hindi/Tamil/koi bhi
+  // language sahi dikhti hai, font embedding ki zaroorat nahi)
   // ------------------------------------
 
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
   if (downloadPdfBtn) {
 
-    downloadPdfBtn.addEventListener("click", async function () {
+    downloadPdfBtn.addEventListener("click", function () {
 
       if (!currentReport) return;
-
-      const reportSection = document.getElementById("reportSection");
-
-      if (!window.html2canvas || !window.jspdf) {
-        showToast("PDF library load nahi hui, phir try करें।", "error");
-        return;
-      }
-
-      const originalHtml = downloadPdfBtn.innerHTML;
-      downloadPdfBtn.disabled = true;
-      downloadPdfBtn.innerHTML = '<span class="spinner"></span> PDF बना रहे हैं...';
-
-      try {
-
-        const canvas = await window.html2canvas(reportSection, {
-          scale: 2,
-          backgroundColor: "#ffffff",
-          useCORS: true
-        });
-
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        const imgData = canvas.toDataURL("image/jpeg", 0.92);
-
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft > 0) {
-
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        const fileName =
-          "IdeaForgeX-Report-" + Date.now() + ".pdf";
-
-        pdf.save(fileName);
-
-        showToast("PDF download ho gaya!", "success");
-
-      } catch (error) {
-
-        console.error("PDF generation error:", error);
-        showToast("PDF banane mein समस्या हुई।", "error");
-
-      } finally {
-
-        downloadPdfBtn.disabled = false;
-        downloadPdfBtn.innerHTML = originalHtml;
-      }
+      downloadElementAsPdf("reportSection", "IdeaForgeX-Report", downloadPdfBtn);
     });
   }
 
@@ -434,9 +650,69 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("ideaInput").value = "";
       document.getElementById("charCount").textContent = "0";
       document.getElementById("reportSection").style.display = "none";
+      document.getElementById("launchPlanSection").style.display = "none";
+      document.getElementById("pitchDeckSection").style.display = "none";
 
       window.scrollTo({ top: 0, behavior: "smooth" });
       document.getElementById("ideaInput").focus();
+    });
+  }
+
+  // 🆕 Launch Plan
+  const generateLaunchPlanBtn = document.getElementById("generateLaunchPlanBtn");
+  if (generateLaunchPlanBtn) {
+    generateLaunchPlanBtn.addEventListener("click", generateLaunchPlan);
+  }
+
+  const downloadLaunchPlanPdfBtn = document.getElementById("downloadLaunchPlanPdfBtn");
+  if (downloadLaunchPlanPdfBtn) {
+    downloadLaunchPlanPdfBtn.addEventListener("click", function () {
+      downloadElementAsPdf("launchPlanSection", "IdeaForgeX-LaunchPlan", downloadLaunchPlanPdfBtn);
+    });
+  }
+
+  const copyLaunchPlanBtn = document.getElementById("copyLaunchPlanBtn");
+  if (copyLaunchPlanBtn) {
+    copyLaunchPlanBtn.addEventListener("click", function () {
+      if (!currentLaunchPlan) return;
+      copyPlainText(sectionsToPlainText("IdeaForgeX — 30-Day Launch Plan", LAUNCH_PLAN_DISPLAY, currentLaunchPlan));
+    });
+  }
+
+  const shareLaunchPlanBtn = document.getElementById("shareLaunchPlanBtn");
+  if (shareLaunchPlanBtn) {
+    shareLaunchPlanBtn.addEventListener("click", function () {
+      if (!currentLaunchPlan) return;
+      sharePlainText("IdeaForgeX Launch Plan", sectionsToPlainText("IdeaForgeX — 30-Day Launch Plan", LAUNCH_PLAN_DISPLAY, currentLaunchPlan));
+    });
+  }
+
+  // 🆕 Pitch Deck
+  const generatePitchDeckBtn = document.getElementById("generatePitchDeckBtn");
+  if (generatePitchDeckBtn) {
+    generatePitchDeckBtn.addEventListener("click", generatePitchDeck);
+  }
+
+  const downloadPitchDeckPdfBtn = document.getElementById("downloadPitchDeckPdfBtn");
+  if (downloadPitchDeckPdfBtn) {
+    downloadPitchDeckPdfBtn.addEventListener("click", function () {
+      downloadElementAsPdf("pitchDeckSection", "IdeaForgeX-PitchDeck", downloadPitchDeckPdfBtn);
+    });
+  }
+
+  const copyPitchDeckBtn = document.getElementById("copyPitchDeckBtn");
+  if (copyPitchDeckBtn) {
+    copyPitchDeckBtn.addEventListener("click", function () {
+      if (!currentPitchDeck) return;
+      copyPlainText(sectionsToPlainText("IdeaForgeX — Investor Pitch Deck", PITCH_DECK_DISPLAY, currentPitchDeck));
+    });
+  }
+
+  const sharePitchDeckBtn = document.getElementById("sharePitchDeckBtn");
+  if (sharePitchDeckBtn) {
+    sharePitchDeckBtn.addEventListener("click", function () {
+      if (!currentPitchDeck) return;
+      sharePlainText("IdeaForgeX Pitch Deck", sectionsToPlainText("IdeaForgeX — Investor Pitch Deck", PITCH_DECK_DISPLAY, currentPitchDeck));
     });
   }
 
