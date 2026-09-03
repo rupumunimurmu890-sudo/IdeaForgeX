@@ -101,6 +101,7 @@
       <div class="reportSections" id="reportSections"></div>
 
       <div class="reportActions">
+        <button type="button" id="downloadPdfBtn" class="actionBtn">📄 Download PDF</button>
         <button type="button" id="copyReportBtn" class="actionBtn">📋 Copy Full Report</button>
         <button type="button" id="shareReportBtn" class="actionBtn">📤 Share</button>
         <button type="button" id="newIdeaBtn" class="actionBtn">✨ New Idea</button>
@@ -114,6 +115,8 @@
 
   <div id="toastContainer"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
