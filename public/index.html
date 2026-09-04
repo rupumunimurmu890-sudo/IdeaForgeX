@@ -59,12 +59,17 @@
             <option value="Application">Application</option>
             <option value="Letter">Letter</option>
             <option value="Email">Email</option>
+            <option value="Resume/CV">Resume/CV</option>
             <option value="Caption">Caption</option>
+            <option value="Hashtags">Hashtags</option>
+            <option value="YouTube Title">YouTube Title</option>
             <option value="YouTube Description">YouTube Description</option>
             <option value="Instagram Caption">Instagram Caption</option>
             <option value="Speech">Speech</option>
             <option value="Story">Story</option>
+            <option value="Article">Article</option>
             <option value="Shayari">Shayari</option>
+            <option value="Rewrite">Rewrite</option>
             <option value="Business Description">Business Description</option>
           </select>
           <select id="toneSelect">
@@ -110,10 +115,23 @@
 
         <div id="toolResultActions" class="reportActions" style="display:none;">
           <button type="button" id="toolCopyBtn" class="actionBtn">📋 Copy</button>
+          <button type="button" id="toolRegenerateBtn" class="actionBtn">🔄 Regenerate</button>
+          <button type="button" id="toolSaveBtn" class="actionBtn">⭐ Save</button>
           <button type="button" id="toolShareBtn" class="actionBtn">📤 Share</button>
         </div>
 
+        <div id="toolHistorySection" class="ideaHistorySection" style="display:none;">
+          <div class="historyLabel">🕘 Recent</div>
+          <div id="toolHistoryRow" class="ideaHistoryRow"></div>
+        </div>
+
+        <div id="toolFavoritesSection" class="ideaHistorySection" style="display:none;">
+          <div class="historyLabel">⭐ My Favorites</div>
+          <div id="toolFavoritesRow" class="ideaHistoryRow"></div>
+        </div>
+
       </div>
+
 
     </section>
 
