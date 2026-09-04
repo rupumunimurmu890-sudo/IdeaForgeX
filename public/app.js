@@ -564,6 +564,7 @@ async function generatePitchDeck() {
 // ------------------------------------
 
 let currentToolResult = "";
+let currentToolInput = "";
 let activeTool = "assistant";
 
 const TOOL_TITLES = {
@@ -597,6 +598,8 @@ function openToolWorkspace(tool) {
   document.getElementById("toolInput").focus();
 }
 
+let lastToolPayload = null;
+
 async function runAiTool(input, tool) {
 
   const btn = document.getElementById("toolGenerateBtn");
@@ -628,6 +631,8 @@ async function runAiTool(input, tool) {
       payload.toLanguage = document.getElementById("toLanguageSelect")?.value || "English";
     }
 
+    lastToolPayload = payload;
+
     const response = await fetch("/api/ai-tool", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -641,9 +646,13 @@ async function runAiTool(input, tool) {
     }
 
     currentToolResult = data.result;
+    currentToolInput = input;
+
     resultBox.textContent = data.result;
     resultBox.style.display = "block";
     resultActions.style.display = "flex";
+
+    saveToToolHistory(tool, input, data.result);
 
   } catch (error) {
 
@@ -658,12 +667,180 @@ async function runAiTool(input, tool) {
 }
 
 // ------------------------------------
+// 🆕 Tool History (localStorage, last 15)
+// ------------------------------------
+
+const TOOL_HISTORY_KEY = "ideaforge_tool_history";
+const TOOL_HISTORY_LIMIT = 15;
+
+function getToolHistory() {
+  try {
+    const raw = localStorage.getItem(TOOL_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveToToolHistory(tool, input, result) {
+
+  try {
+
+    let list = getToolHistory();
+
+    list.unshift({
+      tool: tool,
+      input: input,
+      result: result,
+      label: (TOOL_TITLES[tool] || tool) + ": " + input.slice(0, 50),
+      savedAt: Date.now()
+    });
+
+    while (list.length > TOOL_HISTORY_LIMIT) list.pop();
+
+    localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(list));
+    renderToolHistory();
+
+  } catch (error) {
+    console.error("Tool history save error:", error);
+  }
+}
+
+function renderToolHistory() {
+
+  const list = getToolHistory();
+  const section = document.getElementById("toolHistorySection");
+  const row = document.getElementById("toolHistoryRow");
+
+  if (!section || !row) return;
+
+  if (list.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  row.innerHTML = "";
+
+  list.forEach(function (item) {
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "historyItem";
+    btn.textContent = item.label;
+
+    btn.addEventListener("click", function () {
+
+      openToolWorkspace(item.tool);
+      document.getElementById("toolInput").value = item.input;
+
+      currentToolResult = item.result;
+      currentToolInput = item.input;
+
+      const resultBox = document.getElementById("toolResult");
+      const resultActions = document.getElementById("toolResultActions");
+
+      resultBox.textContent = item.result;
+      resultBox.style.display = "block";
+      resultActions.style.display = "flex";
+    });
+
+    row.appendChild(btn);
+  });
+
+  section.style.display = "block";
+}
+
+// ------------------------------------
+// 🆕 Favorites (localStorage)
+// ------------------------------------
+
+const TOOL_FAVORITES_KEY = "ideaforge_tool_favorites";
+
+function getToolFavorites() {
+  try {
+    const raw = localStorage.getItem(TOOL_FAVORITES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveToToolFavorites(tool, input, result) {
+
+  try {
+
+    let list = getToolFavorites();
+
+    list.unshift({
+      tool: tool,
+      input: input,
+      result: result,
+      label: (TOOL_TITLES[tool] || tool) + ": " + input.slice(0, 50),
+      savedAt: Date.now()
+    });
+
+    localStorage.setItem(TOOL_FAVORITES_KEY, JSON.stringify(list));
+    renderToolFavorites();
+    showToast("Favorites mein save ho gaya! ⭐", "success");
+
+  } catch (error) {
+    console.error("Favorites save error:", error);
+  }
+}
+
+function renderToolFavorites() {
+
+  const list = getToolFavorites();
+  const section = document.getElementById("toolFavoritesSection");
+  const row = document.getElementById("toolFavoritesRow");
+
+  if (!section || !row) return;
+
+  if (list.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  row.innerHTML = "";
+
+  list.forEach(function (item) {
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "historyItem";
+    btn.textContent = "⭐ " + item.label;
+
+    btn.addEventListener("click", function () {
+
+      openToolWorkspace(item.tool);
+      document.getElementById("toolInput").value = item.input;
+
+      currentToolResult = item.result;
+      currentToolInput = item.input;
+
+      const resultBox = document.getElementById("toolResult");
+      const resultActions = document.getElementById("toolResultActions");
+
+      resultBox.textContent = item.result;
+      resultBox.style.display = "block";
+      resultActions.style.display = "flex";
+    });
+
+    row.appendChild(btn);
+  });
+
+  section.style.display = "block";
+}
+
+// ------------------------------------
 // Init
 // ------------------------------------
 
 document.addEventListener("DOMContentLoaded", function () {
 
   renderHistory();
+  renderToolHistory();
+  renderToolFavorites();
 
   const ideaInput = document.getElementById("ideaInput");
   const charCount = document.getElementById("charCount");
@@ -887,6 +1064,25 @@ document.addEventListener("DOMContentLoaded", function () {
     toolCopyBtn.addEventListener("click", function () {
       if (!currentToolResult) return;
       copyPlainText(currentToolResult);
+    });
+  }
+
+  const toolRegenerateBtn = document.getElementById("toolRegenerateBtn");
+  if (toolRegenerateBtn) {
+    toolRegenerateBtn.addEventListener("click", function () {
+
+      if (!lastToolPayload) return;
+
+      runAiTool(lastToolPayload.input, lastToolPayload.tool);
+    });
+  }
+
+  const toolSaveBtn = document.getElementById("toolSaveBtn");
+  if (toolSaveBtn) {
+    toolSaveBtn.addEventListener("click", function () {
+
+      if (!currentToolResult || !currentToolInput) return;
+      saveToToolFavorites(activeTool, currentToolInput, currentToolResult);
     });
   }
 
