@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX - Main JavaScript
+// IdeaForgeX - Main JavaScript (Updated: 19+ Languages + Voice AI)
 // ========================================
 
 let currentReport = null;
@@ -11,9 +11,7 @@ const HISTORY_LIMIT = 10;
 // ------------------------------------
 // Toast helper
 // ------------------------------------
-
 function showToast(message, type) {
-
   const container = document.getElementById("toastContainer");
   if (!container) return;
 
@@ -38,7 +36,6 @@ function showToast(message, type) {
 // ------------------------------------
 // History (localStorage)
 // ------------------------------------
-
 function getHistory() {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -49,11 +46,8 @@ function getHistory() {
 }
 
 function saveToHistory(ideaText, report) {
-
   try {
-
     let list = getHistory();
-
     list.unshift({
       idea: ideaText.slice(0, 80),
       score: report.score.overall,
@@ -63,17 +57,14 @@ function saveToHistory(ideaText, report) {
     });
 
     while (list.length > HISTORY_LIMIT) list.pop();
-
     localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
     renderHistory();
-
   } catch (error) {
     console.error("History save error:", error);
   }
 }
 
 function renderHistory() {
-
   const list = getHistory();
   const section = document.getElementById("ideaHistorySection");
   const row = document.getElementById("ideaHistoryRow");
@@ -86,9 +77,7 @@ function renderHistory() {
   }
 
   row.innerHTML = "";
-
   list.forEach(function (item) {
-
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "historyItem";
@@ -118,7 +107,6 @@ function escapeHtml(str) {
 // ------------------------------------
 // Report rendering
 // ------------------------------------
-
 const SECTION_DISPLAY = [
   { key: "IDEA", title: "💡 The Idea" },
   { key: "TARGET_CUSTOMERS", title: "🎯 Target Customers" },
@@ -135,10 +123,8 @@ const SECTION_DISPLAY = [
 ];
 
 function setBar(barId, valId, value) {
-
   const bar = document.getElementById(barId);
   const val = document.getElementById(valId);
-
   const safeValue = typeof value === "number" ? value : 0;
 
   if (bar) bar.style.width = safeValue + "%";
@@ -146,7 +132,6 @@ function setBar(barId, valId, value) {
 }
 
 function renderReport(report) {
-
   const { score, sections } = report;
 
   document.getElementById("scoreOverall").textContent =
@@ -161,9 +146,7 @@ function renderReport(report) {
   container.innerHTML = "";
 
   SECTION_DISPLAY.forEach(function (item) {
-
     if (item.key === "__SWOT__") {
-
       const card = document.createElement("div");
       card.className = "reportCard";
       card.innerHTML =
@@ -194,9 +177,7 @@ function renderReport(report) {
 }
 
 function reportToPlainText(report) {
-
   const { score, sections } = report;
-
   let text = "IdeaForgeX — Startup Report\n\n";
   text += "Overall Score: " + score.overall + "/100\n";
   text += "Market Demand: " + score.market + "/100\n";
@@ -205,7 +186,6 @@ function reportToPlainText(report) {
   text += "Ease to Start: " + score.difficulty + "/100\n\n";
 
   SECTION_DISPLAY.forEach(function (item) {
-
     if (item.key === "__SWOT__") {
       text += "SWOT ANALYSIS\n";
       text += "Strengths:\n" + (sections.SWOT_STRENGTHS || "") + "\n";
@@ -227,13 +207,10 @@ function reportToPlainText(report) {
 // ------------------------------------
 // Generate report
 // ------------------------------------
-
 async function generateReport() {
-
   const ideaInput = document.getElementById("ideaInput");
   const languageSelect = document.getElementById("languageSelect");
   const generateBtn = document.getElementById("generateBtn");
-
   const idea = ideaInput.value.trim();
 
   if (!idea) {
@@ -246,66 +223,47 @@ async function generateReport() {
   generateBtn.innerHTML = '<span class="spinner"></span> Analyzing your idea...';
 
   try {
-
     const response = await fetch("/api/generate-report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        idea,
-        language: languageSelect.value
-      })
+      body: JSON.stringify({ idea, language: languageSelect.value })
     });
 
     const data = await response.json();
-
     if (!response.ok || !data.success || !data.report) {
       throw new Error(data?.error || "Report generate nahi ho paya.");
     }
 
     currentReport = data.report;
     currentIdeaText = idea;
-
     renderReport(data.report);
     saveToHistory(idea, data.report);
-
   } catch (error) {
-
     console.error("Generate report error:", error);
-    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
-
+    showToast(error.message || "Kuch galat ho gaya, phir try karein.", "error");
   } finally {
-
     generateBtn.disabled = false;
     generateBtn.innerHTML = originalHtml;
   }
 }
 
 // ------------------------------------
-// 🆕 Generic PDF generator — kisi bhi section element
-// ka screenshot lekar multi-page PDF banata hai
+// Generic PDF generator
 // ------------------------------------
-
 async function downloadElementAsPdf(elementId, filePrefix, button) {
-
   const el = document.getElementById(elementId);
 
   if (!window.html2canvas || !window.jspdf) {
-    showToast("PDF library load nahi hui, phir try करें।", "error");
+    showToast("PDF library load nahi hui, phir try karein.", "error");
     return;
   }
 
   const originalHtml = button.innerHTML;
   button.disabled = true;
-  button.innerHTML = '<span class="spinner"></span> PDF बना रहे हैं...';
+  button.innerHTML = '<span class="spinner"></span> PDF ban raha hai...';
 
   try {
-
-    const canvas = await window.html2canvas(el, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      useCORS: true
-    });
-
+    const canvas = await window.html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
 
@@ -316,7 +274,6 @@ async function downloadElementAsPdf(elementId, filePrefix, button) {
 
     let heightLeft = imgHeight;
     let position = 0;
-
     const imgData = canvas.toDataURL("image/jpeg", 0.92);
 
     pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
@@ -331,53 +288,41 @@ async function downloadElementAsPdf(elementId, filePrefix, button) {
 
     pdf.save(filePrefix + "-" + Date.now() + ".pdf");
     showToast("PDF download ho gaya!", "success");
-
   } catch (error) {
-
     console.error("PDF generation error:", error);
-    showToast("PDF banane mein समस्या हुई।", "error");
-
+    showToast("PDF banane mein samasya hui.", "error");
   } finally {
-
     button.disabled = false;
     button.innerHTML = originalHtml;
   }
 }
 
 async function copyPlainText(text) {
-
   try {
     await navigator.clipboard.writeText(text);
     showToast("Copy ho gaya!", "success");
   } catch (error) {
-    showToast("Copy nahi ho paya।", "error");
+    showToast("Copy nahi ho paya.", "error");
   }
 }
 
 async function sharePlainText(title, text) {
-
   if (navigator.share) {
-    try {
-      await navigator.share({ title, text });
-    } catch (error) {
-      // user cancelled — ignore
-    }
+    try { await navigator.share({ title, text }); } catch (error) {}
   } else {
     try {
       await navigator.clipboard.writeText(text);
-      showToast("Copy ho gaya, ab share kar sakte ho।", "info");
+      showToast("Copy ho gaya, ab share kar sakte ho.", "info");
     } catch (error) {
-      showToast("Share/copy nahi ho paya।", "error");
+      showToast("Share/copy nahi ho paya.", "error");
     }
   }
 }
 
 // ------------------------------------
-// 🚀 LAUNCH PLAN
+// LAUNCH PLAN
 // ------------------------------------
-
 let currentLaunchPlan = null;
-
 const LAUNCH_PLAN_DISPLAY = [
   { key: "BUDGET_BREAKDOWN", title: "💰 Budget Breakdown" },
   { key: "PREPARATION", title: "📋 Day 1–7: Preparation" },
@@ -391,39 +336,29 @@ const LAUNCH_PLAN_DISPLAY = [
 ];
 
 function renderSectionsInto(containerId, sectionsSpec, data) {
-
   const container = document.getElementById(containerId);
   container.innerHTML = "";
-
   sectionsSpec.forEach(function (item) {
-
     const content = data[item.key] || "";
     if (!content) return;
-
     const card = document.createElement("div");
     card.className = "reportCard";
-    card.innerHTML =
-      '<div class="reportCardTitle">' + item.title + '</div>' +
-      '<div class="reportCardBody">' + escapeHtml(content) + '</div>';
+    card.innerHTML = '<div class="reportCardTitle">' + item.title + '</div><div class="reportCardBody">' + escapeHtml(content) + '</div>';
     container.appendChild(card);
   });
 }
 
 function sectionsToPlainText(title, sectionsSpec, data) {
-
   let text = title + "\n\n";
-
   sectionsSpec.forEach(function (item) {
     const content = data[item.key];
     if (!content) return;
     text += item.title.replace(/^[^\w]+/, "").trim() + "\n" + content + "\n\n";
   });
-
   return text.trim();
 }
 
 async function generateLaunchPlan() {
-
   if (!currentIdeaText) {
     showToast("Pehle ek idea se report generate karein.", "error");
     return;
@@ -432,10 +367,9 @@ async function generateLaunchPlan() {
   const btn = document.getElementById("generateLaunchPlanBtn");
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Launch plan बना रहे हैं...';
+  btn.innerHTML = '<span class="spinner"></span> Launch plan ban raha hai...';
 
   try {
-
     const response = await fetch("/api/generate-launch-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -447,37 +381,29 @@ async function generateLaunchPlan() {
     });
 
     const data = await response.json();
-
     if (!response.ok || !data.success || !data.plan) {
       throw new Error(data?.error || "Launch plan generate nahi ho paya.");
     }
 
     currentLaunchPlan = data.plan;
-
     renderSectionsInto("launchPlanSections", LAUNCH_PLAN_DISPLAY, data.plan);
 
     const section = document.getElementById("launchPlanSection");
     section.style.display = "block";
     section.scrollIntoView({ behavior: "smooth", block: "start" });
-
   } catch (error) {
-
     console.error("Launch plan error:", error);
-    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
-
+    showToast(error.message || "Kuch galat ho gaya, phir try karein.", "error");
   } finally {
-
     btn.disabled = false;
     btn.innerHTML = originalHtml;
   }
 }
 
 // ------------------------------------
-// 🎤 PITCH DECK
+// PITCH DECK
 // ------------------------------------
-
 let currentPitchDeck = null;
-
 const PITCH_DECK_DISPLAY = [
   { key: "PROBLEM", title: "Problem" },
   { key: "SOLUTION", title: "Solution" },
@@ -491,26 +417,19 @@ const PITCH_DECK_DISPLAY = [
 ];
 
 function renderPitchDeck(data) {
-
   const container = document.getElementById("pitchDeckSlides");
   container.innerHTML = "";
-
   PITCH_DECK_DISPLAY.forEach(function (item) {
-
     const content = data[item.key] || "";
     if (!content) return;
-
     const slide = document.createElement("div");
     slide.className = "pitchSlide";
-    slide.innerHTML =
-      '<div class="pitchSlideTitle">' + item.title + '</div>' +
-      '<div class="pitchSlideBody">' + escapeHtml(content) + '</div>';
+    slide.innerHTML = '<div class="pitchSlideTitle">' + item.title + '</div><div class="pitchSlideBody">' + escapeHtml(content) + '</div>';
     container.appendChild(slide);
   });
 }
 
 async function generatePitchDeck() {
-
   if (!currentIdeaText) {
     showToast("Pehle ek idea se report generate karein.", "error");
     return;
@@ -519,10 +438,9 @@ async function generatePitchDeck() {
   const btn = document.getElementById("generatePitchDeckBtn");
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Pitch deck बना रहे हैं...';
+  btn.innerHTML = '<span class="spinner"></span> Pitch deck ban raha hai...';
 
   try {
-
     const response = await fetch("/api/generate-pitch-deck", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -533,36 +451,28 @@ async function generatePitchDeck() {
     });
 
     const data = await response.json();
-
     if (!response.ok || !data.success || !data.deck) {
       throw new Error(data?.error || "Pitch deck generate nahi ho paya.");
     }
 
     currentPitchDeck = data.deck;
-
     renderPitchDeck(data.deck);
 
     const section = document.getElementById("pitchDeckSection");
     section.style.display = "block";
     section.scrollIntoView({ behavior: "smooth", block: "start" });
-
   } catch (error) {
-
     console.error("Pitch deck error:", error);
-    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
-
+    showToast(error.message || "Kuch galat ho gaya, phir try karein.", "error");
   } finally {
-
     btn.disabled = false;
     btn.innerHTML = originalHtml;
   }
 }
 
 // ------------------------------------
-// 🆕 IdeaForge-AI Hub — AI Assistant, Writing,
-// Translate, Calculator, Student
+// IdeaForge-AI Hub
 // ------------------------------------
-
 let currentToolResult = "";
 let currentToolInput = "";
 let activeTool = "assistant";
@@ -577,18 +487,12 @@ const TOOL_TITLES = {
 };
 
 function openToolWorkspace(tool) {
-
   activeTool = tool;
-
-  document.querySelectorAll(".hubChip").forEach(function (c) {
-    c.classList.remove("active");
-  });
-
+  document.querySelectorAll(".hubChip").forEach(function (c) { c.classList.remove("active"); });
   const activeChip = document.querySelector('.hubChip[data-tool="' + tool + '"]');
   if (activeChip) activeChip.classList.add("active");
 
   if (tool === "image") {
-
     document.getElementById("toolWorkspace").style.display = "none";
     const imgWorkspace = document.getElementById("imageToolWorkspace");
     imgWorkspace.style.display = "block";
@@ -597,52 +501,37 @@ function openToolWorkspace(tool) {
   }
 
   document.getElementById("imageToolWorkspace").style.display = "none";
-
   document.getElementById("toolWorkspaceTitle").textContent = TOOL_TITLES[tool] || "🤖 AI Assistant";
-
   document.getElementById("writingOptions").style.display = tool === "writing" ? "flex" : "none";
   document.getElementById("translateOptions").style.display = tool === "translate" ? "flex" : "none";
 
   const workspace = document.getElementById("toolWorkspace");
   workspace.style.display = "block";
   workspace.scrollIntoView({ behavior: "smooth", block: "start" });
-
   document.getElementById("toolInput").focus();
 }
 
 let lastToolPayload = null;
 
 // ------------------------------------
-// 🆕 Soft daily usage limit (Free plan indicator)
-// Client-side only — a UX nudge, not real enforcement.
-// Real Pro/payment would need a backend + payment gateway,
-// this just tracks & displays usage for now.
+// Usage limit (Free plan indicator)
 // ------------------------------------
-
 const FREE_DAILY_LIMIT = 15;
 const USAGE_KEY = "ideaforge_usage";
 
 function getTodayUsage() {
-
   try {
-
     const today = new Date().toISOString().slice(0, 10);
     const raw = localStorage.getItem(USAGE_KEY);
     const data = raw ? JSON.parse(raw) : {};
-
-    if (data.date !== today) {
-      return { date: today, count: 0 };
-    }
-
+    if (data.date !== today) return { date: today, count: 0 };
     return data;
-
   } catch (e) {
     return { date: new Date().toISOString().slice(0, 10), count: 0 };
   }
 }
 
 function incrementUsage() {
-
   try {
     const usage = getTodayUsage();
     usage.count += 1;
@@ -652,27 +541,20 @@ function incrementUsage() {
 }
 
 function renderUsageBanner() {
-
   const banner = document.getElementById("usageBanner");
   if (!banner) return;
-
   const usage = getTodayUsage();
   const remaining = FREE_DAILY_LIMIT - usage.count;
 
   if (remaining <= 0) {
-
-    banner.textContent = "आज की free limit खत्म हो गई (" + FREE_DAILY_LIMIT + "/" + FREE_DAILY_LIMIT + ") — कल फिर try करें, या Pro जल्द आ रहा है ✨";
+    banner.textContent = "Aaj ki free limit khatam ho gayi (" + FREE_DAILY_LIMIT + "/" + FREE_DAILY_LIMIT + ") — kal phir try karein, ya Pro jald aa raha hai ✨";
     banner.classList.add("limitReached");
     banner.style.display = "block";
-
   } else if (usage.count > 0) {
-
-    banner.textContent = "Free plan: आज " + usage.count + "/" + FREE_DAILY_LIMIT + " uses";
+    banner.textContent = "Free plan: Aaj " + usage.count + "/" + FREE_DAILY_LIMIT + " uses";
     banner.classList.remove("limitReached");
     banner.style.display = "block";
-
   } else {
-
     banner.style.display = "none";
   }
 }
@@ -682,9 +564,8 @@ function hasUsageRemaining() {
 }
 
 async function runAiTool(input, tool) {
-
   if (!hasUsageRemaining()) {
-    showToast("आज की free limit (" + FREE_DAILY_LIMIT + ") खत्म हो गई। कल फिर try करें।", "error");
+    showToast("Aaj ki free limit (" + FREE_DAILY_LIMIT + ") khatam ho gayi. Kal phir try karein.", "error");
     renderUsageBanner();
     return;
   }
@@ -695,13 +576,11 @@ async function runAiTool(input, tool) {
 
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> सोच रहे हैं...';
-
+  btn.innerHTML = '<span class="spinner"></span> Soch rahe hain...';
   resultBox.style.display = "none";
   resultActions.style.display = "none";
 
   try {
-
     const payload = {
       tool: tool,
       input: input,
@@ -712,7 +591,6 @@ async function runAiTool(input, tool) {
       payload.writingType = document.getElementById("writingTypeSelect")?.value || "";
       payload.tone = document.getElementById("toneSelect")?.value || "";
     }
-
     if (tool === "translate") {
       payload.fromLanguage = document.getElementById("fromLanguageSelect")?.value || "auto";
       payload.toLanguage = document.getElementById("toLanguageSelect")?.value || "English";
@@ -727,20 +605,14 @@ async function runAiTool(input, tool) {
     });
 
     const data = await response.json();
-
     if (!response.ok || !data.success || !data.result) {
       throw new Error(data?.error || "Result generate nahi ho paya.");
     }
 
     incrementUsage();
 
-    // 🆕 AI Smart Router — agar "auto" tool tha aur backend ne
-    // koi specific category detect ki, toh UI ko usi tool pe
-    // switch kar do (jaisa user ne khud wahi category choose ki ho)
     let effectiveTool = tool;
-
     if (tool === "auto" && data.route && TOOL_TITLES[data.route] && data.route !== "auto") {
-
       effectiveTool = data.route;
       openToolWorkspace(effectiveTool);
       document.getElementById("toolInput").value = input;
@@ -749,29 +621,23 @@ async function runAiTool(input, tool) {
 
     currentToolResult = data.result;
     currentToolInput = input;
-
     resultBox.textContent = data.result;
     resultBox.style.display = "block";
     resultActions.style.display = "flex";
 
     saveToToolHistory(effectiveTool, input, data.result);
-
   } catch (error) {
-
     console.error("AI tool error:", error);
-    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
-
+    showToast(error.message || "Kuch galat ho gaya, phir try karein.", "error");
   } finally {
-
     btn.disabled = false;
     btn.innerHTML = originalHtml;
   }
 }
 
 // ------------------------------------
-// 🆕 Tool History (localStorage, last 15)
+// Tool History & Favorites
 // ------------------------------------
-
 const TOOL_HISTORY_KEY = "ideaforge_tool_history";
 const TOOL_HISTORY_LIMIT = 15;
 
@@ -779,306 +645,158 @@ function getToolHistory() {
   try {
     const raw = localStorage.getItem(TOOL_HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+  } catch (e) { return []; }
 }
 
 function saveToToolHistory(tool, input, result) {
-
   try {
-
     let list = getToolHistory();
-
     list.unshift({
-      tool: tool,
-      input: input,
-      result: result,
+      tool: tool, input: input, result: result,
       label: (TOOL_TITLES[tool] || tool) + ": " + input.slice(0, 50),
       savedAt: Date.now()
     });
-
     while (list.length > TOOL_HISTORY_LIMIT) list.pop();
-
     localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(list));
     renderToolHistory();
-
-  } catch (error) {
-    console.error("Tool history save error:", error);
-  }
+  } catch (error) { console.error("Tool history save error:", error); }
 }
 
 function renderToolHistory() {
-
   const list = getToolHistory();
   const section = document.getElementById("toolHistorySection");
   const row = document.getElementById("toolHistoryRow");
-
   if (!section || !row) return;
-
-  if (list.length === 0) {
-    section.style.display = "none";
-    return;
-  }
+  if (list.length === 0) { section.style.display = "none"; return; }
 
   row.innerHTML = "";
-
   list.forEach(function (item) {
-
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "historyItem";
     btn.textContent = item.label;
-
     btn.addEventListener("click", function () {
-
       openToolWorkspace(item.tool);
       document.getElementById("toolInput").value = item.input;
-
       currentToolResult = item.result;
       currentToolInput = item.input;
-
-      const resultBox = document.getElementById("toolResult");
-      const resultActions = document.getElementById("toolResultActions");
-
-      resultBox.textContent = item.result;
-      resultBox.style.display = "block";
-      resultActions.style.display = "flex";
+      document.getElementById("toolResult").textContent = item.result;
+      document.getElementById("toolResult").style.display = "block";
+      document.getElementById("toolResultActions").style.display = "flex";
     });
-
     row.appendChild(btn);
   });
-
   section.style.display = "block";
 }
 
-// ------------------------------------
-// 🆕 Favorites (localStorage)
-// ------------------------------------
-
 const TOOL_FAVORITES_KEY = "ideaforge_tool_favorites";
-
 function getToolFavorites() {
   try {
     const raw = localStorage.getItem(TOOL_FAVORITES_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+  } catch (e) { return []; }
 }
 
 function saveToToolFavorites(tool, input, result) {
-
   try {
-
     let list = getToolFavorites();
-
     list.unshift({
-      tool: tool,
-      input: input,
-      result: result,
+      tool: tool, input: input, result: result,
       label: (TOOL_TITLES[tool] || tool) + ": " + input.slice(0, 50),
       savedAt: Date.now()
     });
-
     localStorage.setItem(TOOL_FAVORITES_KEY, JSON.stringify(list));
     renderToolFavorites();
     showToast("Favorites mein save ho gaya! ⭐", "success");
-
-  } catch (error) {
-    console.error("Favorites save error:", error);
-  }
+  } catch (error) { console.error("Favorites save error:", error); }
 }
 
 function renderToolFavorites() {
-
   const list = getToolFavorites();
   const section = document.getElementById("toolFavoritesSection");
   const row = document.getElementById("toolFavoritesRow");
-
   if (!section || !row) return;
-
-  if (list.length === 0) {
-    section.style.display = "none";
-    return;
-  }
+  if (list.length === 0) { section.style.display = "none"; return; }
 
   row.innerHTML = "";
-
   list.forEach(function (item) {
-
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "historyItem";
     btn.textContent = "⭐ " + item.label;
-
     btn.addEventListener("click", function () {
-
       openToolWorkspace(item.tool);
       document.getElementById("toolInput").value = item.input;
-
       currentToolResult = item.result;
       currentToolInput = item.input;
-
-      const resultBox = document.getElementById("toolResult");
-      const resultActions = document.getElementById("toolResultActions");
-
-      resultBox.textContent = item.result;
-      resultBox.style.display = "block";
-      resultActions.style.display = "flex";
+      document.getElementById("toolResult").textContent = item.result;
+      document.getElementById("toolResult").style.display = "block";
+      document.getElementById("toolResultActions").style.display = "flex";
     });
-
     row.appendChild(btn);
   });
-
   section.style.display = "block";
 }
 
 // ------------------------------------
-// 🆕 UI Translation (buttons/menus, not just AI output)
+// 🌍 UI Translation (EXPANDED: 19+ Languages)
 // ------------------------------------
-
 const UI_STRINGS = {
-  en: {
-    tagline: "AI Tools for Everyone",
-    languageLabel: "🌐 Language",
-    hubLabel: "✨ What do you want to do?",
-    askAiBtn: "➤ Ask AI",
-    chipAssistant: "🤖 AI Assistant",
-    chipWriting: "✍️ Writing",
-    chipTranslate: "🌐 Translate",
-    chipCalculator: "🧮 Calculator",
-    chipBusiness: "💼 Business",
-    chipStudent: "📚 Student",
-    chipStatus: "🎨 Status",
-    chipAd: "📢 Advertisement",
-    chipImage: "📸 Image Tools",
-    chipVoice: "🎤 Voice AI",
-    generateBtn: "✨ Generate",
-    copyBtn: "📋 Copy",
-    regenerateBtn: "🔄 Regenerate",
-    saveBtn: "⭐ Save",
-    shareBtn: "📤 Share"
-  },
-  hi: {
-    tagline: "सबके लिए AI टूल्स",
-    languageLabel: "🌐 भाषा",
-    hubLabel: "✨ आप क्या करना चाहते हैं?",
-    askAiBtn: "➤ AI से पूछें",
-    chipAssistant: "🤖 AI सहायक",
-    chipWriting: "✍️ लेखन",
-    chipTranslate: "🌐 अनुवाद",
-    chipCalculator: "🧮 कैलकुलेटर",
-    chipBusiness: "💼 व्यापार",
-    chipStudent: "📚 छात्र सहायता",
-    chipStatus: "🎨 स्टेटस",
-    chipAd: "📢 विज्ञापन",
-    chipImage: "📸 इमेज टूल्स",
-    chipVoice: "🎤 वॉइस AI",
-    generateBtn: "✨ बनाएं",
-    copyBtn: "📋 कॉपी",
-    regenerateBtn: "🔄 दोबारा बनाएं",
-    saveBtn: "⭐ सेव करें",
-    shareBtn: "📤 शेयर करें"
-  },
-  bn: {
-    tagline: "সবার জন্য AI টুলস",
-    languageLabel: "🌐 ভাষা",
-    hubLabel: "✨ আপনি কী করতে চান?",
-    askAiBtn: "➤ AI কে জিজ্ঞাসা করুন",
-    chipAssistant: "🤖 AI সহায়ক",
-    chipWriting: "✍️ লেখা",
-    chipTranslate: "🌐 অনুবাদ",
-    chipCalculator: "🧮 ক্যালকুলেটর",
-    chipBusiness: "💼 ব্যবসা",
-    chipStudent: "📚 ছাত্র সহায়ক",
-    chipStatus: "🎨 স্ট্যাটাস",
-    chipAd: "📢 বিজ্ঞাপন",
-    chipImage: "📸 ইমেজ টুলস",
-    chipVoice: "🎤 ভয়েস AI",
-    generateBtn: "✨ তৈরি করুন",
-    copyBtn: "📋 কপি",
-    regenerateBtn: "🔄 আবার তৈরি করুন",
-    saveBtn: "⭐ সেভ করুন",
-    shareBtn: "📤 শেয়ার করুন"
-  },
-  ur: {
-    tagline: "سب کے لیے AI ٹولز",
-    languageLabel: "🌐 زبان",
-    hubLabel: "✨ آپ کیا کرنا چاہتے ہیں؟",
-    askAiBtn: "➤ AI سے پوچھیں",
-    chipAssistant: "🤖 AI اسسٹنٹ",
-    chipWriting: "✍️ تحریر",
-    chipTranslate: "🌐 ترجمہ",
-    chipCalculator: "🧮 کیلکولیٹر",
-    chipBusiness: "💼 کاروبار",
-    chipStudent: "📚 طالب علم مدد",
-    chipStatus: "🎨 اسٹیٹس",
-    chipAd: "📢 اشتہار",
-    chipImage: "📸 امیج ٹولز",
-    chipVoice: "🎤 وائس AI",
-    generateBtn: "✨ بنائیں",
-    copyBtn: "📋 کاپی",
-    regenerateBtn: "🔄 دوبارہ بنائیں",
-    saveBtn: "⭐ محفوظ کریں",
-    shareBtn: "📤 شیئر کریں"
-  }
+  en: { tagline: "AI Tools for Everyone", languageLabel: "🌐 Language", hubLabel: "✨ What do you want to do?", askAiBtn: "➤ Ask AI", chipAssistant: "🤖 AI Assistant", chipWriting: "✍️ Writing", chipTranslate: "🌐 Translate", chipCalculator: "🧮 Calculator", chipBusiness: "💼 Business", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Advertisement", chipImage: "📸 Image Tools", chipVoice: "🎤 Voice AI", generateBtn: "✨ Generate", copyBtn: "📋 Copy", regenerateBtn: "🔄 Regenerate", saveBtn: "⭐ Save", shareBtn: "📤 Share" },
+  hi: { tagline: "सबके लिए AI टूल्स", languageLabel: "🌐 भाषा", hubLabel: "✨ आप क्या करना चाहते हैं?", askAiBtn: "➤ AI से पूछें", chipAssistant: "🤖 AI सहायक", chipWriting: "✍️ लेखन", chipTranslate: "🌐 अनुवाद", chipCalculator: "🧮 कैलकुलेटर", chipBusiness: "💼 व्यापार", chipStudent: "📚 छात्र सहायता", chipStatus: "🎨 स्टेटस", chipAd: "📢 विज्ञापन", chipImage: "📸 इमेज टूल्स", chipVoice: "🎤 वॉइस AI", generateBtn: "✨ बनाएं", copyBtn: "📋 कॉपी", regenerateBtn: "🔄 दोबारा बनाएं", saveBtn: "⭐ सेव करें", shareBtn: "📤 शेयर करें" },
+  bn: { tagline: "সবার জন্য AI টুলস", languageLabel: "🌐 ভাষা", hubLabel: "✨ আপনি কী করতে চান?", askAiBtn: "➤ AI কে জিজ্ঞাসা করুন", chipAssistant: "🤖 AI সহায়ক", chipWriting: "✍️ লেখা", chipTranslate: "🌐 অনুবাদ", chipCalculator: "🧮 ক্যালকুলেটর", chipBusiness: "💼 ব্যবসা", chipStudent: "📚 ছাত্র সহায়ক", chipStatus: "🎨 স্ট্যাটাস", chipAd: "📢 বিজ্ঞাপন", chipImage: "📸 ইমেজ টুলস", chipVoice: "🎤 ভয়েস AI", generateBtn: "✨ তৈরি করুন", copyBtn: "📋 কপি", regenerateBtn: "🔄 আবার তৈরি করুন", saveBtn: "⭐ সেভ করুন", shareBtn: "📤 শেয়ার করুন" },
+  ur: { tagline: "سب کے لیے AI ٹولز", languageLabel: "🌐 زبان", hubLabel: "✨ آپ کیا کرنا چاہتے ہیں؟", askAiBtn: "➤ AI سے پوچھیں", chipAssistant: "🤖 AI اسسٹنٹ", chipWriting: "✍️ تحریر", chipTranslate: "🌐 ترجمہ", chipCalculator: "🧮 کیلکولیٹر", chipBusiness: "💼 کاروبار", chipStudent: "📚 طالب علم مدد", chipStatus: "🎨 اسٹیٹس", chipAd: "📢 اشتہار", chipImage: "📸 امیج ٹولز", chipVoice: "🎤 وائس AI", generateBtn: "✨ بنائیں", copyBtn: "📋 کاپی", regenerateBtn: "🔄 دوبارہ بنائیں", saveBtn: "⭐ محفوظ کریں", shareBtn: "📤 شیئر کریں" },
+  es: { tagline: "Herramientas de IA para todos", languageLabel: "🌐 Idioma", hubLabel: "✨ ¿Qué quieres hacer?", askAiBtn: "➤ Preguntar a la IA", chipAssistant: "🤖 Asistente de IA", chipWriting: "✍️ Escritura", chipTranslate: "🌐 Traducir", chipCalculator: "🧮 Calculadora", chipBusiness: "💼 Negocios", chipStudent: "📚 Estudiante", chipStatus: "🎨 Estado", chipAd: "📢 Anuncio", chipImage: "📸 Herramientas de imagen", chipVoice: "🎤 Voz IA", generateBtn: "✨ Generar", copyBtn: "📋 Copiar", regenerateBtn: "🔄 Regenerar", saveBtn: "⭐ Guardar", shareBtn: "📤 Compartir" },
+  fr: { tagline: "Outils d'IA pour tous", languageLabel: "🌐 Langue", hubLabel: "✨ Que voulez-vous faire ?", askAiBtn: "➤ Demander à l'IA", chipAssistant: "🤖 Assistant IA", chipWriting: "✍️ Rédaction", chipTranslate: "🌐 Traduire", chipCalculator: "🧮 Calculatrice", chipBusiness: "💼 Entreprise", chipStudent: "📚 Étudiant", chipStatus: "🎨 Statut", chipAd: "📢 Publicité", chipImage: "📸 Outils d'image", chipVoice: "🎤 Voix IA", generateBtn: "✨ Générer", copyBtn: "📋 Copier", regenerateBtn: "🔄 Régénérer", saveBtn: "⭐ Sauvegarder", shareBtn: "📤 Partager" },
+  de: { tagline: "KI-Tools für alle", languageLabel: "🌐 Sprache", hubLabel: "✨ Was möchten Sie tun?", askAiBtn: "➤ KI fragen", chipAssistant: "🤖 KI-Assistent", chipWriting: "✍️ Schreiben", chipTranslate: "🌐 Übersetzen", chipCalculator: "🧮 Rechner", chipBusiness: "💼 Geschäft", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Werbung", chipImage: "📸 Bild-Tools", chipVoice: "🎤 Sprach-KI", generateBtn: "✨ Generieren", copyBtn: "📋 Kopieren", regenerateBtn: "🔄 Neu generieren", saveBtn: "⭐ Speichern", shareBtn: "📤 Teilen" },
+  pt: { tagline: "Ferramentas de IA para todos", languageLabel: "🌐 Idioma", hubLabel: "✨ O que você quer fazer?", askAiBtn: "➤ Perguntar à IA", chipAssistant: "🤖 Assistente de IA", chipWriting: "✍️ Escrita", chipTranslate: "🌐 Traduzir", chipCalculator: "🧮 Calculadora", chipBusiness: "💼 Negócios", chipStudent: "📚 Estudante", chipStatus: "🎨 Status", chipAd: "📢 Anúncio", chipImage: "📸 Ferramentas de imagem", chipVoice: "🎤 Voz IA", generateBtn: "✨ Gerar", copyBtn: "📋 Copiar", regenerateBtn: "🔄 Regenerar", saveBtn: "⭐ Salvar", shareBtn: "📤 Compartilhar" },
+  ru: { tagline: "ИИ-инструменты для всех", languageLabel: "🌐 Язык", hubLabel: "✨ Что вы хотите сделать?", askAiBtn: "➤ Спросить ИИ", chipAssistant: "🤖 ИИ-ассистент", chipWriting: "✍️ Письмо", chipTranslate: "🌐 Перевести", chipCalculator: "🧮 Калькулятор", chipBusiness: "💼 Бизнес", chipStudent: "📚 Студент", chipStatus: "🎨 Статус", chipAd: "📢 Реклама", chipImage: "📸 Инструменты изображений", chipVoice: "🎤 Голосовой ИИ", generateBtn: "✨ Создать", copyBtn: "📋 Копировать", regenerateBtn: "🔄 Пересоздать", saveBtn: "⭐ Сохранить", shareBtn: "📤 Поделиться" },
+  ja: { tagline: "すべての人のためのAIツール", languageLabel: "🌐 言語", hubLabel: "✨ 何をしたいですか？", askAiBtn: "➤ AIに質問", chipAssistant: "🤖 AIアシスタント", chipWriting: "✍️ 執筆", chipTranslate: "🌐 翻訳", chipCalculator: "🧮 電卓", chipBusiness: "💼 ビジネス", chipStudent: "📚 学生", chipStatus: "🎨 ステータス", chipAd: "📢 広告", chipImage: "📸 画像ツール", chipVoice: "🎤 ボイスAI", generateBtn: "✨ 生成", copyBtn: "📋 コピー", regenerateBtn: "🔄 再生成", saveBtn: "⭐ 保存", shareBtn: "📤 共有" },
+  ko: { tagline: "모두를 위한 AI 도구", languageLabel: "🌐 언어", hubLabel: "✨ 무엇을 하고 싶으신가요?", askAiBtn: "➤ AI에게 질문", chipAssistant: "🤖 AI 어시스턴트", chipWriting: "✍️ 작문", chipTranslate: "🌐 번역", chipCalculator: "🧮 계산기", chipBusiness: "💼 비즈니스", chipStudent: "📚 학생", chipStatus: "🎨 상태", chipAd: "📢 광고", chipImage: "📸 이미지 도구", chipVoice: "🎤 음성 AI", generateBtn: "✨ 생성", copyBtn: "📋 복사", regenerateBtn: "🔄 재생성", saveBtn: "⭐ 저장", shareBtn: "📤 공유" },
+  zh: { tagline: "适合所有人的AI工具", languageLabel: "🌐 语言", hubLabel: "✨ 你想做什么？", askAiBtn: "➤ 询问AI", chipAssistant: "🤖 AI助手", chipWriting: "✍️ 写作", chipTranslate: "🌐 翻译", chipCalculator: "🧮 计算器", chipBusiness: "💼 商业", chipStudent: "📚 学生", chipStatus: "🎨 状态", chipAd: "📢 广告", chipImage: "📸 图像工具", chipVoice: "🎤 语音AI", generateBtn: "✨ 生成", copyBtn: "📋 复制", regenerateBtn: "🔄 重新生成", saveBtn: "⭐ 保存", shareBtn: "📤 分享" },
+  ar: { tagline: "أدوات الذكاء الاصطناعي للجميع", languageLabel: "🌐 اللغة", hubLabel: "✨ ماذا تريد أن تفعل؟", askAiBtn: "➤ اسأل الذكاء الاصطناعي", chipAssistant: "🤖 مساعد الذكاء الاصطناعي", chipWriting: "✍️ كتابة", chipTranslate: "🌐 ترجمة", chipCalculator: "🧮 حاسبة", chipBusiness: "💼 أعمال", chipStudent: "📚 طالب", chipStatus: "🎨 حالة", chipAd: "📢 إعلان", chipImage: "📸 أدوات الصور", chipVoice: "🎤 صوت الذكاء الاصطناعي", generateBtn: "✨ إنشاء", copyBtn: "📋 نسخ", regenerateBtn: "🔄 إعادة إنشاء", saveBtn: "⭐ حفظ", shareBtn: "📤 مشاركة" },
+  tr: { tagline: "Herkes için Yapay Zeka Araçları", languageLabel: "🌐 Dil", hubLabel: "✨ Ne yapmak istiyorsunuz?", askAiBtn: "➤ Yapay Zekaya Sor", chipAssistant: "🤖 Yapay Zeka Asistanı", chipWriting: "✍️ Yazma", chipTranslate: "🌐 Çevir", chipCalculator: "🧮 Hesap Makinesi", chipBusiness: "💼 İş", chipStudent: "📚 Öğrenci", chipStatus: "🎨 Durum", chipAd: "📢 Reklam", chipImage: "📸 Resim Araçları", chipVoice: "🎤 Sesli Yapay Zeka", generateBtn: "✨ Oluştur", copyBtn: "📋 Kopyala", regenerateBtn: "🔄 Yeniden Oluştur", saveBtn: "⭐ Kaydet", shareBtn: "📤 Paylaş" },
+  vi: { tagline: "Công cụ AI cho mọi người", languageLabel: "🌐 Ngôn ngữ", hubLabel: "✨ Bạn muốn làm gì?", askAiBtn: "➤ Hỏi AI", chipAssistant: "🤖 Trợ lý AI", chipWriting: "✍️ Viết", chipTranslate: "🌐 Dịch", chipCalculator: "🧮 Máy tính", chipBusiness: "💼 Kinh doanh", chipStudent: "📚 Học sinh", chipStatus: "🎨 Trạng thái", chipAd: "📢 Quảng cáo", chipImage: "📸 Công cụ hình ảnh", chipVoice: "🎤 Giọng nói AI", generateBtn: "✨ Tạo", copyBtn: "📋 Sao chép", regenerateBtn: "🔄 Tạo lại", saveBtn: "⭐ Lưu", shareBtn: "📤 Chia sẻ" },
+  id: { tagline: "Alat AI untuk Semua", languageLabel: "🌐 Bahasa", hubLabel: "✨ Apa yang ingin Anda lakukan?", askAiBtn: "➤ Tanya AI", chipAssistant: "🤖 Asisten AI", chipWriting: "✍️ Menulis", chipTranslate: "🌐 Terjemahkan", chipCalculator: "🧮 Kalkulator", chipBusiness: "💼 Bisnis", chipStudent: "📚 Pelajar", chipStatus: "🎨 Status", chipAd: "📢 Iklan", chipImage: "📸 Alat Gambar", chipVoice: "🎤 Suara AI", generateBtn: "✨ Buat", copyBtn: "📋 Salin", regenerateBtn: "🔄 Buat Ulang", saveBtn: "⭐ Simpan", shareBtn: "📤 Bagikan" },
+  nl: { tagline: "AI-tools voor iedereen", languageLabel: "🌐 Taal", hubLabel: "✨ Wat wilt u doen?", askAiBtn: "➤ Vraag het aan AI", chipAssistant: "🤖 AI-assistent", chipWriting: "✍️ Schrijven", chipTranslate: "🌐 Vertalen", chipCalculator: "🧮 Rekenmachine", chipBusiness: "💼 Zakelijk", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Advertentie", chipImage: "📸 Beeldtools", chipVoice: "🎤 Spraak-AI", generateBtn: "✨ Genereren", copyBtn: "📋 Kopiëren", regenerateBtn: "🔄 Opnieuw genereren", saveBtn: "⭐ Opslaan", shareBtn: "📤 Delen" },
+  pl: { tagline: "Narzędzia AI dla wszystkich", languageLabel: "🌐 Język", hubLabel: "✨ Co chcesz zrobić?", askAiBtn: "➤ Zapytaj AI", chipAssistant: "🤖 Asystent AI", chipWriting: "✍️ Pisanie", chipTranslate: "🌐 Tłumacz", chipCalculator: "🧮 Kalkulator", chipBusiness: "💼 Biznes", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Reklama", chipImage: "📸 Narzędzia obrazowe", chipVoice: "🎤 Głos AI", generateBtn: "✨ Generuj", copyBtn: "📋 Kopiuj", regenerateBtn: "🔄 Wygeneruj ponownie", saveBtn: "⭐ Zapisz", shareBtn: "📤 Udostępnij" },
+  sv: { tagline: "AI-verktyg för alla", languageLabel: "🌐 Språk", hubLabel: "✨ Vad vill du göra?", askAiBtn: "➤ Fråga AI", chipAssistant: "🤖 AI-assistent", chipWriting: "✍️ Skrivande", chipTranslate: "🌐 Översätt", chipCalculator: "🧮 Kalkylator", chipBusiness: "💼 Företag", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Annons", chipImage: "📸 Bildverktyg", chipVoice: "🎤 Röst-AI", generateBtn: "✨ Generera", copyBtn: "📋 Kopiera", regenerateBtn: "🔄 Generera om", saveBtn: "⭐ Spara", shareBtn: "📤 Dela" }
 };
 
 const UI_LANG_KEY = "ideaforge_ui_lang";
 
 function applyUILanguage(lang) {
-
   const dict = UI_STRINGS[lang] || UI_STRINGS.en;
-
   document.querySelectorAll("[data-i18n]").forEach(function (el) {
-
     const key = el.getAttribute("data-i18n");
-
-    if (dict[key]) {
-      el.textContent = dict[key];
-    }
+    if (dict[key]) el.textContent = dict[key];
   });
-
-  try {
-    localStorage.setItem(UI_LANG_KEY, lang);
-  } catch (e) {}
+  try { localStorage.setItem(UI_LANG_KEY, lang); } catch (e) {}
 }
 
 function getSavedUILanguage() {
-  try {
-    return localStorage.getItem(UI_LANG_KEY) || "en";
-  } catch (e) {
-    return "en";
-  }
+  try { return localStorage.getItem(UI_LANG_KEY) || "en"; } catch (e) { return "en"; }
 }
 
 // ------------------------------------
-// 🆕 Voice input — browser ke native Speech
-// Recognition API se (Chrome/Edge support karte hain)
+// 🎤 Voice Input & Text-to-Speech (Real Voice AI)
 // ------------------------------------
-
 function startVoiceInput(targetTextareaId, micBtn) {
-
   const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (!SpeechRecognitionAPI) {
     showToast("Is browser mein voice input support nahi hai.", "error");
     return;
   }
 
   const recognition = new SpeechRecognitionAPI();
-  recognition.lang = "hi-IN";
+  recognition.lang = "hi-IN"; // Default, can be dynamic based on UI lang
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
-
   micBtn.classList.add("listening");
 
   recognition.onresult = function (event) {
-
     const transcript = event.results[0][0].transcript;
     const textarea = document.getElementById(targetTextareaId);
-
     if (textarea) {
       textarea.value = (textarea.value ? textarea.value + " " : "") + transcript;
       textarea.dispatchEvent(new Event("input"));
@@ -1087,27 +805,33 @@ function startVoiceInput(targetTextareaId, micBtn) {
 
   recognition.onerror = function (event) {
     console.error("Speech recognition error:", event.error);
-    if (event.error !== "aborted") {
-      showToast("Voice sunayi nahi diya, फिर try करें।", "error");
-    }
+    if (event.error !== "aborted") showToast("Voice sunayi nahi diya, phir try karein.", "error");
   };
 
   recognition.onend = function () {
     micBtn.classList.remove("listening");
   };
 
-  try {
-    recognition.start();
-  } catch (e) {
-    micBtn.classList.remove("listening");
+  try { recognition.start(); } catch (e) { micBtn.classList.remove("listening"); }
+}
+
+// 🆕 Text-to-Speech: AI ko bolne ki capability
+function speakText(text, lang = "hi-IN") {
+  if (!window.speechSynthesis) {
+    showToast("Is browser mein Text-to-Speech support nahi hai.", "error");
+    return;
   }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
 }
 
 // ------------------------------------
-// 🆕 Image Tools — photo upload karke
-// describe / extract text / ask about image
+// 📸 Image Tools
 // ------------------------------------
-
 let currentImageBase64 = "";
 let currentImageResult = "";
 
@@ -1121,14 +845,12 @@ function fileToBase64(file) {
 }
 
 async function runImageTool() {
-
   if (!currentImageBase64) {
     showToast("Pehle ek photo upload karein.", "error");
     return;
   }
-
   if (!hasUsageRemaining()) {
-    showToast("आज की free limit khatam ho gayi.", "error");
+    showToast("Aaj ki free limit khatam ho gayi.", "error");
     return;
   }
 
@@ -1138,13 +860,11 @@ async function runImageTool() {
 
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Analyze कर रहे हैं...';
-
+  btn.innerHTML = '<span class="spinner"></span> Analyze kar rahe hain...';
   resultBox.style.display = "none";
   resultActions.style.display = "none";
 
   try {
-
     const action = document.getElementById("imageActionSelect")?.value || "describe";
     const question = document.getElementById("imageQuestionInput")?.value.trim() || "";
     const language = document.getElementById("languageSelect")?.value || "auto";
@@ -1152,14 +872,10 @@ async function runImageTool() {
     const response = await fetch("/api/image-tool", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageBase64: currentImageBase64,
-        action, question, language
-      })
+      body: JSON.stringify({ imageBase64: currentImageBase64, action, question, language })
     });
 
     const data = await response.json();
-
     if (!response.ok || !data.success || !data.result) {
       throw new Error(data?.error || "Image analyze nahi ho payi.");
     }
@@ -1168,16 +884,11 @@ async function runImageTool() {
     resultBox.textContent = data.result;
     resultBox.style.display = "block";
     resultActions.style.display = "flex";
-
     incrementUsage();
-
   } catch (error) {
-
     console.error("Image tool error:", error);
-    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
-
+    showToast(error.message || "Kuch galat ho gaya, phir try karein.", "error");
   } finally {
-
     btn.disabled = false;
     btn.innerHTML = originalHtml;
   }
@@ -1186,14 +897,11 @@ async function runImageTool() {
 // ------------------------------------
 // Init
 // ------------------------------------
-
 document.addEventListener("DOMContentLoaded", function () {
-
   renderHistory();
   renderToolHistory();
   renderToolFavorites();
   renderUsageBanner();
-
   applyUILanguage(getSavedUILanguage());
 
   const uiLanguageSelect = document.getElementById("uiLanguageSelect");
@@ -1206,7 +914,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const ideaInput = document.getElementById("ideaInput");
   const charCount = document.getElementById("charCount");
-
   if (ideaInput && charCount) {
     ideaInput.addEventListener("input", function () {
       charCount.textContent = ideaInput.value.length;
@@ -1214,22 +921,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const generateBtn = document.getElementById("generateBtn");
-  if (generateBtn) {
-    generateBtn.addEventListener("click", generateReport);
-  }
-
-  // ------------------------------------
-  // Download PDF — reportSection ka screenshot lekar
-  // multi-page PDF banate hain (isse Hindi/Tamil/koi bhi
-  // language sahi dikhti hai, font embedding ki zaroorat nahi)
-  // ------------------------------------
+  if (generateBtn) generateBtn.addEventListener("click", generateReport);
 
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
-
   if (downloadPdfBtn) {
-
     downloadPdfBtn.addEventListener("click", function () {
-
       if (!currentReport) return;
       downloadElementAsPdf("reportSection", "IdeaForgeX-Report", downloadPdfBtn);
     });
@@ -1238,42 +934,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const copyReportBtn = document.getElementById("copyReportBtn");
   if (copyReportBtn) {
     copyReportBtn.addEventListener("click", async function () {
-
       if (!currentReport) return;
-
       try {
         await navigator.clipboard.writeText(reportToPlainText(currentReport));
         showToast("Report copy ho gaya!", "success");
-      } catch (error) {
-        showToast("Copy nahi ho paya।", "error");
-      }
+      } catch (error) { showToast("Copy nahi ho paya.", "error"); }
     });
   }
 
   const shareReportBtn = document.getElementById("shareReportBtn");
   if (shareReportBtn) {
     shareReportBtn.addEventListener("click", async function () {
-
       if (!currentReport) return;
-
       const text = reportToPlainText(currentReport);
-
       if (navigator.share) {
-
-        try {
-          await navigator.share({ title: "IdeaForgeX Report", text });
-        } catch (error) {
-          // user cancelled share — ignore
-        }
-
+        try { await navigator.share({ title: "IdeaForgeX Report", text }); } catch (error) {}
       } else {
-
         try {
           await navigator.clipboard.writeText(text);
-          showToast("Report copy ho gaya, ab share kar sakte ho।", "info");
-        } catch (error) {
-          showToast("Share/copy nahi ho paya।", "error");
-        }
+          showToast("Report copy ho gaya, ab share kar sakte ho.", "info");
+        } catch (error) { showToast("Share/copy nahi ho paya.", "error"); }
       }
     });
   }
@@ -1281,26 +961,20 @@ document.addEventListener("DOMContentLoaded", function () {
   const newIdeaBtn = document.getElementById("newIdeaBtn");
   if (newIdeaBtn) {
     newIdeaBtn.addEventListener("click", function () {
-
       currentReport = null;
       currentIdeaText = "";
-
       document.getElementById("ideaInput").value = "";
       document.getElementById("charCount").textContent = "0";
       document.getElementById("reportSection").style.display = "none";
       document.getElementById("launchPlanSection").style.display = "none";
       document.getElementById("pitchDeckSection").style.display = "none";
-
       window.scrollTo({ top: 0, behavior: "smooth" });
       document.getElementById("ideaInput").focus();
     });
   }
 
-  // 🆕 Launch Plan
   const generateLaunchPlanBtn = document.getElementById("generateLaunchPlanBtn");
-  if (generateLaunchPlanBtn) {
-    generateLaunchPlanBtn.addEventListener("click", generateLaunchPlan);
-  }
+  if (generateLaunchPlanBtn) generateLaunchPlanBtn.addEventListener("click", generateLaunchPlan);
 
   const downloadLaunchPlanPdfBtn = document.getElementById("downloadLaunchPlanPdfBtn");
   if (downloadLaunchPlanPdfBtn) {
@@ -1325,11 +999,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 🆕 Pitch Deck
   const generatePitchDeckBtn = document.getElementById("generatePitchDeckBtn");
-  if (generatePitchDeckBtn) {
-    generatePitchDeckBtn.addEventListener("click", generatePitchDeck);
-  }
+  if (generatePitchDeckBtn) generatePitchDeckBtn.addEventListener("click", generatePitchDeck);
 
   const downloadPitchDeckPdfBtn = document.getElementById("downloadPitchDeckPdfBtn");
   if (downloadPitchDeckPdfBtn) {
@@ -1354,69 +1025,40 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 🆕 Hub category chips
   document.querySelectorAll(".hubChip").forEach(function (chip) {
-
     chip.addEventListener("click", function () {
-
       const tool = chip.getAttribute("data-tool");
       const scrollTarget = chip.getAttribute("data-scroll");
       const externalUrl = chip.getAttribute("data-external");
       const isSoon = chip.getAttribute("data-soon");
 
-      if (tool) {
-        openToolWorkspace(tool);
-        return;
-      }
-
+      if (tool) { openToolWorkspace(tool); return; }
       if (scrollTarget) {
         const el = document.getElementById(scrollTarget);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
-
-      if (externalUrl) {
-        window.open(externalUrl, "_blank");
-        return;
-      }
-
-      if (isSoon) {
-        showToast("Yeh feature jald aa raha hai! ✨", "info");
-        return;
-      }
+      if (externalUrl) { window.open(externalUrl, "_blank"); return; }
+      if (isSoon) { showToast("Yeh feature jald aa raha hai! ✨", "info"); return; }
     });
   });
 
-  // 🆕 Hub "Ask AI" — seedha hub box se auto tool
   const hubAskBtn = document.getElementById("hubAskBtn");
   if (hubAskBtn) {
     hubAskBtn.addEventListener("click", function () {
-
       const text = document.getElementById("hubInput").value.trim();
-
-      if (!text) {
-        showToast("Pehle kuch likhein.", "error");
-        return;
-      }
-
+      if (!text) { showToast("Pehle kuch likhein.", "error"); return; }
       openToolWorkspace("assistant");
       document.getElementById("toolInput").value = text;
       runAiTool(text, "assistant");
     });
   }
 
-  // 🆕 Tool workspace Generate button
   const toolGenerateBtn = document.getElementById("toolGenerateBtn");
   if (toolGenerateBtn) {
     toolGenerateBtn.addEventListener("click", function () {
-
       const text = document.getElementById("toolInput").value.trim();
-
-      if (!text) {
-        showToast("Pehle kuch likhein.", "error");
-        return;
-      }
-
+      if (!text) { showToast("Pehle kuch likhein.", "error"); return; }
       runAiTool(text, activeTool);
     });
   }
@@ -1432,9 +1074,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const toolRegenerateBtn = document.getElementById("toolRegenerateBtn");
   if (toolRegenerateBtn) {
     toolRegenerateBtn.addEventListener("click", function () {
-
       if (!lastToolPayload) return;
-
       runAiTool(lastToolPayload.input, lastToolPayload.tool);
     });
   }
@@ -1442,7 +1082,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const toolSaveBtn = document.getElementById("toolSaveBtn");
   if (toolSaveBtn) {
     toolSaveBtn.addEventListener("click", function () {
-
       if (!currentToolResult || !currentToolInput) return;
       saveToToolFavorites(activeTool, currentToolInput, currentToolResult);
     });
@@ -1456,7 +1095,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 🆕 Voice input — hub aur tool workspace dono mein
   const hubMicBtn = document.getElementById("hubMicBtn");
   if (hubMicBtn) {
     hubMicBtn.addEventListener("click", function () {
@@ -1471,7 +1109,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 🆕 Voice AI chip — seedha AI Assistant kholo aur mic shuru karo
   const voiceAiChip = document.getElementById("voiceAiChip");
   if (voiceAiChip) {
     voiceAiChip.addEventListener("click", function () {
@@ -1483,38 +1120,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 🆕 Image Tools — upload, action select, generate, copy/share
   const imageUploadCard = document.getElementById("imageUploadCard");
   const imageFileInput = document.getElementById("imageFileInput");
-
   if (imageUploadCard && imageFileInput) {
-
-    imageUploadCard.addEventListener("click", function () {
-      imageFileInput.click();
-    });
-
+    imageUploadCard.addEventListener("click", function () { imageFileInput.click(); });
     imageFileInput.addEventListener("change", async function () {
-
       const file = imageFileInput.files[0];
       if (!file) return;
-
       try {
-
         currentImageBase64 = await fileToBase64(file);
-
         const preview = document.getElementById("imagePreview");
         const uploadText = document.getElementById("imageUploadText");
-
-        if (preview) {
-          preview.src = currentImageBase64;
-          preview.style.display = "block";
-        }
-        if (uploadText) {
-          uploadText.style.display = "none";
-        }
-
+        if (preview) { preview.src = currentImageBase64; preview.style.display = "block"; }
+        if (uploadText) uploadText.style.display = "none";
       } catch (error) {
-        showToast("Photo load nahi ho payi।", "error");
+        showToast("Photo load nahi ho payi.", "error");
       }
     });
   }
@@ -1522,18 +1142,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const imageActionSelect = document.getElementById("imageActionSelect");
   if (imageActionSelect) {
     imageActionSelect.addEventListener("change", function () {
-
       const questionInput = document.getElementById("imageQuestionInput");
-      if (questionInput) {
-        questionInput.style.display = imageActionSelect.value === "ask" ? "block" : "none";
-      }
+      if (questionInput) questionInput.style.display = imageActionSelect.value === "ask" ? "block" : "none";
     });
   }
 
   const imageGenerateBtn = document.getElementById("imageGenerateBtn");
-  if (imageGenerateBtn) {
-    imageGenerateBtn.addEventListener("click", runImageTool);
-  }
+  if (imageGenerateBtn) imageGenerateBtn.addEventListener("click", runImageTool);
 
   const imageCopyBtn = document.getElementById("imageCopyBtn");
   if (imageCopyBtn) {
@@ -1550,5 +1165,4 @@ document.addEventListener("DOMContentLoaded", function () {
       sharePlainText("IdeaForge-AI Image Tool", currentImageResult);
     });
   }
-
 });
