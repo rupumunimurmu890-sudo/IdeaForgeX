@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX Worker v5.0 - Phase 2: Business & Life Suite
+// IdeaForgeX Worker v6.0 - Phase 3: Creative Studio
 // ========================================
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS, GET", "Access-Control-Allow-Headers": "Content-Type, X-User-ID, X-User-Plan" };
@@ -32,14 +32,25 @@ function buildReportPrompt(idea, lang) { return `You are IdeaForgeX, an expert s
 function buildLaunchPlanPrompt(idea, budget, lang) { return `You are IdeaForgeX, a launch strategist. Idea: "${idea}". Budget: ${budget || "Modest bootstrapped"}. ${langLine(lang)}\nProduce a 30-day launch plan in EXACTLY this format:\n###BUDGET_BREAKDOWN###\n4-6 bullet lines.\n###PREPARATION###\nDay 1-7 tasks.\n###PRODUCT_DEVELOPMENT###\nDay 8-15 tasks.\n###BRANDING###\nDay 16-20 tasks.\n###MARKETING_LAUNCH###\nDay 21-25 tasks.\n###LAUNCH_WEEK###\nDay 26-30 tasks.\n###PRODUCT_IDEAS###\n3-5 variations.\n###PRICING###\n3-4 price points.\n###EXPECTED_SALES###\n30-day sales narrative.`; }
 function buildPitchDeckPrompt(idea, lang) { return `You are IdeaForgeX, a pitch consultant. Idea: "${idea}". ${langLine(lang)}\nProduce pitch deck content in EXACTLY this format (punchy bullets, no fluff):\n###PROBLEM###\n2-3 bullets.\n###SOLUTION###\n2-3 bullets.\n###MARKET###\n2-3 bullets with size.\n###PRODUCT###\n2-3 bullets.\n###BUSINESS_MODEL###\n2-3 bullets.\n###COMPETITION###\n2-3 bullets.\n###FINANCIALS###\n2-3 bullets with numbers.\n###GROWTH###\n2-3 bullets.\n###FUNDING_REQUIREMENT###\n2-3 bullets with ₹ amount.`; }
 
-// 🆕 Phase 2 Prompts
+// 🆕 Phase 3 Prompts
 function buildAutopilotPrompt(input) { return `You are an AI marketing autopilot. User request: "${input}"\nGenerate a COMPLETE marketing package:\n###AD_COPY###\nShort, punchy advertisement copy (2-3 lines)\n###INSTAGRAM_CAPTION###\nEngaging Instagram caption with emojis (3-4 lines)\n###FACEBOOK_POST###\nDetailed Facebook post (4-5 lines)\n###WHATSAPP_MESSAGE###\nCasual WhatsApp message for sharing (2-3 lines)\n###POSTER_TEXT###\nHeadline and subheadline for a poster\n###IMAGE_PROMPT###\nDetailed prompt to generate a marketing image\n###VIDEO_PROMPT###\nScript/prompt for a short marketing video\n###HASHTAGS###\n10-15 relevant hashtags\nRespond in the same language as the user.`; }
-
 function buildGoalPlanPrompt(goal, timeframe) { return `You are an expert life and business coach. \nUser Goal: "${goal}"\nTimeframe: ${timeframe}\n${langLine("auto")}\nCreate a highly actionable, step-by-step roadmap to achieve this goal within the given timeframe.\nFormat exactly like this:\n###OVERVIEW###\n2-3 sentence summary of the strategy.\n###MILESTONES###\nBreak the timeframe into clear milestones (e.g., Month 1, Month 2).\n###ACTION_PLAN###\nSpecific weekly or daily tasks for each milestone.\n###RESOURCES_NEEDED###\nTools, skills, or money needed.\n###POTENTIAL_OBSTACLES###\n3 things that might go wrong and how to fix them.\nBe practical, motivating, and realistic.`; }
-
 function buildMoneyCalcPrompt(business, investment, type) { return `You are an expert financial analyst and business calculator.\nBusiness Idea: "${business}"\nInitial Investment: ${investment}\nBusiness Type: ${type}\n${langLine("auto")}\nCalculate and provide a realistic financial projection. Format exactly like this:\n###INVESTMENT_BREAKDOWN###\nHow the initial investment should be spent (bullet points).\n###MONTHLY_EXPENSES###\nEstimated recurring monthly costs.\n###REVENUE_MODEL###\nHow it will make money and expected pricing.\n###PROFIT_PROJECTION###\nExpected monthly profit for the first 6 months.\n###BREAK_EVEN###\nWhen the business will recover the initial investment.\n###RISKS###\nFinancial risks to watch out for.\nUse realistic numbers and Indian Rupees (₹) unless specified otherwise.`; }
-
 function buildImproveIdeaPrompt(idea) { return `You are a brutally honest but constructive startup mentor.\nUser Idea: "${idea}"\n${langLine("auto")}\nAnalyze this idea and provide honest feedback. Format exactly like this:\n###VERDICT###\nIs this a good idea? (Give a rating out of 10 and a 1-sentence summary).\n###WHAT_WORKS###\n3 strong points of this idea.\n###WHAT_IS_MISSING###\n3 weaknesses or things the user hasn't thought about.\n###PRICING_STRATEGY###\nHow much should they charge? Give specific price ranges.\n###TARGET_AUDIENCE###\nWho exactly will buy this?\n###IMMEDIATE_NEXT_STEPS###\n3 things they should do right now to test this idea without spending money.\nBe direct, practical, and avoid generic advice.`; }
+
+// 🆕 Phase 3: Poster, Video, Workflow
+function buildPosterPrompt(topic) { return `You are an expert graphic designer and copywriter.\nTopic: "${topic}"\n${langLine("auto")}\nCreate content for a beautiful social media poster. Format exactly like this:\n###HEADLINE###\nA short, punchy, attention-grabbing headline (max 6 words).\n###SUBHEADLINE###\nA compelling subheadline (max 12 words).\n###BODY###\nBrief body text or key benefits (2-3 short lines).\n###FOOTER###\nA strong Call to Action (CTA) or contact info (max 10 words).\nKeep it concise, impactful, and visually balanced.`; }
+
+function buildVideoPrompt(topic, platform) { return `You are an expert video scriptwriter and director.\nTopic: "${topic}"\nPlatform: ${platform}\n${langLine("auto")}\nWrite a professional video script. Format exactly like this:\n###TITLE###\nCatchy video title.\n###HOOK###\nFirst 3 seconds: What will grab attention immediately?\n###INTRO###\nBrief introduction (5-10 seconds).\n###BODY###\nMain content broken into 3 key points/scenes. For each scene, provide:\n- Visual: What is on screen?\n- Audio: What is the voiceover/dialogue?\n###CTA###\nStrong Call to Action at the end.\n###HASHTAGS###\n5 relevant hashtags.\nTailor the pacing and style specifically for ${platform}.`; }
+
+function buildWorkflowPrompt(topic, type) { 
+  let instructions = "";
+  if (type === "startup-launch") instructions = "Generate: 1. A 3-sentence Executive Summary. 2. A complete Instagram Social Pack (Caption + Hashtags). 3. A 30-second Video Ad Script.";
+  else if (type === "content-creator") instructions = "Generate: 1. 5 Viral Video Ideas. 2. A detailed Script for the best idea. 3. A Social Media Announcement Post.";
+  else instructions = "Generate: 1. A catchy Product Tagline. 2. A Facebook/Instagram Ad Copy. 3. A WhatsApp Broadcast Message.";
+  
+  return `You are an AI automation expert.\nTopic: "${topic}"\nWorkflow Type: ${type}\n${langLine("auto")}\n${instructions}\nFormat exactly like this:\n###PART_1###\n[Content for Part 1]\n###PART_2###\n[Content for Part 2]\n###PART_3###\n[Content for Part 3]\nBe comprehensive and ready to use.`; 
+}
 
 function buildRemixPrompt(text, style) { return `You are a content remixer. Original text: "${text}"\nRemix style: "${style}"\nRewrite the content in the specified style while keeping the core message. Styles guide: shorter, professional, funny, viral, hindi, english, simple, emotional, seo, instagram, youtube. Output ONLY the remixed content.`; }
 function buildSocialPackPrompt(content) { return `You are a social media expert. Content: "${content}"\nGenerate a complete social media pack:\n###INSTAGRAM###\nCaption with emojis (3-4 lines)\n###FACEBOOK###\nDetailed post (4-5 lines)\n###WHATSAPP###\nShort status message (1-2 lines)\n###YOUTUBE_TITLE###\nCatchy title (under 60 chars)\n###YOUTUBE_DESCRIPTION###\nDescription with keywords (3-4 lines)\n###SHORTS_CAPTION###\nShort caption for Shorts/Reels\n###HASHTAGS###\n15 relevant hashtags\n###THUMBNAIL_PROMPT###\nPrompt to generate a thumbnail image`; }
@@ -54,7 +65,7 @@ function buildToolPrompt(tool, input, opts) {
   if (tool === "code") return `You are an expert software engineer. Write clean, efficient code in ${opts.codeLang || "Python"} for: ${input}. Wrap in markdown blocks.`;
   if (tool === "logo") return `You are a brand designer. Create a logo concept for: "${input}". Style: ${opts.logoStyle || "Minimalist"}. Provide visual description, Hex colors, and typography.`;
   if (tool === "social") return `You are a social media expert. Create an engaging post for ${opts.platform || "Instagram"} about: "${input}". Include hook, body, CTA, and hashtags.`;
-  if (tool === "auto") return `You are IdeaForge-AI. ${ll}\nSTEP 1: Output exactly one line: ROUTE: <category> (categories: writing, translate, calculator, student, code, logo, social, autopilot, goalplan, moneycalc, improveidea, assistant).\nSTEP 2: Give a direct answer. Do not repeat ROUTE line.\nUser's request: ${input}`;
+  if (tool === "auto") return `You are IdeaForge-AI. ${ll}\nSTEP 1: Output exactly one line: ROUTE: <category> (categories: writing, translate, calculator, student, code, logo, social, autopilot, goalplan, moneycalc, improveidea, poster, video, workflow, assistant).\nSTEP 2: Give a direct answer. Do not repeat ROUTE line.\nUser's request: ${input}`;
   return `You are IdeaForge-AI. ${ll}\nAnswer helpfully.\nRequest: ${input}`;
 }
 
@@ -190,7 +201,6 @@ export default {
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
-    // 🆕 Phase 2: Goal Plan
     if (url.pathname === "/api/goal-plan" && request.method === "POST") {
       const check = await checkAndIncrementUsage(env, userId, userPlan);
       if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
@@ -202,7 +212,6 @@ export default {
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
-    //  Phase 2: Money Calculator
     if (url.pathname === "/api/money-calc" && request.method === "POST") {
       const check = await checkAndIncrementUsage(env, userId, userPlan);
       if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
@@ -214,7 +223,6 @@ export default {
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
-    // 🆕 Phase 2: Improve Idea
     if (url.pathname === "/api/improve-idea" && request.method === "POST") {
       const check = await checkAndIncrementUsage(env, userId, userPlan);
       if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
@@ -223,6 +231,42 @@ export default {
         const parsed = await generateSectioned(env, buildImproveIdeaPrompt(body.idea || ""), ["VERDICT", "WHAT_WORKS", "WHAT_IS_MISSING", "PRICING_STRATEGY", "TARGET_AUDIENCE", "IMMEDIATE_NEXT_STEPS"], 2000);
         if (!parsed) return Response.json({ success: false, error: "Improve idea generate nahi hua." }, { status: 200, headers: corsHeaders });
         return Response.json({ success: true, feedback: parsed.sections }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    //  Phase 3: Poster
+    if (url.pathname === "/api/generate-poster" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const parsed = await generateSectioned(env, buildPosterPrompt(body.topic || ""), ["HEADLINE", "SUBHEADLINE", "BODY", "FOOTER"], 1000);
+        if (!parsed) return Response.json({ success: false, error: "Poster content generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, poster: parsed.sections }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    //  Phase 3: Video Script
+    if (url.pathname === "/api/generate-video" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const parsed = await generateSectioned(env, buildVideoPrompt(body.topic || "", body.platform || "YouTube Long"), ["TITLE", "HOOK", "INTRO", "BODY", "CTA", "HASHTAGS"], 2000);
+        if (!parsed) return Response.json({ success: false, error: "Video script generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, video: parsed.sections }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    // 🆕 Phase 3: Workflow
+    if (url.pathname === "/api/run-workflow" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const parsed = await generateSectioned(env, buildWorkflowPrompt(body.topic || "", body.type || "startup-launch"), ["PART_1", "PART_2", "PART_3"], 2500);
+        if (!parsed) return Response.json({ success: false, error: "Workflow generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, workflow: parsed.sections }, { status: 200, headers: corsHeaders });
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
@@ -289,6 +333,6 @@ export default {
     }
 
     if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response("IdeaForgeX v5.0 Running 🚀", { status: 200, headers: corsHeaders });
+    return new Response("IdeaForgeX v6.0 Running 🚀", { status: 200, headers: corsHeaders });
   }
 };
