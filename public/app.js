@@ -1,9 +1,10 @@
 // ========================================
-// IdeaForgeX - Main JavaScript v7.0 (Phase 4: Smart Context)
+// IdeaForgeX - Main JavaScript v8.0 (Phase 5: Conversational AI)
 // ========================================
 
 let currentReport = null, currentIdeaText = "", isProUser = false;
-let userBrand = { name: "", industry: "", audience: "" }; // 🆕 Phase 4
+let userBrand = { name: "", industry: "", audience: "" };
+let chatHistory = []; // 🆕 Phase 5: Chat Memory
 const HISTORY_KEY = "ideaforgex_history", HISTORY_LIMIT = 10;
 const FREE_DAILY_LIMIT = 15, USAGE_KEY = "ideaforge_usage";
 
@@ -33,9 +34,9 @@ function escapeHtml(str) { const d = document.createElement("div"); d.textConten
 
 const SECTION_DISPLAY = [
   { key: "IDEA", title: "💡 The Idea" }, { key: "TARGET_CUSTOMERS", title: "🎯 Target Customers" }, { key: "CUSTOMER_PROBLEM", title: "😣 Customer Problem" },
-  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: " Competitor Analysis" },
+  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: "🥊 Competitor Analysis" },
   { key: "__SWOT__", title: "SWOT Analysis" }, { key: "MARKETING_STRATEGY", title: "📣 Marketing Strategy" }, { key: "STARTUP_COST", title: "💵 Startup Cost" },
-  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
+  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "⚠️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
 ];
 
 function setBar(barId, valId, val) { const b = document.getElementById(barId), v = document.getElementById(valId); if(b) b.style.width = (val||0)+"%"; if(v) v.textContent = (typeof val==="number"?val:"--")+"/100"; }
@@ -49,7 +50,7 @@ function renderReport(report) {
   SECTION_DISPLAY.forEach(item => {
     if (item.key === "__SWOT__") {
       const card = document.createElement("div"); card.className = "reportCard";
-      card.innerHTML = '<div class="reportCardTitle"> SWOT Analysis</div><div class="swotGrid"><div class="swotBox swotStrengths"><div class="swotTitle">Strengths</div>'+escapeHtml(sections.SWOT_STRENGTHS||"")+'</div><div class="swotBox swotWeaknesses"><div class="swotTitle">Weaknesses</div>'+escapeHtml(sections.SWOT_WEAKNESSES||"")+'</div><div class="swotBox swotOpportunities"><div class="swotTitle">Opportunities</div>'+escapeHtml(sections.SWOT_OPPORTUNITIES||"")+'</div><div class="swotBox swotThreats"><div class="swotTitle">Threats</div>'+escapeHtml(sections.SWOT_THREATS||"")+'</div></div>';
+      card.innerHTML = '<div class="reportCardTitle">🧭 SWOT Analysis</div><div class="swotGrid"><div class="swotBox swotStrengths"><div class="swotTitle">Strengths</div>'+escapeHtml(sections.SWOT_STRENGTHS||"")+'</div><div class="swotBox swotWeaknesses"><div class="swotTitle">Weaknesses</div>'+escapeHtml(sections.SWOT_WEAKNESSES||"")+'</div><div class="swotBox swotOpportunities"><div class="swotTitle">Opportunities</div>'+escapeHtml(sections.SWOT_OPPORTUNITIES||"")+'</div><div class="swotBox swotThreats"><div class="swotTitle">Threats</div>'+escapeHtml(sections.SWOT_THREATS||"")+'</div></div>';
       container.appendChild(card); return;
     }
     const content = sections[item.key] || ""; if (!content) return;
@@ -92,7 +93,7 @@ async function generateLaunchPlan() {
   try {
     const res = await fetch("/api/generate-launch-plan", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({idea:currentIdeaText, budget:document.getElementById("budgetInput")?.value||"", language:document.getElementById("languageSelect").value, brand: userBrand}) });
     const data = await res.json(); if(!res.ok||!data.success||!data.plan) throw new Error(data?.error);
-    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
+    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:" Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
     document.getElementById("launchPlanSection").style.display="block";
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
@@ -124,16 +125,19 @@ function smartRouteInput(input) {
   if (/\b(goal|plan|roadmap|kaise karein|how to achieve|target)\b/.test(t)) return 'goalplan';
   if (/\b(profit|loss|money|calculate business|investment|roi|kamaai)\b/.test(t)) return 'moneycalc';
   if (/\b(improve|feedback|suggestion|better idea|idea check)\b/.test(t)) return 'improveidea';
-  // 🆕 Phase 4 Routing
   if (/\b(roast|shark tank|critique|brutal|idea check)\b/.test(t)) return 'roast';
   if (/\b(poster|banner|flyer|graphic design)\b/.test(t)) return 'poster';
   if (/\b(video|script|youtube|reel|shorts|tiktok)\b/.test(t)) return 'video';
   if (/\b(workflow|batch|all in one|complete pack)\b/.test(t)) return 'workflow';
+  // 🆕 Phase 5 Routing
+  if (/\b(chat|talk|conversation|baat karo|help me)\b/.test(t)) return 'chat';
+  if (/\b(card|quote|instagram story|status|shareable)\b/.test(t)) return 'card';
+  if (/\b(cold email|outreach|follow up|proposal|networking email)\b/.test(t)) return 'email';
   return 'assistant';
 }
 
 let currentToolResult = "", currentToolInput = "", activeTool = "assistant", lastToolPayload = null;
-const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: " Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "✍️ Writing", translate: " Translate", calculator: "🧮 Calculator", student: "📚 Student", code: "💻 Code", logo: "🎨 Logo", social: "📱 Social", socialpack: " Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools" };
+const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: "💡 Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "✍️ Writing", translate: "🌐 Translate", calculator: "🧮 Calculator", student: "📚 Student", code: "💻 Code", logo: "🎨 Logo", social: " Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: " Quote Card", email: "✉️ Cold Email" };
 
 function openToolWorkspace(tool) {
   activeTool = tool;
@@ -149,7 +153,7 @@ function openToolWorkspace(tool) {
   
   document.getElementById("toolWorkspaceTitle").textContent = TOOL_TITLES[tool] || "🤖 AI Assistant";
   
-  ["writingOptions", "translateOptions", "codeOptions", "logoOptions", "socialOptions", "aiImageOptions", "goalOptions", "moneyOptions", "posterOptions", "videoOptions", "workflowOptions"].forEach(id => {
+  ["writingOptions", "translateOptions", "codeOptions", "logoOptions", "socialOptions", "aiImageOptions", "goalOptions", "moneyOptions", "posterOptions", "videoOptions", "workflowOptions", "emailOptions"].forEach(id => {
     if(document.getElementById(id)) document.getElementById(id).style.display = "none";
   });
 
@@ -164,10 +168,23 @@ function openToolWorkspace(tool) {
   if (tool === "poster") document.getElementById("posterOptions").style.display = "flex";
   if (tool === "video") document.getElementById("videoOptions").style.display = "flex";
   if (tool === "workflow") document.getElementById("workflowOptions").style.display = "flex";
+  if (tool === "email") document.getElementById("emailOptions").style.display = "flex";
+
+  // 🆕 Phase 5: Toggle Chat vs Standard Input
+  if (tool === "chat") {
+    document.getElementById("chatInterface").style.display = "block";
+    document.getElementById("standardInputArea").style.display = "none";
+    document.getElementById("toolResultActions").style.display = "none";
+    document.getElementById("bilingualToggle").parentElement.style.display = "none"; // Hide bilingual for chat
+  } else {
+    document.getElementById("chatInterface").style.display = "none";
+    document.getElementById("standardInputArea").style.display = "block";
+    document.getElementById("bilingualToggle").parentElement.style.display = "flex";
+  }
   
   document.getElementById("toolWorkspace").style.display = "block";
   document.getElementById("toolWorkspace").scrollIntoView({behavior:"smooth"});
-  document.getElementById("toolInput").focus();
+  if (tool !== "chat") document.getElementById("toolInput").focus();
 }
 
 function getTodayUsage() {
@@ -191,14 +208,14 @@ function formatToolResult(text, tool) {
 
 function renderAutopilotResult(pkg) {
   const container = document.getElementById("autopilotResult"); container.innerHTML = "";
-  const sections = [{ key: "AD_COPY", title: "📢 Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "AD_COPY", title: "📢 Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: " Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (pkg[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pkg[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderSocialPackResult(pack) {
   const container = document.getElementById("socialPackResult"); container.innerHTML = "";
-  const sections = [{ key: "INSTAGRAM", title: "📸 Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: "📝 YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "🖼️ Thumbnail Prompt" }];
+  const sections = [{ key: "INSTAGRAM", title: " Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: "📝 YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "🖼️ Thumbnail Prompt" }];
   sections.forEach(s => { if (pack[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pack[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -219,17 +236,16 @@ function renderMoneyResult(calc) {
 
 function renderImproveResult(feedback) {
   const container = document.getElementById("improveResult"); container.innerHTML = "";
-  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: "🚀 Immediate Next Steps" }];
+  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: " Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: "🚀 Immediate Next Steps" }];
   sections.forEach(s => { if (feedback[s.key]) { const div = document.createElement("div"); div.className = "improve-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(feedback[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
-// 🆕 Phase 4: Roast Result
 function renderRoastResult(roast) {
   const container = document.getElementById("roastResult"); container.innerHTML = "";
   const score = roast.SHARK_SCORE || "?";
-  container.innerHTML = `<div class="shark-score"> ${score}/10</div>`;
-  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: " The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "⚖️ Final Verdict" }];
+  container.innerHTML = `<div class="shark-score">🦈 ${score}/10</div>`;
+  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: "🔥 The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "⚖️ Final Verdict" }];
   sections.forEach(s => { if (roast[s.key]) { const div = document.createElement("div"); div.className = "roast-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(roast[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -243,9 +259,19 @@ function renderPosterResult(poster, theme) {
   document.getElementById("posterPreviewBox").style.display = "block";
 }
 
+// 🆕 Phase 5: Card Renderer
+function renderCardResult(card) {
+  document.getElementById("cardHeadline").textContent = card.HEADLINE || "Headline";
+  document.getElementById("cardBody").textContent = card.BODY || "Body text goes here.";
+  document.getElementById("cardFooter").textContent = card.FOOTER || "Footer / CTA";
+  document.getElementById("cardPreview").style.background = card.BG_GRADIENT || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+  document.getElementById("cardPreview").style.color = "white";
+  document.getElementById("cardPreviewBox").style.display = "block";
+}
+
 function renderVideoResult(video) {
   const container = document.getElementById("videoResult"); container.innerHTML = "";
-  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "🎙️ Intro" }, { key: "BODY", title: "🎥 Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "🎙️ Intro" }, { key: "BODY", title: " Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (video[s.key]) { const div = document.createElement("div"); div.className = "video-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(video[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -255,6 +281,52 @@ function renderWorkflowResult(workflow) {
   const sections = [{ key: "PART_1", title: "📦 Part 1" }, { key: "PART_2", title: "📦 Part 2" }, { key: "PART_3", title: "📦 Part 3" }];
   sections.forEach(s => { if (workflow[s.key]) { const div = document.createElement("div"); div.className = "workflow-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(workflow[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
+}
+
+// 🆕 Phase 5: Email Renderer
+function renderEmailResult(email) {
+  const container = document.getElementById("emailResult"); container.innerHTML = "";
+  const sections = [{ key: "SUBJECT", title: "📧 Subject Line" }, { key: "BODY", title: "📝 Email Body" }, { key: "SIGN_OFF", title: "✍️ Sign Off" }];
+  sections.forEach(s => { if (email[s.key]) { const div = document.createElement("div"); div.className = "email-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(email[s.key])}</p>`; container.appendChild(div); } });
+  container.style.display = "block";
+}
+
+// 🆕 Phase 5: Chat Logic
+function appendChatMessage(role, text) {
+  const container = document.getElementById("chatContainer");
+  const msgDiv = document.createElement("div");
+  msgDiv.className = `chat-message chat-${role}`;
+  msgDiv.textContent = text;
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  if (!hasUsageRemaining()) { showToast("Limit khatam! Pro lein.", "error"); return; }
+
+  appendChatMessage("user", text);
+  input.value = "";
+  chatHistory.push({ role: "user", content: text });
+
+  // Keep only last 10 messages for context
+  if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+  const btn = document.getElementById("sendChatBtn");
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Thinking...';
+
+  try {
+    const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json", "X-User-ID": localStorage.getItem('uid')||'anon', "X-User-Plan": isProUser?"pro":"free" }, body: JSON.stringify({ messages: chatHistory, brand: userBrand }) });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.reply) throw new Error(data?.error || "Chat reply nahi aaya.");
+    if (!isProUser) incrementUsage();
+    
+    appendChatMessage("ai", data.reply);
+    chatHistory.push({ role: "assistant", content: data.reply });
+    currentToolResult = data.reply; // For copy/share
+  } catch (e) { showToast(e.message, "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
 async function runAiTool(input, tool) {
@@ -271,6 +343,8 @@ async function runAiTool(input, tool) {
   document.getElementById("videoResult").style.display="none";
   document.getElementById("workflowResult").style.display="none";
   document.getElementById("posterPreviewBox").style.display="none";
+  document.getElementById("cardPreviewBox").style.display="none";
+  document.getElementById("emailResult").style.display="none";
   const imgBox = document.getElementById("generatedImageBox"); if(imgBox) imgBox.style.display="none";
 
   const isBilingual = document.getElementById("bilingualToggle")?.checked || false;
@@ -328,7 +402,6 @@ async function runAiTool(input, tool) {
       renderImproveResult(data.feedback); currentToolResult = JSON.stringify(data.feedback); resAct.style.display="flex"; return;
     }
 
-    //  Phase 4: Roast
     if (tool === "roast") {
       const res = await fetch("/api/roast-idea", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ idea: input, brand: userBrand }) });
       const data = await res.json();
@@ -346,6 +419,27 @@ async function runAiTool(input, tool) {
       renderPosterResult(data.poster, theme);
       currentToolResult = `${data.poster.HEADLINE} - ${data.poster.SUBHEADLINE}`;
       resAct.style.display="flex"; return;
+    }
+
+    // 🆕 Phase 5: Card
+    if (tool === "card") {
+      const res = await fetch("/api/generate-card", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ text: input }) });
+      const data = await res.json();
+      if(!res.ok||!data.success||!data.card) throw new Error(data?.error || "Card content generate nahi hua.");
+      if(!isProUser) incrementUsage();
+      renderCardResult(data.card);
+      currentToolResult = `${data.card.HEADLINE} - ${data.card.BODY}`;
+      resAct.style.display="flex"; return;
+    }
+
+    // 🆕 Phase 5: Email
+    if (tool === "email") {
+      const type = document.getElementById("emailTypeSelect")?.value || "Cold Outreach";
+      const res = await fetch("/api/generate-email", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ type, topic: input, brand: userBrand }) });
+      const data = await res.json();
+      if(!res.ok||!data.success||!data.email) throw new Error(data?.error || "Email generate nahi hua.");
+      if(!isProUser) incrementUsage();
+      renderEmailResult(data.email); currentToolResult = JSON.stringify(data.email); resAct.style.display="flex"; return;
     }
 
     if (tool === "video") {
@@ -427,7 +521,7 @@ async function analyzeDocument() {
     if(!res.ok||!data.success||!data.analysis) throw new Error(data?.error);
     if(!isProUser) incrementUsage();
     const resultDiv = document.getElementById("docResult"); resultDiv.innerHTML = "";
-    const sections = [{ key: "SUMMARY", title: "📋 Summary" }, { key: "KEY_POINTS", title: "🎯 Key Points" }, { key: "QUESTIONS_ANSWERS", title: "❓ Q&A" }, { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" }, { key: "MCQS", title: " MCQs" }];
+    const sections = [{ key: "SUMMARY", title: "📋 Summary" }, { key: "KEY_POINTS", title: " Key Points" }, { key: "QUESTIONS_ANSWERS", title: "❓ Q&A" }, { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" }, { key: "MCQS", title: "📝 MCQs" }];
     sections.forEach(s => { if (data.analysis[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(data.analysis[s.key])}</p>`; resultDiv.appendChild(div); } });
     resultDiv.style.display = "block"; showToast("Document analyzed successfully!", "success");
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
@@ -457,28 +551,36 @@ async function downloadPoster() {
   } catch(e) { showToast("Poster download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
+//  Phase 5: Download Card
+async function downloadCard() {
+  if (!window.html2canvas) { showToast("PDF/Image lib load nahi hui.", "error"); return; }
+  const btn = document.getElementById("downloadCardBtn");
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Downloading...';
+  try {
+    const cardEl = document.getElementById("cardPreview");
+    const canvas = await window.html2canvas(cardEl, { scale: 2, backgroundColor: null, useCORS: true });
+    const link = document.createElement('a');
+    link.download = 'IdeaForge-Card-' + Date.now() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast(" Card downloaded as PNG!", "success");
+  } catch(e) { showToast("Card download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+
 const TH_KEY="ideaforge_tool_history"; function getTH(){ try{return JSON.parse(localStorage.getItem(TH_KEY))||[];}catch(e){return[];} }
 function saveToTH(t,i,r){ let l=getTH(); l.unshift({tool:t,input:i,result:r,label:(TOOL_TITLES[t]||t)+": "+i.slice(0,50),savedAt:Date.now()}); while(l.length>15)l.pop(); localStorage.setItem(TH_KEY,JSON.stringify(l)); renderTH(); }
 function renderTH(){ const l=getTH(),s=document.getElementById("toolHistorySection"),r=document.getElementById("toolHistoryRow"); if(!s||!r)return; if(l.length===0){s.style.display="none";return;} r.innerHTML=""; l.forEach(i=>{const b=document.createElement("button");b.type="button";b.className="historyItem";b.innerHTML='<span class="historyItemText">'+escapeHtml(i.label)+'</span>';b.onclick=()=>{openToolWorkspace(i.tool);document.getElementById("toolInput").value=i.input;currentToolResult=i.result;document.getElementById("toolResult").innerHTML=formatToolResult(i.result, i.tool);document.getElementById("toolResult").style.display="block";};r.appendChild(b);}); s.style.display="block"; }
 
-const UI_STRINGS = { en: { tagline: "One AI Workspace for Everything", askAiBtn: "➤ Ask AI" }, hi: { tagline: "सबके लिए AI वर्कस्पेस", askAiBtn: "➤ AI से पूछें" } }; 
+const UI_STRINGS = { en: { tagline: "One AI Workspace for Everything", askAiBtn: "➤ Ask AI" }, hi: { tagline: "सबके लिए AI वर्कस्पेस", askAiBtn: " AI से पूछें" } }; 
 function applyUILanguage(lang) { const d = UI_STRINGS[lang]||UI_STRINGS.en; document.querySelectorAll("[data-i18n]").forEach(el => { const k=el.getAttribute("data-i18n"); if(d[k]) el.textContent=d[k]; }); localStorage.setItem("ideaforge_ui_lang", lang); }
 
 function startVoiceInput(targetId, btn) { const S = window.SpeechRecognition||window.webkitSpeechRecognition; if(!S){showToast("Voice support nahi hai.","error");return;} const r=new S(); r.lang="hi-IN"; btn.classList.add("listening"); r.onresult=e=>{document.getElementById(targetId).value += e.results[0][0].transcript;}; r.onend=()=>btn.classList.remove("listening"); try{r.start();}catch(e){btn.classList.remove("listening");} }
 
-// 🆕 Phase 4: Brand Logic
 function loadBrand() {
-  try {
-    const saved = localStorage.getItem('ideaforge_brand');
-    if (saved) userBrand = JSON.parse(saved);
-  } catch(e) {}
+  try { const saved = localStorage.getItem('ideaforge_brand'); if (saved) userBrand = JSON.parse(saved); } catch(e) {}
 }
 function saveBrand() {
-  userBrand = {
-    name: document.getElementById("brandNameInput").value.trim(),
-    industry: document.getElementById("brandIndustryInput").value.trim(),
-    audience: document.getElementById("brandAudienceInput").value.trim()
-  };
+  userBrand = { name: document.getElementById("brandNameInput").value.trim(), industry: document.getElementById("brandIndustryInput").value.trim(), audience: document.getElementById("brandAudienceInput").value.trim() };
   localStorage.setItem('ideaforge_brand', JSON.stringify(userBrand));
   showToast("👤 Brand Profile Saved! AI will now use it.", "success");
   document.getElementById("brandModal").style.display = "none";
@@ -487,7 +589,7 @@ function saveBrand() {
 document.addEventListener("DOMContentLoaded", () => {
   isProUser = localStorage.getItem('ideaforge_pro') === 'true'; 
   if(!localStorage.getItem('uid')) localStorage.setItem('uid', 'user_'+Math.random().toString(36).substr(2,9));
-  loadBrand(); // 🆕 Load brand on start
+  loadBrand();
   renderHistory(); renderTH(); renderUsageBanner(); applyUILanguage(localStorage.getItem("ideaforge_ui_lang")||"en");
   
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
@@ -496,12 +598,19 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById("hubAskBtn")?.addEventListener("click", () => {
     const t = document.getElementById("hubInput").value.trim(); if(!t) return;
-    const tool = smartRouteInput(t); openToolWorkspace(tool); document.getElementById("toolInput").value = t; runAiTool(t, tool);
+    const tool = smartRouteInput(t); openToolWorkspace(tool); 
+    if (tool !== "chat") { document.getElementById("toolInput").value = t; runAiTool(t, tool); }
+    else { document.getElementById("chatInput").value = t; sendChatMessage(); }
   });
   
   document.getElementById("toolGenerateBtn")?.addEventListener("click", () => {
     const t = document.getElementById("toolInput").value.trim(); if(!t) return; runAiTool(t, activeTool);
   });
+
+  // 🆕 Phase 5: Chat Events
+  document.getElementById("sendChatBtn")?.addEventListener("click", sendChatMessage);
+  document.getElementById("chatInput")?.addEventListener("keypress", (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } });
+  document.getElementById("clearChatBtn")?.addEventListener("click", () => { chatHistory = []; document.getElementById("chatContainer").innerHTML = ""; showToast("Chat history cleared!", "info"); });
   
   document.getElementById("toolCopyBtn")?.addEventListener("click", () => copyText(currentToolResult));
   document.getElementById("toolRegenerateBtn")?.addEventListener("click", () => lastToolPayload && runAiTool(lastToolPayload.input, lastToolPayload.tool));
@@ -512,6 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("toolShareBtn")?.addEventListener("click", () => { if(currentToolResult) { if(navigator.share) navigator.share({title:"IdeaForge-AI", text:currentToolResult}); else { copyText(currentToolResult); showToast("Copied for sharing!", "info"); } } });
   
   document.getElementById("downloadPosterBtn")?.addEventListener("click", downloadPoster);
+  document.getElementById("downloadCardBtn")?.addEventListener("click", downloadCard); // 🆕 Phase 5
   
   document.getElementById("hubMicBtn")?.addEventListener("click", function(){ startVoiceInput("hubInput", this); });
   document.getElementById("toolMicBtn")?.addEventListener("click", function(){ startVoiceInput("toolInput", this); });
@@ -525,7 +635,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("closeRemixModal")?.addEventListener("click", () => { document.getElementById("remixModal").style.display = "none"; });
   
-  // 🆕 Phase 4: Brand Modal Events
   document.getElementById("openBrandBtn")?.addEventListener("click", () => {
     document.getElementById("brandNameInput").value = userBrand.name || "";
     document.getElementById("brandIndustryInput").value = userBrand.industry || "";
@@ -600,11 +709,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   
   const tips = [
+    "Try AI Chat! It remembers your last 5 messages for a real conversation.",
+    "Use Quote Card Maker to turn any text into a beautiful Instagram image.",
+    "Write professional Cold Emails in seconds with the Email tool.",
     "Set your Brand Profile! AI will use it in every tool automatically.",
-    "Try 'Roast My Idea' for a brutal but fair Shark Tank style critique!",
-    "Enable 'Bilingual Output' to get results in English + Hindi together.",
-    "Use Poster Maker to create beautiful social media graphics in seconds!",
-    "Try Video Script tool for YouTube Shorts or Instagram Reels!"
+    "Try 'Roast My Idea' for a brutal but fair Shark Tank style critique!"
   ];
   document.getElementById("dailyTip").textContent = tips[Math.floor(Math.random() * tips.length)];
 });
