@@ -19,9 +19,15 @@
       <span class="brandMark">💡</span>
       <div>
         <div class="brandName">IdeaForge-AI</div>
-        <div class="brandTag">AI Tools for Everyone</div>
+        <div class="brandTag" data-i18n="tagline">AI Tools for Everyone</div>
       </div>
     </div>
+    <select id="uiLanguageSelect" class="uiLangSelect" title="Interface Language">
+      <option value="en">🌐 English</option>
+      <option value="hi">🌐 हिन्दी</option>
+      <option value="bn">🌐 বাংলা</option>
+      <option value="ur">🌐 اردو</option>
+    </select>
   </header>
 
   <main class="layout">
@@ -29,22 +35,27 @@
     <!-- ================= HUB: Auto-ask + Categories ================= -->
     <section class="panel hubPanel">
 
-      <label for="hubInput" class="fieldLabel">✨ आप क्या करना चाहते हैं? (What do you want to do?)</label>
-      <textarea id="hubInput" placeholder="Example: मेरे लिए बैंक में देने की application लिखो / Translate this to English / ₹800 प्रति घंटे के हिसाब से 2 घंटे 35 मिनट का हिसाब करो" maxlength="3000"></textarea>
+      <div id="usageBanner" class="usageBanner" style="display:none;"></div>
 
-      <button type="button" id="hubAskBtn" class="primaryBtn">➤ Ask AI</button>
+      <label for="hubInput" class="fieldLabel" data-i18n="hubLabel">✨ आप क्या करना चाहते हैं? (What do you want to do?)</label>
+      <div class="inputWithMic">
+        <textarea id="hubInput" placeholder="Example: मेरे लिए बैंक में देने की application लिखो / Translate this to English / ₹800 प्रति घंटे के हिसाब से 2 घंटे 35 मिनट का हिसाब करो" maxlength="3000"></textarea>
+        <button type="button" id="hubMicBtn" class="micBtn" title="बोलकर पूछें">🎤</button>
+      </div>
+
+      <button type="button" id="hubAskBtn" class="primaryBtn" data-i18n="askAiBtn">➤ Ask AI</button>
 
       <div class="hubCategories" id="hubCategories">
-        <button type="button" class="hubChip" data-tool="assistant">🤖 AI Assistant</button>
-        <button type="button" class="hubChip" data-tool="writing">✍️ Writing</button>
-        <button type="button" class="hubChip" data-tool="translate">🌐 Translate</button>
-        <button type="button" class="hubChip" data-tool="calculator">🧮 Calculator</button>
-        <button type="button" class="hubChip" data-scroll="businessSection">💼 Business</button>
-        <button type="button" class="hubChip" data-tool="student">📚 Student</button>
-        <button type="button" class="hubChip" data-external="https://statuscraft-ai.rupumunimurmu890.workers.dev">🎨 Status</button>
-        <button type="button" class="hubChip" data-external="https://admakerai-new.rupumunimurmu890.workers.dev">📢 Advertisement</button>
-        <button type="button" class="hubChip" data-soon="true">📸 Image Tools</button>
-        <button type="button" class="hubChip" data-soon="true">🎤 Voice AI</button>
+        <button type="button" class="hubChip" data-tool="assistant" data-i18n="chipAssistant">🤖 AI Assistant</button>
+        <button type="button" class="hubChip" data-tool="writing" data-i18n="chipWriting">✍️ Writing</button>
+        <button type="button" class="hubChip" data-tool="translate" data-i18n="chipTranslate">🌐 Translate</button>
+        <button type="button" class="hubChip" data-tool="calculator" data-i18n="chipCalculator">🧮 Calculator</button>
+        <button type="button" class="hubChip" data-scroll="businessSection" data-i18n="chipBusiness">💼 Business</button>
+        <button type="button" class="hubChip" data-tool="student" data-i18n="chipStudent">📚 Student</button>
+        <button type="button" class="hubChip" data-external="https://statuscraft-ai.rupumunimurmu890.workers.dev" data-i18n="chipStatus">🎨 Status</button>
+        <button type="button" class="hubChip" data-external="https://admakerai-new.rupumunimurmu890.workers.dev" data-i18n="chipAd">📢 Advertisement</button>
+        <button type="button" class="hubChip" data-tool="image" data-i18n="chipImage">📸 Image Tools</button>
+        <button type="button" class="hubChip" id="voiceAiChip" data-i18n="chipVoice">🎤 Voice AI</button>
       </div>
 
       <!-- Generic tool workspace — Writing/Translate/Calculator/Student/Assistant -->
@@ -91,7 +102,27 @@
             <option value="Marathi">Marathi</option>
             <option value="Gujarati">Gujarati</option>
             <option value="Punjabi">Punjabi</option>
+            <option value="Kannada">Kannada</option>
+            <option value="Malayalam">Malayalam</option>
+            <option value="Odia">Odia</option>
+            <option value="Assamese">Assamese</option>
             <option value="Urdu">Urdu</option>
+            <option value="Nepali">Nepali</option>
+            <option value="Sanskrit">Sanskrit</option>
+            <option value="Santali">Santali</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Italian">Italian</option>
+            <option value="Russian">Russian</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Korean">Korean</option>
+            <option value="Turkish">Turkish</option>
+            <option value="Indonesian">Indonesian</option>
+            <option value="Vietnamese">Vietnamese</option>
           </select>
           <span class="swapArrow">→</span>
           <select id="toLanguageSelect">
@@ -103,21 +134,44 @@
             <option value="Marathi">Marathi</option>
             <option value="Gujarati">Gujarati</option>
             <option value="Punjabi">Punjabi</option>
+            <option value="Kannada">Kannada</option>
+            <option value="Malayalam">Malayalam</option>
+            <option value="Odia">Odia</option>
+            <option value="Assamese">Assamese</option>
             <option value="Urdu">Urdu</option>
+            <option value="Nepali">Nepali</option>
+            <option value="Sanskrit">Sanskrit</option>
+            <option value="Santali">Santali</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Italian">Italian</option>
+            <option value="Russian">Russian</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Korean">Korean</option>
+            <option value="Turkish">Turkish</option>
+            <option value="Indonesian">Indonesian</option>
+            <option value="Vietnamese">Vietnamese</option>
           </select>
         </div>
 
-        <textarea id="toolInput" placeholder="Type your request here..." maxlength="3000"></textarea>
+        <div class="inputWithMic">
+          <textarea id="toolInput" placeholder="Type your request here..." maxlength="3000"></textarea>
+          <button type="button" id="toolMicBtn" class="micBtn" title="बोलकर पूछें">🎤</button>
+        </div>
 
-        <button type="button" id="toolGenerateBtn" class="primaryBtn">✨ Generate</button>
+        <button type="button" id="toolGenerateBtn" class="primaryBtn" data-i18n="generateBtn">✨ Generate</button>
 
         <div id="toolResult" class="toolResultBox" style="display:none;"></div>
 
         <div id="toolResultActions" class="reportActions" style="display:none;">
-          <button type="button" id="toolCopyBtn" class="actionBtn">📋 Copy</button>
-          <button type="button" id="toolRegenerateBtn" class="actionBtn">🔄 Regenerate</button>
-          <button type="button" id="toolSaveBtn" class="actionBtn">⭐ Save</button>
-          <button type="button" id="toolShareBtn" class="actionBtn">📤 Share</button>
+          <button type="button" id="toolCopyBtn" class="actionBtn" data-i18n="copyBtn">📋 Copy</button>
+          <button type="button" id="toolRegenerateBtn" class="actionBtn" data-i18n="regenerateBtn">🔄 Regenerate</button>
+          <button type="button" id="toolSaveBtn" class="actionBtn" data-i18n="saveBtn">⭐ Save</button>
+          <button type="button" id="toolShareBtn" class="actionBtn" data-i18n="shareBtn">📤 Share</button>
         </div>
 
         <div id="toolHistorySection" class="ideaHistorySection" style="display:none;">
@@ -128,6 +182,38 @@
         <div id="toolFavoritesSection" class="ideaHistorySection" style="display:none;">
           <div class="historyLabel">⭐ My Favorites</div>
           <div id="toolFavoritesRow" class="ideaHistoryRow"></div>
+        </div>
+
+      </div>
+
+      <!-- 🆕 Image Tools workspace -->
+      <div id="imageToolWorkspace" class="toolWorkspace" style="display:none;">
+
+        <div class="subReportTitle">📸 Image Tools</div>
+
+        <div id="imageUploadCard" class="imageUploadCard">
+          <span id="imageUploadText">Tap to upload a photo</span>
+          <img id="imagePreview" style="display:none;">
+        </div>
+        <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+
+        <div class="toolExtraFields">
+          <select id="imageActionSelect">
+            <option value="describe">🖼️ Describe Image</option>
+            <option value="extract-text">📝 Extract Text</option>
+            <option value="ask">❓ Ask About Image</option>
+          </select>
+        </div>
+
+        <input type="text" id="imageQuestionInput" placeholder="अपना सवाल लिखें..." style="display:none;">
+
+        <button type="button" id="imageGenerateBtn" class="primaryBtn">✨ Analyze Image</button>
+
+        <div id="imageResult" class="toolResultBox" style="display:none;"></div>
+
+        <div id="imageResultActions" class="reportActions" style="display:none;">
+          <button type="button" id="imageCopyBtn" class="actionBtn">📋 Copy</button>
+          <button type="button" id="imageShareBtn" class="actionBtn">📤 Share</button>
         </div>
 
       </div>
@@ -143,7 +229,7 @@
       <textarea id="ideaInput" placeholder="Example: I want to start a home-based tiffin service for office workers in my city..." maxlength="2000"></textarea>
       <div class="charCount"><span id="charCount">0</span> / 2000</div>
 
-      <label for="languageSelect" class="fieldLabel">🌐 Language</label>
+      <label for="languageSelect" class="fieldLabel" data-i18n="languageLabel">🌐 Language</label>
       <select id="languageSelect">
         <option value="auto">Auto Detect</option>
         <option value="English">English</option>
@@ -157,15 +243,25 @@
         <option value="Telugu">Telugu</option>
         <option value="Kannada">Kannada</option>
         <option value="Malayalam">Malayalam</option>
+        <option value="Odia">Odia</option>
+        <option value="Assamese">Assamese</option>
+        <option value="Urdu">Urdu</option>
+        <option value="Nepali">Nepali</option>
+        <option value="Sanskrit">Sanskrit</option>
+        <option value="Santali">Santali</option>
         <option value="Spanish">Spanish</option>
         <option value="French">French</option>
-        <option value="Arabic">Arabic</option>
-        <option value="Portuguese">Portuguese</option>
         <option value="German">German</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Italian">Italian</option>
+        <option value="Russian">Russian</option>
+        <option value="Arabic">Arabic</option>
         <option value="Chinese">Chinese</option>
         <option value="Japanese">Japanese</option>
         <option value="Korean">Korean</option>
-        <option value="Russian">Russian</option>
+        <option value="Turkish">Turkish</option>
+        <option value="Indonesian">Indonesian</option>
+        <option value="Vietnamese">Vietnamese</option>
       </select>
 
       <label for="budgetInput" class="fieldLabel">💰 Your Starting Budget (optional, for Launch Plan)</label>
