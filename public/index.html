@@ -2,16 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IdeaForge-AI v8.0 | Conversational AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IdeaForge-AI v9.0 | Installable App</title>
+  
+  <!--  Phase 6: PWA Meta Tags -->
+  <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="One AI Workspace for Everything.">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4359/4359960.png">
+
   <style>
     :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
+    /* 🆕 Phase 6: Light Mode Variables */
+    body.light-mode { --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
+    body.light-mode input, body.light-mode select, body.light-mode textarea { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+    body.light-mode .chat-ai { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+    body.light-mode .chat-container { background: #f1f5f9; border-color: #cbd5e1; }
+    
     * { box-sizing: border-box; }
-    body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 15px; line-height: 1.6; max-width: 1200px; margin: 0 auto; }
+    body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 15px; line-height: 1.6; max-width: 1200px; margin: 0 auto; transition: background-color 0.3s, color 0.3s; }
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
     .header h1 { margin: 0; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; }
     .tagline { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
-    .reportCard, .pitchSlide, .hubPanel, .toolWorkspace, .imageToolWorkspace, .infoCard { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+    .reportCard, .pitchSlide, .hubPanel, .toolWorkspace, .imageToolWorkspace, .infoCard { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: background-color 0.3s; }
     input, select, textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 10px; font-size: 15px; box-sizing: border-box; transition: border-color 0.2s; margin-bottom: 10px; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
     button { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; margin: 4px; }
@@ -19,6 +32,7 @@
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary { background: #475569; }
     .btn-brand { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .btn-theme { background: #334155; padding: 8px 12px; font-size: 16px; }
     .hubCategories { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 20px 0; }
     .hubChip { background: var(--card-bg); padding: 12px 8px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; font-size: 11px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .hubChip .chip-icon { font-size: 20px; }
@@ -58,22 +72,29 @@
     .remix-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; }
     .remix-btn:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
     .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section, .roast-section, .email-section { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
+    body.light-mode .autopilot-section, body.light-mode .goal-section, body.light-mode .money-section, body.light-mode .improve-section, body.light-mode .video-section, body.light-mode .workflow-section, body.light-mode .roast-section, body.light-mode .email-section { background: #f1f5f9; }
     .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4, .roast-section h4, .email-section h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
     .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p, .roast-section p, .email-section p { margin: 0; font-size: 13px; line-height: 1.5; }
-    .poster-preview, .card-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+    .poster-preview, .card-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; color: white; }
     .poster-headline, .card-headline { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
     .poster-subhead, .card-subhead { font-size: 16px; font-weight: 500; margin-bottom: 20px; opacity: 0.9; }
     .poster-body, .card-body { font-size: 14px; line-height: 1.5; margin-bottom: 20px; opacity: 0.85; }
     .poster-footer, .card-footer { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; }
     .shark-score { font-size: 48px; font-weight: bold; color: #f59e0b; text-align: center; margin: 10px 0; }
-    
-    /* 🆕 Phase 5: Chat UI Styles */
     .chat-container { height: 400px; overflow-y: auto; background: #0f172a; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
     .chat-message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
     .chat-user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
     .chat-ai { align-self: flex-start; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
     .chat-input-area { display: flex; gap: 10px; }
     .chat-input-area textarea { flex: 1; margin-bottom: 0; resize: none; height: 50px; }
+    
+    /* 🆕 Phase 6: Projects Grid */
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
+    .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.2s; position: relative; }
+    .project-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .project-card h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 15px; }
+    .project-card p { margin: 0; font-size: 12px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .project-card .delete-btn { position: absolute; top: 10px; right: 10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; }
   </style>
 </head>
 <body>
@@ -85,6 +106,7 @@
     </div>
     <div class="flex-between">
       <span id="proBadge">PRO</span>
+      <button id="themeToggleBtn" class="btn-theme" title="Toggle Theme">🌗</button>
       <button id="openBrandBtn" class="btn-brand" style="padding: 8px 15px; font-size: 12px;">👤 My Brand</button>
       <select id="uiLanguageSelect" style="width: auto; margin:0;">
         <option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="ur">Urdu</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="pt">Portuguese</option><option value="ru">Russian</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option><option value="ar">Arabic</option><option value="tr">Turkish</option><option value="vi">Vietnamese</option><option value="id">Indonesian</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="sv">Swedish</option>
@@ -123,7 +145,7 @@
     <div class="hubChip" data-tool="poster"><span class="chip-icon">🖼️</span><span>Poster</span></div>
     <div class="hubChip" data-tool="video"><span class="chip-icon">🎬</span><span>Video Script</span></div>
     <div class="hubChip" data-tool="workflow"><span class="chip-icon">⚙️</span><span>Workflow</span></div>
-    <div class="hubChip" data-tool="writing"><span class="chip-icon">✍️</span><span>Writing</span></div>
+    <div class="hubChip" data-tool="writing"><span class="chip-icon">️</span><span>Writing</span></div>
     <div class="hubChip" data-tool="translate"><span class="chip-icon"></span><span>Translate</span></div>
     <div class="hubChip" data-tool="calculator"><span class="chip-icon">🧮</span><span>Calculator</span></div>
     <div class="hubChip" data-tool="student"><span class="chip-icon">📚</span><span>Student</span></div>
@@ -132,12 +154,14 @@
     <div class="hubChip" data-tool="social"><span class="chip-icon"></span><span>Social</span></div>
     <div class="hubChip" data-tool="socialpack"><span class="chip-icon"></span><span>Social Pack</span></div>
     <div class="hubChip" data-tool="ai-image"><span class="chip-icon">️</span><span>Real Image</span></div>
-    <div class="hubChip" data-tool="document"><span class="chip-icon"></span><span>Doc AI</span></div>
-    <div class="hubChip" data-tool="image"><span class="chip-icon"></span><span>Analyze Img</span></div>
+    <div class="hubChip" data-tool="document"><span class="chip-icon">📄</span><span>Doc AI</span></div>
+    <div class="hubChip" data-tool="image"><span class="chip-icon">📸</span><span>Analyze Img</span></div>
+    <!-- 🆕 Phase 6: My Projects Chip -->
+    <div class="hubChip" data-tool="projects" data-scroll="projectsSection"><span class="chip-icon"></span><span>My Projects</span></div>
   </div>
 
   <div id="toolWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 id="toolWorkspaceTitle" style="margin-top:0;">🤖 AI Assistant</h2>
+    <h2 id="toolWorkspaceTitle" style="margin-top:0;"> AI Assistant</h2>
     
     <div id="writingOptions" class="tool-options-row" style="display:none;">
       <select id="writingTypeSelect"><option value="Email">Email</option><option value="Essay">Essay</option><option value="Letter">Letter</option><option value="Blog">Blog Post</option></select>
@@ -193,7 +217,6 @@
         <option value="product-promo">Product Promotion Pack</option>
       </select>
     </div>
-    <!--  Phase 5: Email Options -->
     <div id="emailOptions" class="tool-options-row" style="display:none;">
       <label style="color:var(--text-muted); align-self:center;">Type:</label>
       <select id="emailTypeSelect">
@@ -207,11 +230,10 @@
     <div class="tool-options-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
       <label class="checkbox-label">
         <input type="checkbox" id="bilingualToggle" style="width: auto; margin: 0;">
-        ️ Bilingual Output (English + Hindi)
+        🗣️ Bilingual Output (English + Hindi)
       </label>
     </div>
 
-    <!-- 🆕 Phase 5: Chat Interface (Hidden by default) -->
     <div id="chatInterface" style="display:none;">
       <div id="chatContainer" class="chat-container"></div>
       <div class="chat-input-area">
@@ -221,13 +243,12 @@
       </div>
     </div>
 
-    <!-- Standard Input (Hidden when Chat is active) -->
     <div id="standardInputArea">
       <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
       <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <button id="toolMicBtn" style="padding: 10px 15px;">🎤</button>
         <button id="toolGenerateBtn">✨ Generate</button>
-        <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;">🔊 Speak</button>
+        <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;"> Speak</button>
       </div>
     </div>
 
@@ -243,7 +264,6 @@
       <button id="downloadPosterBtn" style="margin-top: 15px;">📥 Download Poster as Image</button>
     </div>
 
-    <!-- 🆕 Phase 5: Card Preview -->
     <div id="cardPreviewBox" style="display:none; text-align:center; margin-top:20px;">
       <div id="cardPreview" class="card-preview">
         <div class="card-headline" id="cardHeadline">Headline</div>
@@ -270,6 +290,8 @@
       <button id="remixBtn" class="btn-secondary">✨ Remix</button>
       <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);">🚀 Make It Better</button>
       <button id="toolSaveBtn">⭐ Save</button>
+      <!-- 🆕 Phase 6: Save to Projects -->
+      <button id="saveToProjectBtn" class="btn-brand" style="padding: 10px 15px;">📂 Save to Projects</button>
       <button id="toolShareBtn">📤 Share</button>
     </div>
   </div>
@@ -281,12 +303,12 @@
         <button class="remix-btn" data-style="shorter">⚡ Shorter</button>
         <button class="remix-btn" data-style="professional">💼 Professional</button>
         <button class="remix-btn" data-style="funny">😄 Funny</button>
-        <button class="remix-btn" data-style="viral">🔥 Viral</button>
-        <button class="remix-btn" data-style="hindi">🇮🇳 Hindi</button>
-        <button class="remix-btn" data-style="english">🇬🇧 English</button>
+        <button class="remix-btn" data-style="viral"> Viral</button>
+        <button class="remix-btn" data-style="hindi">🇳 Hindi</button>
+        <button class="remix-btn" data-style="english">🇧 English</button>
         <button class="remix-btn" data-style="simple">📖 Simple</button>
         <button class="remix-btn" data-style="emotional">❤️ Emotional</button>
-        <button class="remix-btn" data-style="seo"> SEO</button>
+        <button class="remix-btn" data-style="seo">🔍 SEO</button>
         <button class="remix-btn" data-style="instagram">📸 Instagram</button>
         <button class="remix-btn" data-style="youtube">🎬 YouTube</button>
       </div>
@@ -324,7 +346,7 @@
     <button id="imageGenerateBtn">✨ Analyze Image</button>
     <div id="imageResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
     <div id="imageResultActions" style="display:none; margin-top: 15px;">
-      <button id="imageCopyBtn">📋 Copy</button><button id="imageShareBtn"> Share</button>
+      <button id="imageCopyBtn">📋 Copy</button><button id="imageShareBtn">📤 Share</button>
     </div>
   </div>
 
@@ -336,6 +358,13 @@
     <textarea id="docTextInput" rows="4" placeholder="Or paste your text here..."></textarea>
     <button id="docAnalyzeBtn">🔍 Analyze Document</button>
     <div id="docResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
+  </div>
+
+  <!-- 🆕 Phase 6: My Projects Section -->
+  <div id="projectsSection" class="hubPanel" style="display:none;">
+    <h2>📂 My Projects Workspace</h2>
+    <p style="color: var(--text-muted); font-size: 14px;">All your saved reports, emails, and ideas in one place.</p>
+    <div id="projectsGrid" class="projects-grid"></div>
   </div>
 
   <div id="toolFavoritesSection" style="display:none; margin-top: 30px;"><h3>⭐ Saved Favorites</h3><div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
@@ -366,18 +395,18 @@
     </div>
     <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
       <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
-      <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn"> Generate Investor Pitch Deck</button>
+      <button id="generateLaunchPlanBtn"> Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
     </div>
-    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div></div>
-    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn"> Share</button></div></div>
+    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn"> PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div></div>
+    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
   </div>
 
   <div id="ideaHistorySection" style="display:none; margin-top: 30px;"><h3>🕰️ Past Ideas</h3><div id="ideaHistoryRow" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="infoGrid" id="infoGrid">
-    <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>💬 AI Chat (Remembers Context)</li><li> Quote Card Maker</li><li>✉️ Cold Email Templates</li><li>🦈 Roast My Idea</li></ul></div>
-    <div class="infoCard"><h3> Daily AI Tip</h3><p class="tip-text" id="dailyTip">Use the AI Chat to have a continuous conversation. It remembers your last 5 messages!</p></div>
-    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Chat: Help me plan my day"</li><li>"Make a card: Success is not final"</li><li>"Write a cold email to a marketing agency"</li></ul></div>
+    <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>💬 AI Chat (Remembers Context)</li><li>📸 Quote Card Maker</li><li>✉️ Cold Email Templates</li><li>📂 My Projects Workspace</li></ul></div>
+    <div class="infoCard"><h3>💡 Daily AI Tip</h3><p class="tip-text" id="dailyTip">Use the AI Chat to have a continuous conversation. It remembers your last 5 messages!</p></div>
+    <div class="infoCard"><h3> Trending Prompts</h3><ul><li>"Chat: Help me plan my day"</li><li>"Make a card: Success is not final"</li><li>"Write a cold email to a marketing agency"</li></ul></div>
   </div>
 
   <div id="proModal">
