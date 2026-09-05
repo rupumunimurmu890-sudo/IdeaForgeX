@@ -10,6 +10,7 @@ const corsHeaders = {
 };
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const AI_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 
 // ------------------------------------
 // 🎯 Section markers for each report type
@@ -411,7 +412,35 @@ ${input}
 `;
   }
 
-  // tool === "auto" or "assistant" — general purpose
+  if (tool === "auto") {
+
+    // 🆕 AI Smart Router — pehli line mein category batao,
+    // phir seedha jawab do usi category ke hisaab se
+    return `
+You are IdeaForge-AI, a helpful multilingual AI assistant that can
+help with writing, translation, calculations, business ideas,
+studying, or general questions.
+${langLine}
+
+STEP 1: First, output exactly one line identifying which category
+this request best fits, in this exact format (nothing else on that line):
+ROUTE: <category>
+Where <category> is one of: writing, translate, calculator, student, assistant
+
+STEP 2: Then, on the next lines, give a direct, well-formatted, useful
+answer to the user's request. If it's a writing request, write it
+directly. If it's a calculation, solve it and show the answer clearly.
+If it's a translation request, translate it. Otherwise just answer
+helpfully. Do not repeat the ROUTE line again, and do not explain your
+category choice.
+
+User's request:
+${input}
+`;
+  }
+
+  // tool === "assistant" — general purpose (no routing needed,
+  // user explicitly picked this tool already)
   return `
 You are IdeaForge-AI, a helpful multilingual AI assistant that can
 help with writing, translation, calculations, business ideas,
@@ -677,6 +706,122 @@ export default {
           );
         }
 
+        // 🆕 AI Smart Router — "auto" tool ke response se
+        // ROUTE: <category> line nikalke alag kar do
+        let detectedRoute = null;
+
+        if (tool === "auto") {
+
+          const routeMatch = resultText.match(/^ROUTE:\s*(\w+)\s*\n/i);
+
+          if (routeMatch) {
+            detectedRoute = routeMatch[1].toLowerCase();
+            resultText = resultText.slice(routeMatch[0].length).trim();
+          }
+        }
+
+        return Response.json(
+          { success: true, result: resultText, route: detectedRoute },
+          { status: 200, headers: corsHeaders }
+        );
+
+      } catch (error) {
+
+        console.error("AI tool error:", error);
+
+        return Response.json(
+          { success: false, error: error?.message || "Something went wrong." },
+          { status: 200, headers: corsHeaders }
+        );
+      }
+    }
+
+    // ========================================
+    // 📸 IMAGE TOOLS — describe / extract text / ask
+    // ========================================
+
+    if (url.pathname === "/api/image-tool" && request.method === "POST") {
+
+      try {
+
+        const body = await request.json();
+
+        const imageBase64 = body.imageBase64 || "";
+        const action = body.action || "describe";
+        const question = (body.question || "").trim();
+        const language = body.language || "auto";
+
+        if (!imageBase64) {
+          return Response.json(
+            { success: false, error: "Please upload a photo first." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        // base64 → byte array (data URL prefix hata ke)
+        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+        let imageBytes;
+
+        try {
+
+          const binaryString = atob(base64Data);
+          imageBytes = new Uint8Array(binaryString.length);
+
+          for (let i = 0; i < binaryString.length; i++) {
+            imageBytes[i] = binaryString.charCodeAt(i);
+          }
+
+        } catch (decodeError) {
+          return Response.json(
+            { success: false, error: "Photo read nahi ho payi." },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const langLine =
+          language && language !== "auto"
+            ? `Respond in ${language}.`
+            : "Respond in English unless the image contains text in another language worth preserving.";
+
+        let visionPrompt = "";
+
+        if (action === "extract-text") {
+          visionPrompt = "Read and transcribe ALL text visible in this image exactly as it appears, preserving line breaks. If there is no text, say so clearly.";
+        } else if (action === "ask" && question) {
+          visionPrompt = `Look at this image and answer this question about it: "${question}". ${langLine}`;
+        } else {
+          visionPrompt = `Describe this image in detail — what it shows, notable objects, people, setting, and mood. ${langLine}`;
+        }
+
+        let resultText = "";
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+
+          try {
+
+            const result = await env.AI.run("@cf/llava-hf/llava-1.5-7b-hf", {
+              image: Array.from(imageBytes),
+              prompt: visionPrompt,
+              max_tokens: 1024
+            });
+
+            resultText = (result?.description || "").trim();
+
+            if (resultText.length > 2) break;
+
+          } catch (aiError) {
+            console.error("Image tool attempt " + attempt + " failed:", aiError);
+          }
+        }
+
+        if (!resultText) {
+          return Response.json(
+            { success: false, error: "Image analyze nahi ho payi, कृपया फिर से try करें।" },
+            { status: 200, headers: corsHeaders }
+          );
+        }
+
         return Response.json(
           { success: true, result: resultText },
           { status: 200, headers: corsHeaders }
@@ -684,7 +829,7 @@ export default {
 
       } catch (error) {
 
-        console.error("AI tool error:", error);
+        console.error("Image tool error:", error);
 
         return Response.json(
           { success: false, error: error?.message || "Something went wrong." },
