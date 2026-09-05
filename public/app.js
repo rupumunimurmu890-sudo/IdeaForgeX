@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX - Main JavaScript v5.0 (Phase 2: Business & Life Suite)
+// IdeaForgeX - Main JavaScript v6.0 (Phase 3: Creative Studio)
 // ========================================
 
 let currentReport = null, currentIdeaText = "", isProUser = false;
@@ -32,9 +32,9 @@ function escapeHtml(str) { const d = document.createElement("div"); d.textConten
 
 const SECTION_DISPLAY = [
   { key: "IDEA", title: "💡 The Idea" }, { key: "TARGET_CUSTOMERS", title: "🎯 Target Customers" }, { key: "CUSTOMER_PROBLEM", title: "😣 Customer Problem" },
-  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: " Competitor Analysis" },
+  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: "🥊 Competitor Analysis" },
   { key: "__SWOT__", title: "SWOT Analysis" }, { key: "MARKETING_STRATEGY", title: "📣 Marketing Strategy" }, { key: "STARTUP_COST", title: "💵 Startup Cost" },
-  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "⚠️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
+  { key: "ONE_YEAR_PROJECTION", title: " 1-Year Projection" }, { key: "RISKS", title: "⚠️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
 ];
 
 function setBar(barId, valId, val) { const b = document.getElementById(barId), v = document.getElementById(valId); if(b) b.style.width = (val||0)+"%"; if(v) v.textContent = (typeof val==="number"?val:"--")+"/100"; }
@@ -91,7 +91,7 @@ async function generateLaunchPlan() {
   try {
     const res = await fetch("/api/generate-launch-plan", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({idea:currentIdeaText, budget:document.getElementById("budgetInput")?.value||"", language:document.getElementById("languageSelect").value}) });
     const data = await res.json(); if(!res.ok||!data.success||!data.plan) throw new Error(data?.error);
-    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:" Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
+    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
     document.getElementById("launchPlanSection").style.display="block";
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
@@ -108,7 +108,6 @@ async function generatePitchDeck() {
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
 
-//  SMART ROUTER (Updated with Phase 2 tools)
 function smartRouteInput(input) {
   const t = input.toLowerCase().trim();
   if (/[\d]+\s*[\+\-\*\/\^]\s*[\d]+/.test(t) || /\b(calculate|math|kitna|jod|guna)\b/.test(t)) return 'calculator';
@@ -121,15 +120,18 @@ function smartRouteInput(input) {
   if (/\b(image|picture|photo|draw|generate image|banaiye|tasveer|chitra|painting)\b/.test(t)) return 'ai-image';
   if (/\b(promote|marketing|advertisement|ad|campaign|shop|business promote)\b/.test(t)) return 'autopilot';
   if (/\b(document|pdf|analyze document|summary|notes)\b/.test(t)) return 'document';
-  // 🆕 Phase 2 Routing
   if (/\b(goal|plan|roadmap|kaise karein|how to achieve|target)\b/.test(t)) return 'goalplan';
   if (/\b(profit|loss|money|calculate business|investment|roi|kamaai)\b/.test(t)) return 'moneycalc';
   if (/\b(improve|feedback|suggestion|better idea|idea check)\b/.test(t)) return 'improveidea';
+  // 🆕 Phase 3 Routing
+  if (/\b(poster|banner|flyer|graphic design)\b/.test(t)) return 'poster';
+  if (/\b(video|script|youtube|reel|shorts|tiktok)\b/.test(t)) return 'video';
+  if (/\b(workflow|batch|all in one|complete pack)\b/.test(t)) return 'workflow';
   return 'assistant';
 }
 
 let currentToolResult = "", currentToolInput = "", activeTool = "assistant", lastToolPayload = null;
-const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: "💡 Improve Idea", writing: "✍️ Writing", translate: " Translate", calculator: "🧮 Calculator", student: "📚 Student", code: "💻 Code", logo: "🎨 Logo", social: "📱 Social", socialpack: " Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools" };
+const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: "💡 Improve Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "✍️ Writing", translate: "🌐 Translate", calculator: "🧮 Calculator", student: "📚 Student", code: "💻 Code", logo: "🎨 Logo", social: "📱 Social", socialpack: " Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools" };
 
 function openToolWorkspace(tool) {
   activeTool = tool;
@@ -145,7 +147,7 @@ function openToolWorkspace(tool) {
   
   document.getElementById("toolWorkspaceTitle").textContent = TOOL_TITLES[tool] || "🤖 AI Assistant";
   
-  ["writingOptions", "translateOptions", "codeOptions", "logoOptions", "socialOptions", "aiImageOptions", "goalOptions", "moneyOptions"].forEach(id => {
+  ["writingOptions", "translateOptions", "codeOptions", "logoOptions", "socialOptions", "aiImageOptions", "goalOptions", "moneyOptions", "posterOptions", "videoOptions", "workflowOptions"].forEach(id => {
     if(document.getElementById(id)) document.getElementById(id).style.display = "none";
   });
 
@@ -157,6 +159,9 @@ function openToolWorkspace(tool) {
   if (tool === "ai-image") document.getElementById("aiImageOptions").style.display = "flex";
   if (tool === "goalplan") document.getElementById("goalOptions").style.display = "flex";
   if (tool === "moneycalc") document.getElementById("moneyOptions").style.display = "flex";
+  if (tool === "poster") document.getElementById("posterOptions").style.display = "flex";
+  if (tool === "video") document.getElementById("videoOptions").style.display = "flex";
+  if (tool === "workflow") document.getElementById("workflowOptions").style.display = "flex";
   
   document.getElementById("toolWorkspace").style.display = "block";
   document.getElementById("toolWorkspace").scrollIntoView({behavior:"smooth"});
@@ -191,30 +196,53 @@ function renderAutopilotResult(pkg) {
 
 function renderSocialPackResult(pack) {
   const container = document.getElementById("socialPackResult"); container.innerHTML = "";
-  const sections = [{ key: "INSTAGRAM", title: "📸 Instagram" }, { key: "FACEBOOK", title: " Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: "📝 YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "🖼️ Thumbnail Prompt" }];
+  const sections = [{ key: "INSTAGRAM", title: "📸 Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: "📝 YouTube Description" }, { key: "SHORTS_CAPTION", title: " Shorts Caption" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "🖼️ Thumbnail Prompt" }];
   sections.forEach(s => { if (pack[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pack[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
-// 🆕 Phase 2 Renderers
 function renderGoalResult(plan) {
   const container = document.getElementById("goalResult"); container.innerHTML = "";
-  const sections = [{ key: "OVERVIEW", title: "🎯 Strategy Overview" }, { key: "MILESTONES", title: "🏆 Key Milestones" }, { key: "ACTION_PLAN", title: " Action Plan" }, { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" }, { key: "POTENTIAL_OBSTACLES", title: "⚠️ Potential Obstacles" }];
+  const sections = [{ key: "OVERVIEW", title: "🎯 Strategy Overview" }, { key: "MILESTONES", title: " Key Milestones" }, { key: "ACTION_PLAN", title: "📅 Action Plan" }, { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" }, { key: "POTENTIAL_OBSTACLES", title: "️ Potential Obstacles" }];
   sections.forEach(s => { if (plan[s.key]) { const div = document.createElement("div"); div.className = "goal-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(plan[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderMoneyResult(calc) {
   const container = document.getElementById("moneyResult"); container.innerHTML = "";
-  const sections = [{ key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" }, { key: "MONTHLY_EXPENSES", title: "📉 Monthly Expenses" }, { key: "REVENUE_MODEL", title: "💵 Revenue Model" }, { key: "PROFIT_PROJECTION", title: "📈 Profit Projection" }, { key: "BREAK_EVEN", title: "⚖️ Break-Even Point" }, { key: "RISKS", title: "⚠️ Financial Risks" }];
+  const sections = [{ key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" }, { key: "MONTHLY_EXPENSES", title: " Monthly Expenses" }, { key: "REVENUE_MODEL", title: "💵 Revenue Model" }, { key: "PROFIT_PROJECTION", title: "📈 Profit Projection" }, { key: "BREAK_EVEN", title: "⚖️ Break-Even Point" }, { key: "RISKS", title: "⚠️ Financial Risks" }];
   sections.forEach(s => { if (calc[s.key]) { const div = document.createElement("div"); div.className = "money-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(calc[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderImproveResult(feedback) {
   const container = document.getElementById("improveResult"); container.innerHTML = "";
-  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: "🚀 Immediate Next Steps" }];
+  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: " What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: " Immediate Next Steps" }];
   sections.forEach(s => { if (feedback[s.key]) { const div = document.createElement("div"); div.className = "improve-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(feedback[s.key])}</p>`; container.appendChild(div); } });
+  container.style.display = "block";
+}
+
+//  Phase 3 Renderers
+function renderPosterResult(poster, theme) {
+  document.getElementById("posterHeadline").textContent = poster.HEADLINE || "Headline";
+  document.getElementById("posterSubhead").textContent = poster.SUBHEADLINE || "Subheadline";
+  document.getElementById("posterBody").textContent = poster.BODY || "Body text goes here.";
+  document.getElementById("posterFooter").textContent = poster.FOOTER || "Footer / CTA";
+  document.getElementById("posterPreview").style.background = theme;
+  document.getElementById("posterPreviewBox").style.display = "block";
+}
+
+function renderVideoResult(video) {
+  const container = document.getElementById("videoResult"); container.innerHTML = "";
+  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "🎙️ Intro" }, { key: "BODY", title: " Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  sections.forEach(s => { if (video[s.key]) { const div = document.createElement("div"); div.className = "video-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(video[s.key])}</p>`; container.appendChild(div); } });
+  container.style.display = "block";
+}
+
+function renderWorkflowResult(workflow) {
+  const container = document.getElementById("workflowResult"); container.innerHTML = "";
+  const sections = [{ key: "PART_1", title: "📦 Part 1" }, { key: "PART_2", title: "📦 Part 2" }, { key: "PART_3", title: " Part 3" }];
+  sections.forEach(s => { if (workflow[s.key]) { const div = document.createElement("div"); div.className = "workflow-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(workflow[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
@@ -228,6 +256,9 @@ async function runAiTool(input, tool) {
   document.getElementById("goalResult").style.display="none";
   document.getElementById("moneyResult").style.display="none";
   document.getElementById("improveResult").style.display="none";
+  document.getElementById("videoResult").style.display="none";
+  document.getElementById("workflowResult").style.display="none";
+  document.getElementById("posterPreviewBox").style.display="none";
   const imgBox = document.getElementById("generatedImageBox"); if(imgBox) imgBox.style.display="none";
 
   try {
@@ -256,7 +287,6 @@ async function runAiTool(input, tool) {
       renderSocialPackResult(data.pack); currentToolResult = JSON.stringify(data.pack); resAct.style.display="flex"; return;
     }
 
-    // 🆕 Phase 2 Tools Logic
     if (tool === "goalplan") {
       const timeframe = document.getElementById("goalTimeframeSelect")?.value || "6 Months";
       const res = await fetch("/api/goal-plan", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ goal: input, timeframe }) });
@@ -267,7 +297,7 @@ async function runAiTool(input, tool) {
     }
 
     if (tool === "moneycalc") {
-      const investment = document.getElementById("moneyInvestment")?.value || "₹10,000";
+      const investment = document.getElementById("moneyInvestment")?.value || "10,000";
       const type = document.getElementById("moneyTypeSelect")?.value || "Small Business";
       const res = await fetch("/api/money-calc", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ business: input, investment, type }) });
       const data = await res.json();
@@ -282,6 +312,36 @@ async function runAiTool(input, tool) {
       if(!res.ok||!data.success||!data.feedback) throw new Error(data?.error || "Improve idea generate nahi hua.");
       if(!isProUser) incrementUsage();
       renderImproveResult(data.feedback); currentToolResult = JSON.stringify(data.feedback); resAct.style.display="flex"; return;
+    }
+
+    // 🆕 Phase 3 Tools Logic
+    if (tool === "poster") {
+      const theme = document.getElementById("posterThemeSelect")?.value || "linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;";
+      const res = await fetch("/api/generate-poster", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ topic: input }) });
+      const data = await res.json();
+      if(!res.ok||!data.success||!data.poster) throw new Error(data?.error || "Poster content generate nahi hua.");
+      if(!isProUser) incrementUsage();
+      renderPosterResult(data.poster, theme);
+      currentToolResult = `${data.poster.HEADLINE} - ${data.poster.SUBHEADLINE}`;
+      resAct.style.display="flex"; return;
+    }
+
+    if (tool === "video") {
+      const platform = document.getElementById("videoPlatformSelect")?.value || "YouTube Long";
+      const res = await fetch("/api/generate-video", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ topic: input, platform }) });
+      const data = await res.json();
+      if(!res.ok||!data.success||!data.video) throw new Error(data?.error || "Video script generate nahi hua.");
+      if(!isProUser) incrementUsage();
+      renderVideoResult(data.video); currentToolResult = JSON.stringify(data.video); resAct.style.display="flex"; return;
+    }
+
+    if (tool === "workflow") {
+      const type = document.getElementById("workflowTypeSelect")?.value || "startup-launch";
+      const res = await fetch("/api/run-workflow", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ topic: input, type }) });
+      const data = await res.json();
+      if(!res.ok||!data.success||!data.workflow) throw new Error(data?.error || "Workflow generate nahi hua.");
+      if(!isProUser) incrementUsage();
+      renderWorkflowResult(data.workflow); currentToolResult = JSON.stringify(data.workflow); resAct.style.display="flex"; return;
     }
 
     if (tool === "ai-image") {
@@ -345,7 +405,7 @@ async function analyzeDocument() {
     if(!res.ok||!data.success||!data.analysis) throw new Error(data?.error);
     if(!isProUser) incrementUsage();
     const resultDiv = document.getElementById("docResult"); resultDiv.innerHTML = "";
-    const sections = [{ key: "SUMMARY", title: " Summary" }, { key: "KEY_POINTS", title: "🎯 Key Points" }, { key: "QUESTIONS_ANSWERS", title: " Q&A" }, { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" }, { key: "MCQS", title: "📝 MCQs" }];
+    const sections = [{ key: "SUMMARY", title: "📋 Summary" }, { key: "KEY_POINTS", title: "🎯 Key Points" }, { key: "QUESTIONS_ANSWERS", title: "❓ Q&A" }, { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" }, { key: "MCQS", title: "📝 MCQs" }];
     sections.forEach(s => { if (data.analysis[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(data.analysis[s.key])}</p>`; resultDiv.appendChild(div); } });
     resultDiv.style.display = "block"; showToast("Document analyzed successfully!", "success");
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
@@ -358,6 +418,22 @@ function speakResult() {
   const utterance = new SpeechSynthesisUtterance(currentToolResult);
   utterance.lang = "hi-IN"; utterance.rate = 1.0;
   window.speechSynthesis.speak(utterance); showToast("🔊 Speaking...", "info");
+}
+
+// 🆕 Download Poster as Image
+async function downloadPoster() {
+  if (!window.html2canvas) { showToast("PDF/Image lib load nahi hui.", "error"); return; }
+  const btn = document.getElementById("downloadPosterBtn");
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Downloading...';
+  try {
+    const posterEl = document.getElementById("posterPreview");
+    const canvas = await window.html2canvas(posterEl, { scale: 2, backgroundColor: null, useCORS: true });
+    const link = document.createElement('a');
+    link.download = 'IdeaForge-Poster-' + Date.now() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast("🖼️ Poster downloaded as PNG!", "success");
+  } catch(e) { showToast("Poster download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
 const TH_KEY="ideaforge_tool_history"; function getTH(){ try{return JSON.parse(localStorage.getItem(TH_KEY))||[];}catch(e){return[];} }
@@ -394,6 +470,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("speakResultBtn")?.addEventListener("click", speakResult);
   document.getElementById("toolSaveBtn")?.addEventListener("click", () => { if(currentToolResult && currentToolInput) { saveToTH(activeTool, currentToolInput, currentToolResult); showToast("⭐ Saved!", "success"); } });
   document.getElementById("toolShareBtn")?.addEventListener("click", () => { if(currentToolResult) { if(navigator.share) navigator.share({title:"IdeaForge-AI", text:currentToolResult}); else { copyText(currentToolResult); showToast("Copied for sharing!", "info"); } } });
+  
+  // 🆕 Poster Download
+  document.getElementById("downloadPosterBtn")?.addEventListener("click", downloadPoster);
   
   document.getElementById("hubMicBtn")?.addEventListener("click", function(){ startVoiceInput("hubInput", this); });
   document.getElementById("toolMicBtn")?.addEventListener("click", function(){ startVoiceInput("toolInput", this); });
@@ -472,11 +551,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   
   const tips = [
-    "Use Auto-Pilot with 'Mujhe apni shop ka promotion karna hai' for instant marketing package!",
-    "Try Goal Plan tool: '6 mahine mein YouTube channel grow karna hai'",
-    "Use Money Calc: '₹50,000 mein goat farming ka profit calculate karo'",
-    "Try Improve Idea: 'Mera online t-shirt business ka idea check karo'",
-    "Use Remix button to transform any content into different styles!"
+    "Use Poster Maker to create beautiful social media graphics in seconds!",
+    "Try Video Script tool for YouTube Shorts or Instagram Reels!",
+    "Use AI Workflow to generate a complete Startup Launch pack in one click!",
+    "Use Remix button to transform any content into different styles!",
+    "Try Goal Plan tool: '6 mahine mein YouTube channel grow karna hai'"
   ];
   document.getElementById("dailyTip").textContent = tips[Math.floor(Math.random() * tips.length)];
 });
