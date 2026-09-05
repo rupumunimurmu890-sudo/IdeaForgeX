@@ -1,364 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#4c1d95">
-
-<title>IdeaForge-AI - AI Tools for Everyone</title>
-<meta name="description" content="IdeaForge-AI — one AI hub for business ideas, writing, translation, calculations and more.">
-
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IdeaForge-AI | AI Tools for Everyone</title>
+  
+  <!-- 🌟 Modern UI/UX CSS (Glassmorphism & Animations) -->
+  <style>
+    :root {
+      --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899;
+      --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
+      --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444;
+    }
+    body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
+    .reportCard, .pitchSlide, .hubPanel, .toolWorkspace, .imageToolWorkspace { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+    input, select, textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: border-color 0.2s; margin-bottom: 10px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+    button { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease; margin: 5px; }
+    button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.4); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .hubCategories { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin: 20px 0; }
+    .hubChip { background: var(--card-bg); padding: 16px 10px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; font-size: 14px; font-weight: 500; }
+    .hubChip:hover { border-color: var(--primary); transform: scale(1.03); }
+    .hubChip.active { background: var(--primary); color: white; border-color: var(--primary); }
+    pre { background: #000; color: #00ff00; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; border: 1px solid var(--border); }
+    .tool-options-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tool-options-row select { flex: 1; min-width: 150px; margin-bottom: 0; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); color: var(--text-main); padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 1000; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toastError { border-left-color: var(--error); }
+    .toastSuccess { border-left-color: var(--success); }
+    
+    /* Utility */
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .scoreBar { background: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+    .scoreBarFill { background: linear-gradient(90deg, var(--primary), var(--secondary)); height: 100%; transition: width 0.5s ease; }
+    #proBadge { background: gold; color: black; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: none; }
+    .ad-banner { background: linear-gradient(90deg, #ff9800, #ff5722); color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; display: none; }
+    #usageBanner { background: #1e293b; border-left: 4px solid var(--primary); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; display: none; font-size: 14px; }
+    #usageBanner.limitReached { border-left-color: var(--error); color: var(--error); }
+    
+    /* Modal */
+    #proModal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }
+    .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; max-width: 400px; width: 90%; text-align: center; border: 1px solid var(--primary); }
+  </style>
 </head>
-
 <body>
 
-  <header class="topBar">
-    <div class="brand">
-      <span class="brandMark">💡</span>
-      <div>
-        <div class="brandName">IdeaForge-AI</div>
-        <div class="brandTag" data-i18n="tagline">AI Tools for Everyone</div>
-      </div>
+  <!-- Header -->
+  <header class="flex-between" style="margin-bottom: 20px;">
+    <div>
+      <h1 style="margin:0; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">IdeaForge-AI</h1>
+      <p style="margin:5px 0 0 0; color: var(--text-muted);" data-i18n="tagline">AI Tools for Everyone</p>
     </div>
-    <select id="uiLanguageSelect" class="uiLangSelect" title="Interface Language">
-      <option value="en">🌐 English</option>
-      <option value="hi">🌐 हिन्दी</option>
-      <option value="bn">🌐 বাংলা</option>
-      <option value="ur">🌐 اردو</option>
-    </select>
+    <div class="flex-between">
+      <span id="proBadge">PRO</span>
+      <select id="uiLanguageSelect" style="width: auto; margin:0;">
+        <option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option>
+        <option value="ur">Urdu</option><option value="es">Spanish</option><option value="fr">French</option>
+        <option value="de">German</option><option value="pt">Portuguese</option><option value="ru">Russian</option>
+        <option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option>
+        <option value="ar">Arabic</option><option value="tr">Turkish</option><option value="vi">Vietnamese</option>
+        <option value="id">Indonesian</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="sv">Swedish</option>
+      </select>
+    </div>
   </header>
 
-  <main class="layout">
+  <!-- Banners -->
+  <div id="usageBanner"></div>
+  <div id="adContainer" class="ad-banner">
+    <p style="margin:0 0 10px 0;">📢 Advertisement Space</p>
+    <button onclick="document.getElementById('proModal').style.display='flex'">🚀 Upgrade to Pro</button>
+  </div>
 
-    <!-- ================= HUB: Auto-ask + Categories ================= -->
-    <section class="panel hubPanel">
+  <!-- Hub Panel -->
+  <div class="hubPanel">
+    <label style="color: var(--text-muted); margin-bottom: 10px; display: block;" data-i18n="hubLabel">✨ What do you want to do?</label>
+    <div style="display: flex; gap: 10px;">
+      <textarea id="hubInput" rows="2" placeholder="e.g., Write an email, Calculate 25*4, Translate Hello to Hindi..."></textarea>
+      <button id="hubMicBtn" style="padding: 10px 15px;">🎤</button>
+      <button id="hubAskBtn" data-i18n="askAiBtn">➤ Ask AI</button>
+    </div>
+  </div>
 
-      <div id="usageBanner" class="usageBanner" style="display:none;"></div>
+  <!-- Hub Categories (Chips) -->
+  <div class="hubCategories">
+    <div class="hubChip" data-tool="assistant" data-i18n="chipAssistant">🤖 AI Assistant</div>
+    <div class="hubChip" data-tool="writing" data-i18n="chipWriting">✍️ Writing</div>
+    <div class="hubChip" data-tool="translate" data-i18n="chipTranslate">🌐 Translate</div>
+    <div class="hubChip" data-tool="calculator" data-i18n="chipCalculator">🧮 Calculator</div>
+    <div class="hubChip" data-tool="student" data-i18n="chipStudent">📚 Student</div>
+    <!-- 🆕 New Tools -->
+    <div class="hubChip" data-tool="code">💻 Code</div>
+    <div class="hubChip" data-tool="logo">🎨 Logo</div>
+    <div class="hubChip" data-tool="social">📱 Social</div>
+    <div class="hubChip" data-tool="image" data-i18n="chipImage">📸 Image</div>
+    <div class="hubChip" id="voiceAiChip" data-i18n="chipVoice">🎤 Voice</div>
+  </div>
 
-      <label for="hubInput" class="fieldLabel" data-i18n="hubLabel">✨ आप क्या करना चाहते हैं? (What do you want to do?)</label>
-      <div class="inputWithMic">
-        <textarea id="hubInput" placeholder="Example: मेरे लिए बैंक में देने की application लिखो / Translate this to English / ₹800 प्रति घंटे के हिसाब से 2 घंटे 35 मिनट का हिसाब करो" maxlength="3000"></textarea>
-        <button type="button" id="hubMicBtn" class="micBtn" title="बोलकर पूछें">🎤</button>
-      </div>
+  <!-- Tool Workspace -->
+  <div id="toolWorkspace" class="toolWorkspace" style="display: none;">
+    <h2 id="toolWorkspaceTitle" style="margin-top:0;">🤖 AI Assistant</h2>
+    
+    <!-- Dynamic Options for Specific Tools -->
+    <div id="writingOptions" class="tool-options-row" style="display:none;">
+      <select id="writingTypeSelect"><option value="Email">Email</option><option value="Essay">Essay</option><option value="Letter">Letter</option><option value="Blog">Blog Post</option></select>
+      <select id="toneSelect"><option value="Professional">Professional</option><option value="Casual">Casual</option><option value="Friendly">Friendly</option><option value="Formal">Formal</option></select>
+    </div>
+    <div id="translateOptions" class="tool-options-row" style="display:none;">
+      <select id="fromLanguageSelect"><option value="auto">Auto Detect</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Spanish">Spanish</option></select>
+      <select id="toLanguageSelect"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option></select>
+    </div>
+    <!-- 🆕 New Tool Options -->
+    <div id="codeOptions" class="tool-options-row" style="display:none;">
+      <label style="color:var(--text-muted); align-self:center;">Lang:</label>
+      <select id="codeLangSelect"><option value="Python">Python</option><option value="JavaScript">JavaScript</option><option value="HTML/CSS">HTML/CSS</option><option value="React">React</option><option value="Java">Java</option><option value="C++">C++</option></select>
+    </div>
+    <div id="logoOptions" class="tool-options-row" style="display:none;">
+      <label style="color:var(--text-muted); align-self:center;">Style:</label>
+      <select id="logoStyleSelect"><option value="Minimalist">Minimalist</option><option value="3D Modern">3D Modern</option><option value="Vintage">Vintage</option><option value="Abstract">Abstract</option></select>
+    </div>
+    <div id="socialOptions" class="tool-options-row" style="display:none;">
+      <label style="color:var(--text-muted); align-self:center;">Platform:</label>
+      <select id="platformSelect"><option value="Instagram">Instagram</option><option value="LinkedIn">LinkedIn</option><option value="Twitter/X">Twitter/X</option><option value="Facebook">Facebook</option></select>
+    </div>
 
-      <button type="button" id="hubAskBtn" class="primaryBtn" data-i18n="askAiBtn">➤ Ask AI</button>
+    <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <button id="toolMicBtn" style="padding: 10px 15px;"></button>
+      <button id="toolGenerateBtn" data-i18n="generateBtn">✨ Generate</button>
+    </div>
 
-      <div class="hubCategories" id="hubCategories">
-        <button type="button" class="hubChip" data-tool="assistant" data-i18n="chipAssistant">🤖 AI Assistant</button>
-        <button type="button" class="hubChip" data-tool="writing" data-i18n="chipWriting">✍️ Writing</button>
-        <button type="button" class="hubChip" data-tool="translate" data-i18n="chipTranslate">🌐 Translate</button>
-        <button type="button" class="hubChip" data-tool="calculator" data-i18n="chipCalculator">🧮 Calculator</button>
-        <button type="button" class="hubChip" data-scroll="businessSection" data-i18n="chipBusiness">💼 Business</button>
-        <button type="button" class="hubChip" data-tool="student" data-i18n="chipStudent">📚 Student</button>
-        <button type="button" class="hubChip" data-external="https://statuscraft-ai.rupumunimurmu890.workers.dev" data-i18n="chipStatus">🎨 Status</button>
-        <button type="button" class="hubChip" data-external="https://admakerai-new.rupumunimurmu890.workers.dev" data-i18n="chipAd">📢 Advertisement</button>
-        <button type="button" class="hubChip" data-tool="image" data-i18n="chipImage">📸 Image Tools</button>
-        <button type="button" class="hubChip" id="voiceAiChip" data-i18n="chipVoice">🎤 Voice AI</button>
-      </div>
+    <div id="toolResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border); white-space: pre-wrap;"></div>
+    
+    <div id="toolResultActions" style="display:none; margin-top: 15px; gap: 10px;">
+      <button id="toolCopyBtn" data-i18n="copyBtn">📋 Copy</button>
+      <button id="toolRegenerateBtn" data-i18n="regenerateBtn">🔄 Regenerate</button>
+      <button id="toolSaveBtn" data-i18n="saveBtn">⭐ Save</button>
+      <button id="toolShareBtn" data-i18n="shareBtn">📤 Share</button>
+    </div>
+  </div>
 
-      <!-- Generic tool workspace — Writing/Translate/Calculator/Student/Assistant -->
-      <div id="toolWorkspace" class="toolWorkspace" style="display:none;">
+  <!-- Image Tool Workspace -->
+  <div id="imageToolWorkspace" class="imageToolWorkspace" style="display: none;">
+    <h2 style="margin-top:0;">📸 Image Tools</h2>
+    <div id="imageUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
+      <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+      <p id="imageUploadText"> Click to upload an image</p>
+      <img id="imagePreview" style="display:none; max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">
+    </div>
+    <select id="imageActionSelect">
+      <option value="describe">Describe Image</option>
+      <option value="extract-text">Extract Text (OCR)</option>
+      <option value="ask">Ask Question about Image</option>
+    </select>
+    <input type="text" id="imageQuestionInput" placeholder="Ask a question about the image..." style="display:none;">
+    <button id="imageGenerateBtn">✨ Analyze Image</button>
+    <div id="imageResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
+    <div id="imageResultActions" style="display:none; margin-top: 15px;">
+      <button id="imageCopyBtn">📋 Copy</button>
+      <button id="imageShareBtn">📤 Share</button>
+    </div>
+  </div>
 
-        <div id="toolWorkspaceTitle" class="subReportTitle">🤖 AI Assistant</div>
+  <!-- History & Favorites -->
+  <div id="toolFavoritesSection" style="display:none; margin-top: 30px;">
+    <h3>⭐ Saved Favorites</h3>
+    <div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div>
+  </div>
+  <div id="toolHistorySection" style="display:none; margin-top: 20px;">
+    <h3>🕒 Recent Tool History</h3>
+    <div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div>
+  </div>
 
-        <div id="writingOptions" class="toolExtraFields" style="display:none;">
-          <select id="writingTypeSelect">
-            <option value="">Type: General</option>
-            <option value="WhatsApp Message">WhatsApp Message</option>
-            <option value="Application">Application</option>
-            <option value="Letter">Letter</option>
-            <option value="Email">Email</option>
-            <option value="Resume/CV">Resume/CV</option>
-            <option value="Caption">Caption</option>
-            <option value="Hashtags">Hashtags</option>
-            <option value="YouTube Title">YouTube Title</option>
-            <option value="YouTube Description">YouTube Description</option>
-            <option value="Instagram Caption">Instagram Caption</option>
-            <option value="Speech">Speech</option>
-            <option value="Story">Story</option>
-            <option value="Article">Article</option>
-            <option value="Shayari">Shayari</option>
-            <option value="Rewrite">Rewrite</option>
-            <option value="Business Description">Business Description</option>
-          </select>
-          <select id="toneSelect">
-            <option value="">Tone: Simple</option>
-            <option value="Professional">Professional</option>
-            <option value="Friendly">Friendly</option>
-            <option value="Emotional">Emotional</option>
-          </select>
-        </div>
-
-        <div id="translateOptions" class="toolExtraFields" style="display:none;">
-          <select id="fromLanguageSelect">
-            <option value="auto">Detect Language</option>
-            <option value="English">English</option>
-            <option value="Hindi">Hindi</option>
-            <option value="Bengali">Bengali</option>
-            <option value="Tamil">Tamil</option>
-            <option value="Telugu">Telugu</option>
-            <option value="Marathi">Marathi</option>
-            <option value="Gujarati">Gujarati</option>
-            <option value="Punjabi">Punjabi</option>
-            <option value="Kannada">Kannada</option>
-            <option value="Malayalam">Malayalam</option>
-            <option value="Odia">Odia</option>
-            <option value="Assamese">Assamese</option>
-            <option value="Urdu">Urdu</option>
-            <option value="Nepali">Nepali</option>
-            <option value="Sanskrit">Sanskrit</option>
-            <option value="Santali">Santali</option>
-            <option value="Spanish">Spanish</option>
-            <option value="French">French</option>
-            <option value="German">German</option>
-            <option value="Portuguese">Portuguese</option>
-            <option value="Italian">Italian</option>
-            <option value="Russian">Russian</option>
-            <option value="Arabic">Arabic</option>
-            <option value="Chinese">Chinese</option>
-            <option value="Japanese">Japanese</option>
-            <option value="Korean">Korean</option>
-            <option value="Turkish">Turkish</option>
-            <option value="Indonesian">Indonesian</option>
-            <option value="Vietnamese">Vietnamese</option>
-          </select>
-          <span class="swapArrow">→</span>
-          <select id="toLanguageSelect">
-            <option value="English">English</option>
-            <option value="Hindi">Hindi</option>
-            <option value="Bengali">Bengali</option>
-            <option value="Tamil">Tamil</option>
-            <option value="Telugu">Telugu</option>
-            <option value="Marathi">Marathi</option>
-            <option value="Gujarati">Gujarati</option>
-            <option value="Punjabi">Punjabi</option>
-            <option value="Kannada">Kannada</option>
-            <option value="Malayalam">Malayalam</option>
-            <option value="Odia">Odia</option>
-            <option value="Assamese">Assamese</option>
-            <option value="Urdu">Urdu</option>
-            <option value="Nepali">Nepali</option>
-            <option value="Sanskrit">Sanskrit</option>
-            <option value="Santali">Santali</option>
-            <option value="Spanish">Spanish</option>
-            <option value="French">French</option>
-            <option value="German">German</option>
-            <option value="Portuguese">Portuguese</option>
-            <option value="Italian">Italian</option>
-            <option value="Russian">Russian</option>
-            <option value="Arabic">Arabic</option>
-            <option value="Chinese">Chinese</option>
-            <option value="Japanese">Japanese</option>
-            <option value="Korean">Korean</option>
-            <option value="Turkish">Turkish</option>
-            <option value="Indonesian">Indonesian</option>
-            <option value="Vietnamese">Vietnamese</option>
-          </select>
-        </div>
-
-        <div class="inputWithMic">
-          <textarea id="toolInput" placeholder="Type your request here..." maxlength="3000"></textarea>
-          <button type="button" id="toolMicBtn" class="micBtn" title="बोलकर पूछें">🎤</button>
-        </div>
-
-        <button type="button" id="toolGenerateBtn" class="primaryBtn" data-i18n="generateBtn">✨ Generate</button>
-
-        <div id="toolResult" class="toolResultBox" style="display:none;"></div>
-
-        <div id="toolResultActions" class="reportActions" style="display:none;">
-          <button type="button" id="toolCopyBtn" class="actionBtn" data-i18n="copyBtn">📋 Copy</button>
-          <button type="button" id="toolRegenerateBtn" class="actionBtn" data-i18n="regenerateBtn">🔄 Regenerate</button>
-          <button type="button" id="toolSaveBtn" class="actionBtn" data-i18n="saveBtn">⭐ Save</button>
-          <button type="button" id="toolShareBtn" class="actionBtn" data-i18n="shareBtn">📤 Share</button>
-        </div>
-
-        <div id="toolHistorySection" class="ideaHistorySection" style="display:none;">
-          <div class="historyLabel">🕘 Recent</div>
-          <div id="toolHistoryRow" class="ideaHistoryRow"></div>
-        </div>
-
-        <div id="toolFavoritesSection" class="ideaHistorySection" style="display:none;">
-          <div class="historyLabel">⭐ My Favorites</div>
-          <div id="toolFavoritesRow" class="ideaHistoryRow"></div>
-        </div>
-
-      </div>
-
-      <!-- 🆕 Image Tools workspace -->
-      <div id="imageToolWorkspace" class="toolWorkspace" style="display:none;">
-
-        <div class="subReportTitle">📸 Image Tools</div>
-
-        <div id="imageUploadCard" class="imageUploadCard">
-          <span id="imageUploadText">Tap to upload a photo</span>
-          <img id="imagePreview" style="display:none;">
-        </div>
-        <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
-
-        <div class="toolExtraFields">
-          <select id="imageActionSelect">
-            <option value="describe">🖼️ Describe Image</option>
-            <option value="extract-text">📝 Extract Text</option>
-            <option value="ask">❓ Ask About Image</option>
-          </select>
-        </div>
-
-        <input type="text" id="imageQuestionInput" placeholder="अपना सवाल लिखें..." style="display:none;">
-
-        <button type="button" id="imageGenerateBtn" class="primaryBtn">✨ Analyze Image</button>
-
-        <div id="imageResult" class="toolResultBox" style="display:none;"></div>
-
-        <div id="imageResultActions" class="reportActions" style="display:none;">
-          <button type="button" id="imageCopyBtn" class="actionBtn">📋 Copy</button>
-          <button type="button" id="imageShareBtn" class="actionBtn">📤 Share</button>
-        </div>
-
-      </div>
-
-
-    </section>
-
-    <section id="businessSection">
-
-    <section class="panel inputPanel">
-
-      <label for="ideaInput" class="fieldLabel">✨ Describe your business idea</label>
-      <textarea id="ideaInput" placeholder="Example: I want to start a home-based tiffin service for office workers in my city..." maxlength="2000"></textarea>
-      <div class="charCount"><span id="charCount">0</span> / 2000</div>
-
-      <label for="languageSelect" class="fieldLabel" data-i18n="languageLabel">🌐 Language</label>
-      <select id="languageSelect">
-        <option value="auto">Auto Detect</option>
-        <option value="English">English</option>
-        <option value="Hindi">Hindi (हिन्दी)</option>
-        <option value="Hinglish">Hinglish</option>
-        <option value="Bengali">Bengali</option>
-        <option value="Marathi">Marathi</option>
-        <option value="Gujarati">Gujarati</option>
-        <option value="Punjabi">Punjabi</option>
-        <option value="Tamil">Tamil</option>
-        <option value="Telugu">Telugu</option>
-        <option value="Kannada">Kannada</option>
-        <option value="Malayalam">Malayalam</option>
-        <option value="Odia">Odia</option>
-        <option value="Assamese">Assamese</option>
-        <option value="Urdu">Urdu</option>
-        <option value="Nepali">Nepali</option>
-        <option value="Sanskrit">Sanskrit</option>
-        <option value="Santali">Santali</option>
-        <option value="Spanish">Spanish</option>
-        <option value="French">French</option>
-        <option value="German">German</option>
-        <option value="Portuguese">Portuguese</option>
-        <option value="Italian">Italian</option>
-        <option value="Russian">Russian</option>
-        <option value="Arabic">Arabic</option>
-        <option value="Chinese">Chinese</option>
-        <option value="Japanese">Japanese</option>
-        <option value="Korean">Korean</option>
-        <option value="Turkish">Turkish</option>
-        <option value="Indonesian">Indonesian</option>
-        <option value="Vietnamese">Vietnamese</option>
+  <!-- Startup Idea Generator Section -->
+  <div class="hubPanel" id="ideaSection">
+    <h2>💡 Startup Idea Analyzer</h2>
+    <textarea id="ideaInput" rows="3" placeholder="Describe your startup idea here..."></textarea>
+    <div class="flex-between">
+      <select id="languageSelect" style="width: auto;">
+        <option value="auto">Auto Detect</option><option value="English">English</option><option value="Hindi">Hindi</option>
       </select>
-
-      <label for="budgetInput" class="fieldLabel">💰 Your Starting Budget (optional, for Launch Plan)</label>
-      <input type="text" id="budgetInput" placeholder="Example: ₹50,000">
-
-      <button type="button" id="generateBtn" class="primaryBtn">
-        🚀 Generate Complete Startup Report
-      </button>
-
-      <div id="ideaHistorySection" class="ideaHistorySection" style="display:none;">
-        <div class="historyLabel">🕘 My Recent Ideas</div>
-        <div id="ideaHistoryRow" class="ideaHistoryRow"></div>
+      <div>
+        <span id="charCount" style="color: var(--text-muted); margin-right: 10px;">0</span>
+        <button id="generateBtn" data-i18n="generateBtn">✨ Generate Report</button>
+        <button id="newIdeaBtn" style="background: #475569;">️ New Idea</button>
       </div>
+    </div>
+  </div>
 
-    </section>
+  <!-- Report Section -->
+  <div id="reportSection" style="display:none;">
+    <div class="hubPanel">
+      <h2>📊 Analysis Score</h2>
+      <div style="font-size: 24px; font-weight: bold; margin-bottom: 15px;">Overall: <span id="scoreOverall">--</span>/100</div>
+      <div>Market Demand: <span id="valMarket">--</span><div class="scoreBar"><div id="barMarket" class="scoreBarFill" style="width:0%"></div></div></div>
+      <div>Low Competition: <span id="valCompetition">--</span><div class="scoreBar"><div id="barCompetition" class="scoreBarFill" style="width:0%"></div></div></div>
+      <div>Profit Potential: <span id="valProfit">--</span><div class="scoreBar"><div id="barProfit" class="scoreBarFill" style="width:0%"></div></div></div>
+      <div>Ease to Start: <span id="valDifficulty">--</span><div class="scoreBar"><div id="barDifficulty" class="scoreBarFill" style="width:0%"></div></div></div>
+    </div>
+    <div id="reportSections"></div>
+    <div class="flex-between" style="margin-top: 20px;">
+      <button id="downloadPdfBtn">📄 Download PDF</button>
+      <button id="copyReportBtn" data-i18n="copyBtn">📋 Copy</button>
+      <button id="shareReportBtn" data-i18n="shareBtn">📤 Share</button>
+    </div>
 
-    <section id="reportSection" class="panel reportPanel" style="display:none;">
-
-      <div class="scoreOverall">
-        <div class="scoreOverallNumber" id="scoreOverall">--</div>
-        <div class="scoreOverallLabel">Overall Idea Score</div>
+    <!-- Launch Plan & Pitch Deck -->
+    <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
+      <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button>
+      <button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
+    </div>
+    
+    <div id="launchPlanSection" style="display:none; margin-top: 20px;">
+      <div id="launchPlanSections"></div>
+      <div class="flex-between">
+        <button id="downloadLaunchPlanPdfBtn">📄 PDF</button>
+        <button id="copyLaunchPlanBtn">📋 Copy</button>
+        <button id="shareLaunchPlanBtn"> Share</button>
       </div>
+    </div>
 
-      <div class="scoreGrid">
-        <div class="scoreCard">
-          <div class="scoreCardLabel">📊 Market Demand</div>
-          <div class="scoreBar"><div class="scoreBarFill" id="barMarket"></div></div>
-          <div class="scoreCardValue" id="valMarket">--/100</div>
-        </div>
-        <div class="scoreCard">
-          <div class="scoreCardLabel">🥊 Low Competition</div>
-          <div class="scoreBar"><div class="scoreBarFill" id="barCompetition"></div></div>
-          <div class="scoreCardValue" id="valCompetition">--/100</div>
-        </div>
-        <div class="scoreCard">
-          <div class="scoreCardLabel">💰 Profit Potential</div>
-          <div class="scoreBar"><div class="scoreBarFill" id="barProfit"></div></div>
-          <div class="scoreCardValue" id="valProfit">--/100</div>
-        </div>
-        <div class="scoreCard">
-          <div class="scoreCardLabel">🟢 Ease to Start</div>
-          <div class="scoreBar"><div class="scoreBarFill" id="barDifficulty"></div></div>
-          <div class="scoreCardValue" id="valDifficulty">--/100</div>
-        </div>
+    <div id="pitchDeckSection" style="display:none; margin-top: 20px;">
+      <div id="pitchDeckSlides"></div>
+      <div class="flex-between">
+        <button id="downloadPitchDeckPdfBtn">📄 PDF</button>
+        <button id="copyPitchDeckBtn">📋 Copy</button>
+        <button id="sharePitchDeckBtn">📤 Share</button>
       </div>
+    </div>
+  </div>
 
-      <div class="reportSections" id="reportSections"></div>
+  <!-- Idea History -->
+  <div id="ideaHistorySection" style="display:none; margin-top: 30px;">
+    <h3> Past Ideas</h3>
+    <div id="ideaHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div>
+  </div>
 
-      <div class="reportActions">
-        <button type="button" id="downloadPdfBtn" class="actionBtn">📄 Download PDF</button>
-        <button type="button" id="copyReportBtn" class="actionBtn">📋 Copy Full Report</button>
-        <button type="button" id="shareReportBtn" class="actionBtn">📤 Share</button>
-        <button type="button" id="newIdeaBtn" class="actionBtn">✨ New Idea</button>
-      </div>
+  <!-- Pro Modal -->
+  <div id="proModal">
+    <div class="modal-content">
+      <h2 style="color: gold;">🚀 Upgrade to Pro</h2>
+      <p>Unlimited AI • No Ads • Priority • New Tools</p>
+      <h3 style="color: var(--primary);">₹499 / month</h3>
+      <button id="upgradeProBtn" style="width: 100%; margin-top: 10px;"> Pay & Activate Pro</button>
+      <br><br>
+      <button id="closeProModal" style="background: #475569;">Cancel</button>
+    </div>
+  </div>
 
-      <div class="reportActions" style="margin-top:8px;">
-        <button type="button" id="generateLaunchPlanBtn" class="actionBtn actionHighlight">🚀 Generate Launch Plan</button>
-        <button type="button" id="generatePitchDeckBtn" class="actionBtn actionHighlight">🎤 Generate Pitch Deck</button>
-      </div>
-
-    </section>
-
-    <section id="launchPlanSection" class="panel reportPanel" style="display:none;">
-      <div class="subReportTitle">🚀 30-Day Launch Plan</div>
-      <div class="reportSections" id="launchPlanSections"></div>
-      <div class="reportActions">
-        <button type="button" id="downloadLaunchPlanPdfBtn" class="actionBtn">📄 Download PDF</button>
-        <button type="button" id="copyLaunchPlanBtn" class="actionBtn">📋 Copy</button>
-        <button type="button" id="shareLaunchPlanBtn" class="actionBtn">📤 Share</button>
-      </div>
-    </section>
-
-    <section id="pitchDeckSection" class="panel reportPanel" style="display:none;">
-      <div class="subReportTitle">🎤 Investor Pitch Deck</div>
-      <div class="pitchDeckSlides" id="pitchDeckSlides"></div>
-      <div class="reportActions">
-        <button type="button" id="downloadPitchDeckPdfBtn" class="actionBtn">📄 Download PDF</button>
-        <button type="button" id="copyPitchDeckBtn" class="actionBtn">📋 Copy</button>
-        <button type="button" id="sharePitchDeckBtn" class="actionBtn">📤 Share</button>
-      </div>
-    </section>
-
-    </section>
-
-  </main>
-
-  <p class="footer">💡 IdeaForge-AI &nbsp;·&nbsp; © 2026</p>
-
+  <!-- Toast Container -->
   <div id="toastContainer"></div>
 
+  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="app.js"></script>
-
-  <!-- Cloudflare Web Analytics -->
-  <script defer type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "fca44a86c9444b27bad73247f4dc4e1c"}'></script>
-  <!-- End Cloudflare Web Analytics -->
-
 </body>
 </html>
