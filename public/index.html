@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IdeaForge-AI v6.0 | Creative Studio</title>
+  <title>IdeaForge-AI v7.0 | Smart Workspace</title>
   <style>
     :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
     * { box-sizing: border-box; }
@@ -19,14 +19,16 @@
     button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.4); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary { background: #475569; }
+    .btn-brand { background: linear-gradient(135deg, #f59e0b, #d97706); }
     .hubCategories { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 20px 0; }
     .hubChip { background: var(--card-bg); padding: 12px 8px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; font-size: 11px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .hubChip .chip-icon { font-size: 20px; }
     .hubChip:hover { border-color: var(--primary); transform: scale(1.03); }
     .hubChip.active { background: var(--primary); color: white; border-color: var(--primary); }
     pre { background: #000; color: #00ff00; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid var(--border); }
-    .tool-options-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tool-options-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
     .tool-options-row select, .tool-options-row input { flex: 1; min-width: 140px; margin-bottom: 0; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text-main); }
     .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); color: var(--text-main); padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 1000; max-width: 300px; }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toastError { border-left-color: var(--error); }
@@ -40,7 +42,7 @@
     #usageBanner.limitReached { border-color: var(--error); background: rgba(239, 68, 68, 0.1); }
     .usage-text { font-weight: 600; margin-bottom: 8px; }
     .usage-upgrade-btn { background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 6px 14px; font-size: 12px; margin: 0; }
-    #proModal, #remixModal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+    #proModal, #remixModal, #brandModal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
     .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; max-width: 450px; width: 100%; text-align: center; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; }
     #generatedImage { max-width: 100%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-top: 10px; }
     .historyItem { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 200px; max-width: 250px; text-align: left; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
@@ -56,16 +58,15 @@
     .remix-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 15px; }
     .remix-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; }
     .remix-btn:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
-    .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
-    .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
-    .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p { margin: 0; font-size: 13px; line-height: 1.5; }
-    
-    /* 🆕 Poster Maker Styles */
+    .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section, .roast-section { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
+    .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4, .roast-section h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
+    .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p, .roast-section p { margin: 0; font-size: 13px; line-height: 1.5; }
     .poster-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
     .poster-headline { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
     .poster-subhead { font-size: 16px; font-weight: 500; margin-bottom: 20px; opacity: 0.9; }
     .poster-body { font-size: 14px; line-height: 1.5; margin-bottom: 20px; opacity: 0.85; }
     .poster-footer { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; }
+    .shark-score { font-size: 48px; font-weight: bold; color: #f59e0b; text-align: center; margin: 10px 0; }
   </style>
 </head>
 <body>
@@ -74,10 +75,10 @@
     <div>
       <h1>IdeaForge-AI</h1>
       <p class="tagline">One AI Workspace for Everything</p>
-      <p class="value-prop">Your AI-powered toolbox for writing, coding, images, business planning, marketing & creative design.</p>
     </div>
     <div class="flex-between">
       <span id="proBadge">PRO</span>
+      <button id="openBrandBtn" class="btn-brand" style="padding: 8px 15px; font-size: 12px;">👤 My Brand</button>
       <select id="uiLanguageSelect" style="width: auto; margin:0;">
         <option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="ur">Urdu</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="pt">Portuguese</option><option value="ru">Russian</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option><option value="ar">Arabic</option><option value="tr">Turkish</option><option value="vi">Vietnamese</option><option value="id">Indonesian</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="sv">Swedish</option>
       </select>
@@ -96,14 +97,15 @@
   <div class="hubPanel">
     <label style="color: var(--text-muted); margin-bottom: 10px; display: block; font-weight: 500;">✨ What do you want to do today?</label>
     <div style="display: flex; gap: 10px;">
-      <textarea id="hubInput" rows="2" placeholder="e.g., 'Make a poster for my gym' or 'Write a video script for my new phone'..."></textarea>
-      <button id="hubMicBtn" style="padding: 10px 15px;">🎤</button>
+      <textarea id="hubInput" rows="2" placeholder="e.g., 'Make a poster for my gym' or 'Roast my startup idea'..."></textarea>
+      <button id="hubMicBtn" style="padding: 10px 15px;"></button>
       <button id="hubAskBtn">➤ Ask AI</button>
     </div>
   </div>
 
   <div class="hubCategories">
     <div class="hubChip" data-tool="assistant"><span class="chip-icon">🤖</span><span>Assistant</span></div>
+    <div class="hubChip" data-tool="roast"><span class="chip-icon"></span><span>Roast Idea</span></div>
     <div class="hubChip" data-tool="autopilot"><span class="chip-icon">🚀</span><span>Auto-Pilot</span></div>
     <div class="hubChip" data-tool="goalplan"><span class="chip-icon">🎯</span><span>Goal Plan</span></div>
     <div class="hubChip" data-tool="moneycalc"><span class="chip-icon">💰</span><span>Money Calc</span></div>
@@ -111,13 +113,13 @@
     <div class="hubChip" data-tool="poster"><span class="chip-icon">🖼️</span><span>Poster</span></div>
     <div class="hubChip" data-tool="video"><span class="chip-icon">🎬</span><span>Video Script</span></div>
     <div class="hubChip" data-tool="workflow"><span class="chip-icon">⚙️</span><span>Workflow</span></div>
-    <div class="hubChip" data-tool="writing"><span class="chip-icon">✍️</span><span>Writing</span></div>
+    <div class="hubChip" data-tool="writing"><span class="chip-icon">️</span><span>Writing</span></div>
     <div class="hubChip" data-tool="translate"><span class="chip-icon">🌐</span><span>Translate</span></div>
     <div class="hubChip" data-tool="calculator"><span class="chip-icon">🧮</span><span>Calculator</span></div>
-    <div class="hubChip" data-tool="student"><span class="chip-icon"></span><span>Student</span></div>
+    <div class="hubChip" data-tool="student"><span class="chip-icon">📚</span><span>Student</span></div>
     <div class="hubChip" data-tool="code"><span class="chip-icon">💻</span><span>Code</span></div>
     <div class="hubChip" data-tool="logo"><span class="chip-icon">🎨</span><span>Logo</span></div>
-    <div class="hubChip" data-tool="social"><span class="chip-icon">📱</span><span>Social</span></div>
+    <div class="hubChip" data-tool="social"><span class="chip-icon"></span><span>Social</span></div>
     <div class="hubChip" data-tool="socialpack"><span class="chip-icon">📦</span><span>Social Pack</span></div>
     <div class="hubChip" data-tool="ai-image"><span class="chip-icon">🖼️</span><span>Real Image</span></div>
     <div class="hubChip" data-tool="document"><span class="chip-icon">📄</span><span>Doc AI</span></div>
@@ -125,7 +127,7 @@
   </div>
 
   <div id="toolWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 id="toolWorkspaceTitle" style="margin-top:0;"> AI Assistant</h2>
+    <h2 id="toolWorkspaceTitle" style="margin-top:0;">🤖 AI Assistant</h2>
     
     <div id="writingOptions" class="tool-options-row" style="display:none;">
       <select id="writingTypeSelect"><option value="Email">Email</option><option value="Essay">Essay</option><option value="Letter">Letter</option><option value="Blog">Blog Post</option></select>
@@ -159,7 +161,6 @@
       <input type="text" id="moneyInvestment" placeholder="Investment Amount (e.g., ₹50,000)" style="flex:1;">
       <select id="moneyTypeSelect"><option value="Small Business">Small Business</option><option value="Farming">Farming</option><option value="Shop/Retail">Shop/Retail</option><option value="Online Business">Online Business</option></select>
     </div>
-    <!-- 🆕 Phase 3 Options -->
     <div id="posterOptions" class="tool-options-row" style="display:none;">
       <label style="color:var(--text-muted); align-self:center;">Theme:</label>
       <select id="posterThemeSelect">
@@ -183,16 +184,23 @@
       </select>
     </div>
 
+    <!-- 🆕 Phase 4: Bilingual Toggle -->
+    <div class="tool-options-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
+      <label class="checkbox-label">
+        <input type="checkbox" id="bilingualToggle" style="width: auto; margin: 0;">
+        ️ Bilingual Output (English + Hindi)
+      </label>
+    </div>
+
     <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <button id="toolMicBtn" style="padding: 10px 15px;">🎤</button>
       <button id="toolGenerateBtn">✨ Generate</button>
-      <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;"> Speak</button>
+      <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;">🔊 Speak</button>
     </div>
 
     <div id="generatedImageBox" style="display:none; text-align:center; margin-top:20px;"><img id="generatedImage" src="" alt="Generated AI Image"></div>
     
-    <!-- 🆕 Poster Preview Area -->
     <div id="posterPreviewBox" style="display:none; text-align:center; margin-top:20px;">
       <div id="posterPreview" class="poster-preview">
         <div class="poster-headline" id="posterHeadline">Headline</div>
@@ -211,14 +219,15 @@
     <div id="improveResult" style="display:none; margin-top: 20px;"></div>
     <div id="videoResult" style="display:none; margin-top: 20px;"></div>
     <div id="workflowResult" style="display:none; margin-top: 20px;"></div>
+    <div id="roastResult" style="display:none; margin-top: 20px;"></div>
 
     <div id="toolResultActions" class="result-actions" style="display:none;">
       <button id="toolCopyBtn">📋 Copy</button>
       <button id="toolRegenerateBtn">🔄 Regenerate</button>
       <button id="remixBtn" class="btn-secondary">✨ Remix</button>
-      <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);">Make It Better</button>
+      <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);">🚀 Make It Better</button>
       <button id="toolSaveBtn">⭐ Save</button>
-      <button id="toolShareBtn">Share</button>
+      <button id="toolShareBtn">📤 Share</button>
     </div>
   </div>
 
@@ -229,10 +238,10 @@
         <button class="remix-btn" data-style="shorter">⚡ Shorter</button>
         <button class="remix-btn" data-style="professional">💼 Professional</button>
         <button class="remix-btn" data-style="funny">😄 Funny</button>
-        <button class="remix-btn" data-style="viral">Viral</button>
-        <button class="remix-btn" data-style="hindi">🇮🇳 Hindi</button>
-        <button class="remix-btn" data-style="english">🇬🇧 English</button>
-        <button class="remix-btn" data-style="simple">Simple</button>
+        <button class="remix-btn" data-style="viral">🔥 Viral</button>
+        <button class="remix-btn" data-style="hindi">🇮 Hindi</button>
+        <button class="remix-btn" data-style="english">🇬 English</button>
+        <button class="remix-btn" data-style="simple">📖 Simple</button>
         <button class="remix-btn" data-style="emotional">❤️ Emotional</button>
         <button class="remix-btn" data-style="seo">🔍 SEO</button>
         <button class="remix-btn" data-style="instagram">📸 Instagram</button>
@@ -242,10 +251,25 @@
     </div>
   </div>
 
+  <!-- 🆕 Phase 4: Brand Modal -->
+  <div id="brandModal">
+    <div class="modal-content">
+      <h2 style="color: var(--primary);">👤 My Brand Profile</h2>
+      <p style="color: var(--text-muted); font-size: 14px;">Set your brand details once. AI will use them for all tools!</p>
+      <input type="text" id="brandNameInput" placeholder="Brand Name (e.g., Sharma Coffee)">
+      <input type="text" id="brandIndustryInput" placeholder="Industry (e.g., Food & Beverage)">
+      <input type="text" id="brandAudienceInput" placeholder="Target Audience (e.g., College students)">
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+        <button id="saveBrandBtn">💾 Save Brand</button>
+        <button id="closeBrandBtn" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="imageToolWorkspace" class="imageToolWorkspace" style="display: none;">
     <h2 style="margin-top:0;">📸 Image Analysis</h2>
     <div id="imageUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
-      <input type="file" id="imageFileInput" accept="image/*" style="display: none;"><p id="imageUploadText"> Click to upload an image</p>
+      <input type="file" id="imageFileInput" accept="image/*" style="display: none;"><p id="imageUploadText">📤 Click to upload an image</p>
       <img id="imagePreview" style="display:none; max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">
     </div>
     <select id="imageActionSelect">
@@ -258,22 +282,22 @@
     <button id="imageGenerateBtn">✨ Analyze Image</button>
     <div id="imageResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
     <div id="imageResultActions" style="display:none; margin-top: 15px;">
-      <button id="imageCopyBtn"> Copy</button><button id="imageShareBtn">Share</button>
+      <button id="imageCopyBtn">📋 Copy</button><button id="imageShareBtn">📤 Share</button>
     </div>
   </div>
 
   <div id="documentWorkspace" class="toolWorkspace" style="display: none;">
     <h2 style="margin-top:0;">📄 Document AI</h2>
     <div id="docUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
-      <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText">📤 Click to upload document</p>
+      <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText"> Click to upload document</p>
     </div>
     <textarea id="docTextInput" rows="4" placeholder="Or paste your text here..."></textarea>
-    <button id="docAnalyzeBtn"> Analyze Document</button>
+    <button id="docAnalyzeBtn">🔍 Analyze Document</button>
     <div id="docResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
   </div>
 
   <div id="toolFavoritesSection" style="display:none; margin-top: 30px;"><h3>⭐ Saved Favorites</h3><div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
-  <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3>🕒 Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
+  <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3> Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="hubPanel" id="ideaSection">
     <h2>💡 Startup Idea Analyzer</h2>
@@ -296,22 +320,22 @@
     </div>
     <div id="reportSections"></div>
     <div class="flex-between" style="margin-top: 20px;">
-      <button id="downloadPdfBtn">📄 Download PDF</button><button id="copyReportBtn"> Copy</button><button id="shareReportBtn">Share</button>
+      <button id="downloadPdfBtn"> Download PDF</button><button id="copyReportBtn">📋 Copy</button><button id="shareReportBtn">📤 Share</button>
     </div>
     <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
       <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
       <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
     </div>
-    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn">Share</button></div></div>
-    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">Share</button></div></div>
+    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn"> Share</button></div></div>
+    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
   </div>
 
   <div id="ideaHistorySection" style="display:none; margin-top: 30px;"><h3>🕰️ Past Ideas</h3><div id="ideaHistoryRow" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="infoGrid" id="infoGrid">
-    <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>🖼️ AI Poster Maker</li><li>🎬 Video Script Generator</li><li>⚙️ AI Workflow (Batch)</li><li>🚀 AI Auto-Pilot</li></ul></div>
-    <div class="infoCard"><h3>💡 Daily AI Tip</h3><p class="tip-text" id="dailyTip">Use the Poster Maker to create beautiful social media graphics in seconds, then download them as PNG!</p></div>
-    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Make a poster for my gym's summer discount"</li><li>"Write a YouTube Shorts script about productivity"</li><li>"Run a Startup Launch workflow for my coffee shop"</li></ul></div>
+    <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>🦈 Roast My Idea (Shark Tank)</li><li>👤 Brand Persona (AI Memory)</li><li>🗣️ Bilingual Output</li><li>🖼️ AI Poster Maker</li></ul></div>
+    <div class="infoCard"><h3>💡 Daily AI Tip</h3><p class="tip-text" id="dailyTip">Set your Brand Profile once! The AI will automatically use your brand name and tone in every poster and social post.</p></div>
+    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Roast my idea: A subscription service for socks"</li><li>"Make a bilingual poster for my cafe"</li><li>"Write a LinkedIn post using my brand voice"</li></ul></div>
   </div>
 
   <div id="proModal">
