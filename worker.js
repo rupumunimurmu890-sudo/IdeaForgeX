@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX Worker v3.0 - Real AI Image Generator
+// IdeaForgeX Worker v4.0 - Phase 1: Top 7 Features
 // ========================================
 
 const corsHeaders = {
@@ -9,17 +9,16 @@ const corsHeaders = {
 };
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-const IMAGE_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0"; // Real Image Model
+const IMAGE_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+const VISION_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
 const FREE_DAILY_LIMIT = 15;
 
 // 🛡️ Usage Limit Checker
 async function checkAndIncrementUsage(env, userId, userPlan) {
   if (userPlan === "pro") return { allowed: true };
   if (!env.USAGE_KV) return { allowed: true };
-
   const today = new Date().toISOString().split('T')[0];
   const kvKey = `usage:${userId}:${today}`;
-
   try {
     let currentUsage = await env.USAGE_KV.get(kvKey);
     currentUsage = currentUsage ? parseInt(currentUsage, 10) : 0;
@@ -31,14 +30,12 @@ async function checkAndIncrementUsage(env, userId, userPlan) {
   } catch (error) { return { allowed: true }; }
 }
 
-// Section markers
 const REPORT_KEYS = ["IDEA", "TARGET_CUSTOMERS", "CUSTOMER_PROBLEM", "REVENUE_MODEL", "MARKET_ANALYSIS", "COMPETITOR_ANALYSIS", "SWOT_STRENGTHS", "SWOT_WEAKNESSES", "SWOT_OPPORTUNITIES", "SWOT_THREATS", "MARKETING_STRATEGY", "STARTUP_COST", "ONE_YEAR_PROJECTION", "RISKS", "GROWTH_STRATEGY"];
 const LAUNCH_KEYS = ["BUDGET_BREAKDOWN", "PREPARATION", "PRODUCT_DEVELOPMENT", "BRANDING", "MARKETING_LAUNCH", "LAUNCH_WEEK", "PRODUCT_IDEAS", "PRICING", "EXPECTED_SALES"];
 const PITCH_KEYS = ["PROBLEM", "SOLUTION", "MARKET", "PRODUCT", "BUSINESS_MODEL", "COMPETITION", "FINANCIALS", "GROWTH", "FUNDING_REQUIREMENT"];
 
 function langLine(lang) { return lang && lang !== "auto" ? `Respond entirely in ${lang}.` : "Respond in the user's language."; }
 
-// 📊 Prompts
 function buildReportPrompt(idea, lang) {
   return `You are IdeaForgeX, an expert startup analyst. Idea: "${idea}". ${langLine(lang)}
 Produce a COMPLETE startup report in EXACTLY this format (no markdown, no extra text):
@@ -92,10 +89,125 @@ Produce pitch deck content in EXACTLY this format (punchy bullets, no fluff):
 ###FUNDING_REQUIREMENT###\n2-3 bullets with ₹ amount.`;
 }
 
-// 🆕 TOOLS PROMPTS
+// 🆕 AUTO-PILOT PROMPT (Feature 1)
+function buildAutopilotPrompt(input) {
+  return `You are an AI marketing autopilot. The user wants to promote/market something. 
+User request: "${input}"
+
+Generate a COMPLETE marketing package with these sections (use exact headers):
+
+###AD_COPY###
+Short, punchy advertisement copy (2-3 lines)
+
+###INSTAGRAM_CAPTION###
+Engaging Instagram caption with emojis (3-4 lines)
+
+###FACEBOOK_POST###
+Detailed Facebook post (4-5 lines)
+
+###WHATSAPP_MESSAGE###
+Casual WhatsApp message for sharing (2-3 lines)
+
+###POSTER_TEXT###
+Headline and subheadline for a poster
+
+###IMAGE_PROMPT###
+Detailed prompt to generate a marketing image using AI
+
+###VIDEO_PROMPT###
+Script/prompt for a short marketing video
+
+###HASHTAGS###
+10-15 relevant hashtags
+
+Respond in the same language as the user's request. Be specific and creative.`;
+}
+
+// 🆕 REMIX PROMPT (Feature 5)
+function buildRemixPrompt(text, style) {
+  return `You are a content remixer. 
+Original text: "${text}"
+Remix style: "${style}"
+
+Rewrite the content in the specified style while keeping the core message. 
+Styles guide:
+- shorter: Make it concise (50% shorter)
+- professional: Formal business tone
+- funny: Add humor and wit
+- viral: Make it attention-grabbing and shareable
+- hindi: Translate to Hindi naturally
+- english: Translate to English naturally
+- simple: Use simple words anyone can understand
+- emotional: Add emotional appeal
+- seo: Optimize for search engines with keywords
+- instagram: Format for Instagram with emojis and hashtags
+- youtube: Format for YouTube with hook and CTA
+
+Output ONLY the remixed content, no explanation.`;
+}
+
+// 🆕 SOCIAL PACK PROMPT (Feature 6)
+function buildSocialPackPrompt(content) {
+  return `You are a social media expert. 
+Content: "${content}"
+
+Generate a complete social media pack with these sections:
+
+###INSTAGRAM###
+Caption with emojis and line breaks (3-4 lines)
+
+###FACEBOOK###
+Detailed post (4-5 lines)
+
+###WHATSAPP###
+Short status message (1-2 lines)
+
+###YOUTUBE_TITLE###
+Catchy title (under 60 characters)
+
+###YOUTUBE_DESCRIPTION###
+Description with keywords (3-4 lines)
+
+###SHORTS_CAPTION###
+Short caption for YouTube Shorts/Reels
+
+###HASHTAGS###
+15 relevant hashtags
+
+###THUMBNAIL_PROMPT###
+Prompt to generate a thumbnail image
+
+Be creative and platform-specific.`;
+}
+
+// 🆕 DOCUMENT AI PROMPT (Feature 3)
+function buildDocumentPrompt(text) {
+  return `You are a document AI assistant. Analyze this text/document:
+
+"${text}"
+
+Provide a comprehensive analysis with these sections:
+
+###SUMMARY###
+3-5 sentence summary of the document
+
+###KEY_POINTS###
+5-7 bullet points of important information
+
+###QUESTIONS_ANSWERS###
+3 important questions and their answers based on the document
+
+###SIMPLE_EXPLANATION###
+Explain the document in simple terms anyone can understand
+
+###MCQS###
+5 multiple choice questions with answers (format: Q: ... A) ... B) ... C) ... D) ... Correct: ...)
+
+Be thorough and accurate.`;
+}
+
 function buildToolPrompt(tool, input, opts) {
   const ll = opts.language && opts.language !== "auto" ? `Respond in ${opts.language}.` : "Respond in the user's language.";
-
   if (tool === "writing") return `You are a writing assistant. Type: ${opts.writingType || "General"}, Tone: ${opts.tone || "Professional"}. ${ll}\nWrite ONLY the finished piece for: ${input}`;
   if (tool === "translate") return `You are a translator. Translate from ${opts.fromLanguage || "auto"} to ${opts.toLanguage || "English"}. Output ONLY the translation.\nText: ${input}`;
   if (tool === "calculator") return `You are a calculator. Solve this, show steps, end with "Answer: ".\nProblem: ${input}`;
@@ -103,17 +215,15 @@ function buildToolPrompt(tool, input, opts) {
   if (tool === "code") return `You are an expert software engineer. Write clean, efficient code in ${opts.codeLang || "Python"} for: ${input}. Wrap in markdown blocks.`;
   if (tool === "logo") return `You are a brand designer. Create a logo concept for: "${input}". Style: ${opts.logoStyle || "Minimalist"}. Provide visual description, Hex colors, and typography.`;
   if (tool === "social") return `You are a social media expert. Create an engaging post for ${opts.platform || "Instagram"} about: "${input}". Include hook, body, CTA, and hashtags.`;
-
   if (tool === "auto") {
     return `You are IdeaForge-AI. ${ll}
-STEP 1: Output exactly one line: ROUTE: <category> (categories: writing, translate, calculator, student, code, logo, social, assistant).
+STEP 1: Output exactly one line: ROUTE: <category> (categories: writing, translate, calculator, student, code, logo, social, autopilot, assistant).
 STEP 2: Give a direct answer. Do not repeat ROUTE line.
 User's request: ${input}`;
   }
   return `You are IdeaForge-AI. ${ll}\nAnswer helpfully.\nRequest: ${input}`;
 }
 
-// Parser & Helpers
 function parseSections(rawText, sectionKeys) {
   if (!rawText || rawText.trim().length < 20) return null;
   const sections = {}; let anyMarkerFound = false;
@@ -219,7 +329,6 @@ export default {
           try { const res = await env.AI.run(AI_MODEL, { messages: [{ role: "user", content: prompt }], max_tokens: 1500, temperature: body.tool === "calculator" ? 0.2 : 0.7 }); resultText = (res?.response || "").trim(); if (resultText.length > 3) break; } catch(e){}
         }
         if (!resultText) return Response.json({ success: false, error: "Result nahi aaya." }, { status: 200, headers: corsHeaders });
-        
         let detectedRoute = null;
         if (body.tool === "auto") {
           const m = resultText.match(/^ROUTE:\s*(\w+)\s*\n/i);
@@ -229,40 +338,131 @@ export default {
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
-    // 🆕 5. REAL AI IMAGE GENERATOR
+    // 5. Real Image Generation
     if (url.pathname === "/api/generate-image" && request.method === "POST") {
       const check = await checkAndIncrementUsage(env, userId, userPlan);
       if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
-      
       try {
         const body = await request.json();
         let prompt = body.prompt || "";
         const style = body.style || "Photorealistic";
-        
-        // Enhance prompt with style
-        if (style !== "None") {
-          prompt = `${prompt}, ${style} style, high quality, 8k resolution, highly detailed`;
-        }
-
-        // Run Stable Diffusion Model
+        if (style !== "None") prompt = `${prompt}, ${style} style, high quality, 8k resolution, highly detailed`;
         const imageResponse = await env.AI.run(IMAGE_MODEL, { prompt });
-        
-        // Convert ArrayBuffer to Base64
         const uint8Array = new Uint8Array(imageResponse);
         let binary = '';
-        for (let i = 0; i < uint8Array.byteLength; i++) {
-          binary += String.fromCharCode(uint8Array[i]);
-        }
+        for (let i = 0; i < uint8Array.byteLength; i++) binary += String.fromCharCode(uint8Array[i]);
         const base64Image = btoa(binary);
-
         return Response.json({ success: true, image: `data:image/png;base64,${base64Image}` }, { status: 200, headers: corsHeaders });
-      } catch (e) {
-        console.error("Image generation error:", e);
-        return Response.json({ success: false, error: "Image generate nahi ho payi. " + e.message }, { status: 200, headers: corsHeaders });
-      }
+      } catch (e) { return Response.json({ success: false, error: "Image generate nahi ho payi. " + e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    // 🆕 6. AI AUTO-PILOT (Feature 1)
+    if (url.pathname === "/api/ai-autopilot" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const prompt = buildAutopilotPrompt(body.input || "");
+        const parsed = await generateSectioned(env, prompt, ["AD_COPY", "INSTAGRAM_CAPTION", "FACEBOOK_POST", "WHATSAPP_MESSAGE", "POSTER_TEXT", "IMAGE_PROMPT", "VIDEO_PROMPT", "HASHTAGS"], 2000);
+        if (!parsed) return Response.json({ success: false, error: "Autopilot package generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, package: parsed.sections }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    //  7. REMIX (Feature 5)
+    if (url.pathname === "/api/remix" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const prompt = buildRemixPrompt(body.text || "", body.style || "professional");
+        let resultText = "";
+        for (let i = 0; i < 3; i++) {
+          try { const res = await env.AI.run(AI_MODEL, { messages: [{ role: "user", content: prompt }], max_tokens: 1000, temperature: 0.8 }); resultText = (res?.response || "").trim(); if (resultText.length > 3) break; } catch(e){}
+        }
+        if (!resultText) return Response.json({ success: false, error: "Remix generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, result: resultText }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    // 🆕 8. SOCIAL PACK (Feature 6)
+    if (url.pathname === "/api/social-pack" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const prompt = buildSocialPackPrompt(body.content || "");
+        const parsed = await generateSectioned(env, prompt, ["INSTAGRAM", "FACEBOOK", "WHATSAPP", "YOUTUBE_TITLE", "YOUTUBE_DESCRIPTION", "SHORTS_CAPTION", "HASHTAGS", "THUMBNAIL_PROMPT"], 1500);
+        if (!parsed) return Response.json({ success: false, error: "Social pack generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, pack: parsed.sections }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    // 🆕 9. DOCUMENT AI (Feature 3)
+    if (url.pathname === "/api/document-ai" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const prompt = buildDocumentPrompt(body.text || "");
+        const parsed = await generateSectioned(env, prompt, ["SUMMARY", "KEY_POINTS", "QUESTIONS_ANSWERS", "SIMPLE_EXPLANATION", "MCQS"], 2000);
+        if (!parsed) return Response.json({ success: false, error: "Document analysis generate nahi hua." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, analysis: parsed.sections }, { status: 200, headers: corsHeaders });
+      } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
+    }
+
+    // 10. Enhanced Image Analysis (Feature 2)
+    if (url.pathname === "/api/image-tool" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      try {
+        const body = await request.json();
+        const imageBase64 = body.imageBase64 || "";
+        const action = body.action || "full-analysis";
+        const question = (body.question || "").trim();
+        const language = body.language || "auto";
+        if (!imageBase64) return Response.json({ success: false, error: "Please upload a photo first." }, { status: 400, headers: corsHeaders });
+        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+        let imageBytes;
+        try {
+          const binaryString = atob(base64Data);
+          imageBytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) imageBytes[i] = binaryString.charCodeAt(i);
+        } catch (decodeError) { return Response.json({ success: false, error: "Photo read nahi ho payi." }, { status: 400, headers: corsHeaders }); }
+        
+        let visionPrompt = "";
+        if (action === "full-analysis") {
+          visionPrompt = `Analyze this image comprehensively and provide:
+1. DETAILED_DESCRIPTION: What the image shows
+2. PRODUCT_DETECTION: If any product is visible, describe it
+3. AD_COPY: Short advertisement copy for this image
+4. SOCIAL_CAPTION: Social media caption
+5. ALT_TEXT: SEO-friendly alt text
+6. SEO_KEYWORDS: 10 relevant keywords
+7. IMAGE_PROMPT: Prompt to recreate similar image
+Format each section with clear headers.`;
+        } else if (action === "extract-text") {
+          visionPrompt = "Read and transcribe ALL text visible in this image exactly as it appears.";
+        } else if (action === "ask" && question) {
+          visionPrompt = `Look at this image and answer: "${question}"`;
+        } else {
+          visionPrompt = `Describe this image in detail.`;
+        }
+
+        let resultText = "";
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const result = await env.AI.run(VISION_MODEL, { image: Array.from(imageBytes), prompt: visionPrompt, max_tokens: 1500 });
+            resultText = (result?.description || result?.response || "").trim();
+            if (resultText.length > 2) break;
+          } catch (aiError) { console.error("Image tool attempt " + attempt + " failed:", aiError); }
+        }
+        if (!resultText) return Response.json({ success: false, error: "Image analyze nahi ho payi." }, { status: 200, headers: corsHeaders });
+        return Response.json({ success: true, result: resultText }, { status: 200, headers: corsHeaders });
+      } catch (error) { return Response.json({ success: false, error: error?.message || "Something went wrong." }, { status: 200, headers: corsHeaders }); }
     }
 
     if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response("IdeaForgeX v3.0 Running 🚀", { status: 200, headers: corsHeaders });
+    return new Response("IdeaForgeX v4.0 Running 🚀", { status: 200, headers: corsHeaders });
   }
 };
