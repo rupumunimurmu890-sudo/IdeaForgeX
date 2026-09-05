@@ -572,7 +572,8 @@ const TOOL_TITLES = {
   writing: "✍️ Writing Assistant",
   translate: "🌐 Translate",
   calculator: "🧮 Calculator",
-  student: "📚 Student Helper"
+  student: "📚 Student Helper",
+  image: "📸 Image Tools"
 };
 
 function openToolWorkspace(tool) {
@@ -585,6 +586,17 @@ function openToolWorkspace(tool) {
 
   const activeChip = document.querySelector('.hubChip[data-tool="' + tool + '"]');
   if (activeChip) activeChip.classList.add("active");
+
+  if (tool === "image") {
+
+    document.getElementById("toolWorkspace").style.display = "none";
+    const imgWorkspace = document.getElementById("imageToolWorkspace");
+    imgWorkspace.style.display = "block";
+    imgWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  document.getElementById("imageToolWorkspace").style.display = "none";
 
   document.getElementById("toolWorkspaceTitle").textContent = TOOL_TITLES[tool] || "🤖 AI Assistant";
 
@@ -600,7 +612,82 @@ function openToolWorkspace(tool) {
 
 let lastToolPayload = null;
 
+// ------------------------------------
+// 🆕 Soft daily usage limit (Free plan indicator)
+// Client-side only — a UX nudge, not real enforcement.
+// Real Pro/payment would need a backend + payment gateway,
+// this just tracks & displays usage for now.
+// ------------------------------------
+
+const FREE_DAILY_LIMIT = 15;
+const USAGE_KEY = "ideaforge_usage";
+
+function getTodayUsage() {
+
+  try {
+
+    const today = new Date().toISOString().slice(0, 10);
+    const raw = localStorage.getItem(USAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+
+    if (data.date !== today) {
+      return { date: today, count: 0 };
+    }
+
+    return data;
+
+  } catch (e) {
+    return { date: new Date().toISOString().slice(0, 10), count: 0 };
+  }
+}
+
+function incrementUsage() {
+
+  try {
+    const usage = getTodayUsage();
+    usage.count += 1;
+    localStorage.setItem(USAGE_KEY, JSON.stringify(usage));
+    renderUsageBanner();
+  } catch (e) {}
+}
+
+function renderUsageBanner() {
+
+  const banner = document.getElementById("usageBanner");
+  if (!banner) return;
+
+  const usage = getTodayUsage();
+  const remaining = FREE_DAILY_LIMIT - usage.count;
+
+  if (remaining <= 0) {
+
+    banner.textContent = "आज की free limit खत्म हो गई (" + FREE_DAILY_LIMIT + "/" + FREE_DAILY_LIMIT + ") — कल फिर try करें, या Pro जल्द आ रहा है ✨";
+    banner.classList.add("limitReached");
+    banner.style.display = "block";
+
+  } else if (usage.count > 0) {
+
+    banner.textContent = "Free plan: आज " + usage.count + "/" + FREE_DAILY_LIMIT + " uses";
+    banner.classList.remove("limitReached");
+    banner.style.display = "block";
+
+  } else {
+
+    banner.style.display = "none";
+  }
+}
+
+function hasUsageRemaining() {
+  return getTodayUsage().count < FREE_DAILY_LIMIT;
+}
+
 async function runAiTool(input, tool) {
+
+  if (!hasUsageRemaining()) {
+    showToast("आज की free limit (" + FREE_DAILY_LIMIT + ") खत्म हो गई। कल फिर try करें।", "error");
+    renderUsageBanner();
+    return;
+  }
 
   const btn = document.getElementById("toolGenerateBtn");
   const resultBox = document.getElementById("toolResult");
@@ -645,6 +732,21 @@ async function runAiTool(input, tool) {
       throw new Error(data?.error || "Result generate nahi ho paya.");
     }
 
+    incrementUsage();
+
+    // 🆕 AI Smart Router — agar "auto" tool tha aur backend ne
+    // koi specific category detect ki, toh UI ko usi tool pe
+    // switch kar do (jaisa user ne khud wahi category choose ki ho)
+    let effectiveTool = tool;
+
+    if (tool === "auto" && data.route && TOOL_TITLES[data.route] && data.route !== "auto") {
+
+      effectiveTool = data.route;
+      openToolWorkspace(effectiveTool);
+      document.getElementById("toolInput").value = input;
+      showToast("✨ " + TOOL_TITLES[effectiveTool] + " detect kiya gaya", "info");
+    }
+
     currentToolResult = data.result;
     currentToolInput = input;
 
@@ -652,7 +754,7 @@ async function runAiTool(input, tool) {
     resultBox.style.display = "block";
     resultActions.style.display = "flex";
 
-    saveToToolHistory(tool, input, data.result);
+    saveToToolHistory(effectiveTool, input, data.result);
 
   } catch (error) {
 
@@ -833,6 +935,255 @@ function renderToolFavorites() {
 }
 
 // ------------------------------------
+// 🆕 UI Translation (buttons/menus, not just AI output)
+// ------------------------------------
+
+const UI_STRINGS = {
+  en: {
+    tagline: "AI Tools for Everyone",
+    languageLabel: "🌐 Language",
+    hubLabel: "✨ What do you want to do?",
+    askAiBtn: "➤ Ask AI",
+    chipAssistant: "🤖 AI Assistant",
+    chipWriting: "✍️ Writing",
+    chipTranslate: "🌐 Translate",
+    chipCalculator: "🧮 Calculator",
+    chipBusiness: "💼 Business",
+    chipStudent: "📚 Student",
+    chipStatus: "🎨 Status",
+    chipAd: "📢 Advertisement",
+    chipImage: "📸 Image Tools",
+    chipVoice: "🎤 Voice AI",
+    generateBtn: "✨ Generate",
+    copyBtn: "📋 Copy",
+    regenerateBtn: "🔄 Regenerate",
+    saveBtn: "⭐ Save",
+    shareBtn: "📤 Share"
+  },
+  hi: {
+    tagline: "सबके लिए AI टूल्स",
+    languageLabel: "🌐 भाषा",
+    hubLabel: "✨ आप क्या करना चाहते हैं?",
+    askAiBtn: "➤ AI से पूछें",
+    chipAssistant: "🤖 AI सहायक",
+    chipWriting: "✍️ लेखन",
+    chipTranslate: "🌐 अनुवाद",
+    chipCalculator: "🧮 कैलकुलेटर",
+    chipBusiness: "💼 व्यापार",
+    chipStudent: "📚 छात्र सहायता",
+    chipStatus: "🎨 स्टेटस",
+    chipAd: "📢 विज्ञापन",
+    chipImage: "📸 इमेज टूल्स",
+    chipVoice: "🎤 वॉइस AI",
+    generateBtn: "✨ बनाएं",
+    copyBtn: "📋 कॉपी",
+    regenerateBtn: "🔄 दोबारा बनाएं",
+    saveBtn: "⭐ सेव करें",
+    shareBtn: "📤 शेयर करें"
+  },
+  bn: {
+    tagline: "সবার জন্য AI টুলস",
+    languageLabel: "🌐 ভাষা",
+    hubLabel: "✨ আপনি কী করতে চান?",
+    askAiBtn: "➤ AI কে জিজ্ঞাসা করুন",
+    chipAssistant: "🤖 AI সহায়ক",
+    chipWriting: "✍️ লেখা",
+    chipTranslate: "🌐 অনুবাদ",
+    chipCalculator: "🧮 ক্যালকুলেটর",
+    chipBusiness: "💼 ব্যবসা",
+    chipStudent: "📚 ছাত্র সহায়ক",
+    chipStatus: "🎨 স্ট্যাটাস",
+    chipAd: "📢 বিজ্ঞাপন",
+    chipImage: "📸 ইমেজ টুলস",
+    chipVoice: "🎤 ভয়েস AI",
+    generateBtn: "✨ তৈরি করুন",
+    copyBtn: "📋 কপি",
+    regenerateBtn: "🔄 আবার তৈরি করুন",
+    saveBtn: "⭐ সেভ করুন",
+    shareBtn: "📤 শেয়ার করুন"
+  },
+  ur: {
+    tagline: "سب کے لیے AI ٹولز",
+    languageLabel: "🌐 زبان",
+    hubLabel: "✨ آپ کیا کرنا چاہتے ہیں؟",
+    askAiBtn: "➤ AI سے پوچھیں",
+    chipAssistant: "🤖 AI اسسٹنٹ",
+    chipWriting: "✍️ تحریر",
+    chipTranslate: "🌐 ترجمہ",
+    chipCalculator: "🧮 کیلکولیٹر",
+    chipBusiness: "💼 کاروبار",
+    chipStudent: "📚 طالب علم مدد",
+    chipStatus: "🎨 اسٹیٹس",
+    chipAd: "📢 اشتہار",
+    chipImage: "📸 امیج ٹولز",
+    chipVoice: "🎤 وائس AI",
+    generateBtn: "✨ بنائیں",
+    copyBtn: "📋 کاپی",
+    regenerateBtn: "🔄 دوبارہ بنائیں",
+    saveBtn: "⭐ محفوظ کریں",
+    shareBtn: "📤 شیئر کریں"
+  }
+};
+
+const UI_LANG_KEY = "ideaforge_ui_lang";
+
+function applyUILanguage(lang) {
+
+  const dict = UI_STRINGS[lang] || UI_STRINGS.en;
+
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+
+    const key = el.getAttribute("data-i18n");
+
+    if (dict[key]) {
+      el.textContent = dict[key];
+    }
+  });
+
+  try {
+    localStorage.setItem(UI_LANG_KEY, lang);
+  } catch (e) {}
+}
+
+function getSavedUILanguage() {
+  try {
+    return localStorage.getItem(UI_LANG_KEY) || "en";
+  } catch (e) {
+    return "en";
+  }
+}
+
+// ------------------------------------
+// 🆕 Voice input — browser ke native Speech
+// Recognition API se (Chrome/Edge support karte hain)
+// ------------------------------------
+
+function startVoiceInput(targetTextareaId, micBtn) {
+
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognitionAPI) {
+    showToast("Is browser mein voice input support nahi hai.", "error");
+    return;
+  }
+
+  const recognition = new SpeechRecognitionAPI();
+  recognition.lang = "hi-IN";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  micBtn.classList.add("listening");
+
+  recognition.onresult = function (event) {
+
+    const transcript = event.results[0][0].transcript;
+    const textarea = document.getElementById(targetTextareaId);
+
+    if (textarea) {
+      textarea.value = (textarea.value ? textarea.value + " " : "") + transcript;
+      textarea.dispatchEvent(new Event("input"));
+    }
+  };
+
+  recognition.onerror = function (event) {
+    console.error("Speech recognition error:", event.error);
+    if (event.error !== "aborted") {
+      showToast("Voice sunayi nahi diya, फिर try करें।", "error");
+    }
+  };
+
+  recognition.onend = function () {
+    micBtn.classList.remove("listening");
+  };
+
+  try {
+    recognition.start();
+  } catch (e) {
+    micBtn.classList.remove("listening");
+  }
+}
+
+// ------------------------------------
+// 🆕 Image Tools — photo upload karke
+// describe / extract text / ask about image
+// ------------------------------------
+
+let currentImageBase64 = "";
+let currentImageResult = "";
+
+function fileToBase64(file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function () { resolve(reader.result); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function runImageTool() {
+
+  if (!currentImageBase64) {
+    showToast("Pehle ek photo upload karein.", "error");
+    return;
+  }
+
+  if (!hasUsageRemaining()) {
+    showToast("आज की free limit khatam ho gayi.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("imageGenerateBtn");
+  const resultBox = document.getElementById("imageResult");
+  const resultActions = document.getElementById("imageResultActions");
+
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyze कर रहे हैं...';
+
+  resultBox.style.display = "none";
+  resultActions.style.display = "none";
+
+  try {
+
+    const action = document.getElementById("imageActionSelect")?.value || "describe";
+    const question = document.getElementById("imageQuestionInput")?.value.trim() || "";
+    const language = document.getElementById("languageSelect")?.value || "auto";
+
+    const response = await fetch("/api/image-tool", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageBase64: currentImageBase64,
+        action, question, language
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.result) {
+      throw new Error(data?.error || "Image analyze nahi ho payi.");
+    }
+
+    currentImageResult = data.result;
+    resultBox.textContent = data.result;
+    resultBox.style.display = "block";
+    resultActions.style.display = "flex";
+
+    incrementUsage();
+
+  } catch (error) {
+
+    console.error("Image tool error:", error);
+    showToast(error.message || "Kuch galat ho gaya, फिर try करें।", "error");
+
+  } finally {
+
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+// ------------------------------------
 // Init
 // ------------------------------------
 
@@ -841,6 +1192,17 @@ document.addEventListener("DOMContentLoaded", function () {
   renderHistory();
   renderToolHistory();
   renderToolFavorites();
+  renderUsageBanner();
+
+  applyUILanguage(getSavedUILanguage());
+
+  const uiLanguageSelect = document.getElementById("uiLanguageSelect");
+  if (uiLanguageSelect) {
+    uiLanguageSelect.value = getSavedUILanguage();
+    uiLanguageSelect.addEventListener("change", function () {
+      applyUILanguage(uiLanguageSelect.value);
+    });
+  }
 
   const ideaInput = document.getElementById("ideaInput");
   const charCount = document.getElementById("charCount");
@@ -1091,6 +1453,101 @@ document.addEventListener("DOMContentLoaded", function () {
     toolShareBtn.addEventListener("click", function () {
       if (!currentToolResult) return;
       sharePlainText("IdeaForge-AI", currentToolResult);
+    });
+  }
+
+  // 🆕 Voice input — hub aur tool workspace dono mein
+  const hubMicBtn = document.getElementById("hubMicBtn");
+  if (hubMicBtn) {
+    hubMicBtn.addEventListener("click", function () {
+      startVoiceInput("hubInput", hubMicBtn);
+    });
+  }
+
+  const toolMicBtn = document.getElementById("toolMicBtn");
+  if (toolMicBtn) {
+    toolMicBtn.addEventListener("click", function () {
+      startVoiceInput("toolInput", toolMicBtn);
+    });
+  }
+
+  // 🆕 Voice AI chip — seedha AI Assistant kholo aur mic shuru karo
+  const voiceAiChip = document.getElementById("voiceAiChip");
+  if (voiceAiChip) {
+    voiceAiChip.addEventListener("click", function () {
+      openToolWorkspace("assistant");
+      setTimeout(function () {
+        const micBtn = document.getElementById("toolMicBtn");
+        if (micBtn) startVoiceInput("toolInput", micBtn);
+      }, 300);
+    });
+  }
+
+  // 🆕 Image Tools — upload, action select, generate, copy/share
+  const imageUploadCard = document.getElementById("imageUploadCard");
+  const imageFileInput = document.getElementById("imageFileInput");
+
+  if (imageUploadCard && imageFileInput) {
+
+    imageUploadCard.addEventListener("click", function () {
+      imageFileInput.click();
+    });
+
+    imageFileInput.addEventListener("change", async function () {
+
+      const file = imageFileInput.files[0];
+      if (!file) return;
+
+      try {
+
+        currentImageBase64 = await fileToBase64(file);
+
+        const preview = document.getElementById("imagePreview");
+        const uploadText = document.getElementById("imageUploadText");
+
+        if (preview) {
+          preview.src = currentImageBase64;
+          preview.style.display = "block";
+        }
+        if (uploadText) {
+          uploadText.style.display = "none";
+        }
+
+      } catch (error) {
+        showToast("Photo load nahi ho payi।", "error");
+      }
+    });
+  }
+
+  const imageActionSelect = document.getElementById("imageActionSelect");
+  if (imageActionSelect) {
+    imageActionSelect.addEventListener("change", function () {
+
+      const questionInput = document.getElementById("imageQuestionInput");
+      if (questionInput) {
+        questionInput.style.display = imageActionSelect.value === "ask" ? "block" : "none";
+      }
+    });
+  }
+
+  const imageGenerateBtn = document.getElementById("imageGenerateBtn");
+  if (imageGenerateBtn) {
+    imageGenerateBtn.addEventListener("click", runImageTool);
+  }
+
+  const imageCopyBtn = document.getElementById("imageCopyBtn");
+  if (imageCopyBtn) {
+    imageCopyBtn.addEventListener("click", function () {
+      if (!currentImageResult) return;
+      copyPlainText(currentImageResult);
+    });
+  }
+
+  const imageShareBtn = document.getElementById("imageShareBtn");
+  if (imageShareBtn) {
+    imageShareBtn.addEventListener("click", function () {
+      if (!currentImageResult) return;
+      sharePlainText("IdeaForge-AI Image Tool", currentImageResult);
     });
   }
 
