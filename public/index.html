@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IdeaForge-AI v7.0 | Smart Workspace</title>
+  <title>IdeaForge-AI v8.0 | Conversational AI</title>
   <style>
     :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
     * { box-sizing: border-box; }
@@ -11,7 +11,6 @@
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
     .header h1 { margin: 0; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; }
     .tagline { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
-    .value-prop { margin: 10px 0 0 0; color: var(--text-main); font-size: 13px; font-weight: 500; background: rgba(99, 102, 241, 0.1); padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--primary); }
     .reportCard, .pitchSlide, .hubPanel, .toolWorkspace, .imageToolWorkspace, .infoCard { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
     input, select, textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 10px; font-size: 15px; box-sizing: border-box; transition: border-color 0.2s; margin-bottom: 10px; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
@@ -58,15 +57,23 @@
     .remix-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 15px; }
     .remix-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; }
     .remix-btn:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
-    .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section, .roast-section { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
-    .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4, .roast-section h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
-    .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p, .roast-section p { margin: 0; font-size: 13px; line-height: 1.5; }
-    .poster-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-    .poster-headline { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
-    .poster-subhead { font-size: 16px; font-weight: 500; margin-bottom: 20px; opacity: 0.9; }
-    .poster-body { font-size: 14px; line-height: 1.5; margin-bottom: 20px; opacity: 0.85; }
-    .poster-footer { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; }
+    .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section, .roast-section, .email-section { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
+    .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4, .roast-section h4, .email-section h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
+    .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p, .roast-section p, .email-section p { margin: 0; font-size: 13px; line-height: 1.5; }
+    .poster-preview, .card-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+    .poster-headline, .card-headline { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
+    .poster-subhead, .card-subhead { font-size: 16px; font-weight: 500; margin-bottom: 20px; opacity: 0.9; }
+    .poster-body, .card-body { font-size: 14px; line-height: 1.5; margin-bottom: 20px; opacity: 0.85; }
+    .poster-footer, .card-footer { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; }
     .shark-score { font-size: 48px; font-weight: bold; color: #f59e0b; text-align: center; margin: 10px 0; }
+    
+    /* 🆕 Phase 5: Chat UI Styles */
+    .chat-container { height: 400px; overflow-y: auto; background: #0f172a; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .chat-message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+    .chat-user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+    .chat-ai { align-self: flex-start; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+    .chat-input-area { display: flex; gap: 10px; }
+    .chat-input-area textarea { flex: 1; margin-bottom: 0; resize: none; height: 50px; }
   </style>
 </head>
 <body>
@@ -90,22 +97,25 @@
     <button class="usage-upgrade-btn" onclick="document.getElementById('proModal').style.display='flex'">Upgrade to Pro</button>
   </div>
   <div id="adContainer" class="ad-banner">
-    <p style="margin:0 0 10px 0;">📢 Advertisement Space</p>
+    <p style="margin:0 0 10px 0;"> Advertisement Space</p>
     <button onclick="document.getElementById('proModal').style.display='flex'">Upgrade to Pro</button>
   </div>
 
   <div class="hubPanel">
     <label style="color: var(--text-muted); margin-bottom: 10px; display: block; font-weight: 500;">✨ What do you want to do today?</label>
     <div style="display: flex; gap: 10px;">
-      <textarea id="hubInput" rows="2" placeholder="e.g., 'Make a poster for my gym' or 'Roast my startup idea'..."></textarea>
-      <button id="hubMicBtn" style="padding: 10px 15px;"></button>
+      <textarea id="hubInput" rows="2" placeholder="e.g., 'Chat with AI', 'Make a quote card', or 'Write a cold email'..."></textarea>
+      <button id="hubMicBtn" style="padding: 10px 15px;">🎤</button>
       <button id="hubAskBtn">➤ Ask AI</button>
     </div>
   </div>
 
   <div class="hubCategories">
+    <div class="hubChip" data-tool="chat"><span class="chip-icon">💬</span><span>AI Chat</span></div>
+    <div class="hubChip" data-tool="card"><span class="chip-icon">📸</span><span>Quote Card</span></div>
+    <div class="hubChip" data-tool="email"><span class="chip-icon">✉️</span><span>Cold Email</span></div>
     <div class="hubChip" data-tool="assistant"><span class="chip-icon">🤖</span><span>Assistant</span></div>
-    <div class="hubChip" data-tool="roast"><span class="chip-icon"></span><span>Roast Idea</span></div>
+    <div class="hubChip" data-tool="roast"><span class="chip-icon">🦈</span><span>Roast Idea</span></div>
     <div class="hubChip" data-tool="autopilot"><span class="chip-icon">🚀</span><span>Auto-Pilot</span></div>
     <div class="hubChip" data-tool="goalplan"><span class="chip-icon">🎯</span><span>Goal Plan</span></div>
     <div class="hubChip" data-tool="moneycalc"><span class="chip-icon">💰</span><span>Money Calc</span></div>
@@ -113,17 +123,17 @@
     <div class="hubChip" data-tool="poster"><span class="chip-icon">🖼️</span><span>Poster</span></div>
     <div class="hubChip" data-tool="video"><span class="chip-icon">🎬</span><span>Video Script</span></div>
     <div class="hubChip" data-tool="workflow"><span class="chip-icon">⚙️</span><span>Workflow</span></div>
-    <div class="hubChip" data-tool="writing"><span class="chip-icon">️</span><span>Writing</span></div>
-    <div class="hubChip" data-tool="translate"><span class="chip-icon">🌐</span><span>Translate</span></div>
+    <div class="hubChip" data-tool="writing"><span class="chip-icon">✍️</span><span>Writing</span></div>
+    <div class="hubChip" data-tool="translate"><span class="chip-icon"></span><span>Translate</span></div>
     <div class="hubChip" data-tool="calculator"><span class="chip-icon">🧮</span><span>Calculator</span></div>
     <div class="hubChip" data-tool="student"><span class="chip-icon">📚</span><span>Student</span></div>
     <div class="hubChip" data-tool="code"><span class="chip-icon">💻</span><span>Code</span></div>
     <div class="hubChip" data-tool="logo"><span class="chip-icon">🎨</span><span>Logo</span></div>
     <div class="hubChip" data-tool="social"><span class="chip-icon"></span><span>Social</span></div>
-    <div class="hubChip" data-tool="socialpack"><span class="chip-icon">📦</span><span>Social Pack</span></div>
-    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">🖼️</span><span>Real Image</span></div>
-    <div class="hubChip" data-tool="document"><span class="chip-icon">📄</span><span>Doc AI</span></div>
-    <div class="hubChip" data-tool="image"><span class="chip-icon">📸</span><span>Analyze Img</span></div>
+    <div class="hubChip" data-tool="socialpack"><span class="chip-icon"></span><span>Social Pack</span></div>
+    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">️</span><span>Real Image</span></div>
+    <div class="hubChip" data-tool="document"><span class="chip-icon"></span><span>Doc AI</span></div>
+    <div class="hubChip" data-tool="image"><span class="chip-icon"></span><span>Analyze Img</span></div>
   </div>
 
   <div id="toolWorkspace" class="toolWorkspace" style="display: none;">
@@ -183,8 +193,17 @@
         <option value="product-promo">Product Promotion Pack</option>
       </select>
     </div>
+    <!--  Phase 5: Email Options -->
+    <div id="emailOptions" class="tool-options-row" style="display:none;">
+      <label style="color:var(--text-muted); align-self:center;">Type:</label>
+      <select id="emailTypeSelect">
+        <option value="Cold Outreach">Cold Outreach</option>
+        <option value="Follow-up">Follow-up</option>
+        <option value="Proposal">Proposal</option>
+        <option value="Networking">Networking</option>
+      </select>
+    </div>
 
-    <!-- 🆕 Phase 4: Bilingual Toggle -->
     <div class="tool-options-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
       <label class="checkbox-label">
         <input type="checkbox" id="bilingualToggle" style="width: auto; margin: 0;">
@@ -192,11 +211,24 @@
       </label>
     </div>
 
-    <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
-    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <button id="toolMicBtn" style="padding: 10px 15px;">🎤</button>
-      <button id="toolGenerateBtn">✨ Generate</button>
-      <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;">🔊 Speak</button>
+    <!-- 🆕 Phase 5: Chat Interface (Hidden by default) -->
+    <div id="chatInterface" style="display:none;">
+      <div id="chatContainer" class="chat-container"></div>
+      <div class="chat-input-area">
+        <textarea id="chatInput" placeholder="Type your message... (AI remembers context)"></textarea>
+        <button id="sendChatBtn" style="padding: 10px 20px;">Send</button>
+        <button id="clearChatBtn" class="btn-secondary" style="padding: 10px 15px;">Clear</button>
+      </div>
+    </div>
+
+    <!-- Standard Input (Hidden when Chat is active) -->
+    <div id="standardInputArea">
+      <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button id="toolMicBtn" style="padding: 10px 15px;">🎤</button>
+        <button id="toolGenerateBtn">✨ Generate</button>
+        <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;">🔊 Speak</button>
+      </div>
     </div>
 
     <div id="generatedImageBox" style="display:none; text-align:center; margin-top:20px;"><img id="generatedImage" src="" alt="Generated AI Image"></div>
@@ -211,6 +243,16 @@
       <button id="downloadPosterBtn" style="margin-top: 15px;">📥 Download Poster as Image</button>
     </div>
 
+    <!-- 🆕 Phase 5: Card Preview -->
+    <div id="cardPreviewBox" style="display:none; text-align:center; margin-top:20px;">
+      <div id="cardPreview" class="card-preview">
+        <div class="card-headline" id="cardHeadline">Headline</div>
+        <div class="card-body" id="cardBody">Body text goes here.</div>
+        <div class="card-footer" id="cardFooter">Footer / CTA</div>
+      </div>
+      <button id="downloadCardBtn" style="margin-top: 15px;">📥 Download Card as Image</button>
+    </div>
+
     <div id="toolResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border); white-space: pre-wrap; font-size: 14px; line-height: 1.6;"></div>
     <div id="autopilotResult" style="display:none; margin-top: 20px;"></div>
     <div id="socialPackResult" style="display:none; margin-top: 20px;"></div>
@@ -220,6 +262,7 @@
     <div id="videoResult" style="display:none; margin-top: 20px;"></div>
     <div id="workflowResult" style="display:none; margin-top: 20px;"></div>
     <div id="roastResult" style="display:none; margin-top: 20px;"></div>
+    <div id="emailResult" style="display:none; margin-top: 20px;"></div>
 
     <div id="toolResultActions" class="result-actions" style="display:none;">
       <button id="toolCopyBtn">📋 Copy</button>
@@ -239,11 +282,11 @@
         <button class="remix-btn" data-style="professional">💼 Professional</button>
         <button class="remix-btn" data-style="funny">😄 Funny</button>
         <button class="remix-btn" data-style="viral">🔥 Viral</button>
-        <button class="remix-btn" data-style="hindi">🇮 Hindi</button>
-        <button class="remix-btn" data-style="english">🇬 English</button>
+        <button class="remix-btn" data-style="hindi">🇮🇳 Hindi</button>
+        <button class="remix-btn" data-style="english">🇬🇧 English</button>
         <button class="remix-btn" data-style="simple">📖 Simple</button>
         <button class="remix-btn" data-style="emotional">❤️ Emotional</button>
-        <button class="remix-btn" data-style="seo">🔍 SEO</button>
+        <button class="remix-btn" data-style="seo"> SEO</button>
         <button class="remix-btn" data-style="instagram">📸 Instagram</button>
         <button class="remix-btn" data-style="youtube">🎬 YouTube</button>
       </div>
@@ -251,10 +294,9 @@
     </div>
   </div>
 
-  <!-- 🆕 Phase 4: Brand Modal -->
   <div id="brandModal">
     <div class="modal-content">
-      <h2 style="color: var(--primary);">👤 My Brand Profile</h2>
+      <h2 style="color: var(--primary);"> My Brand Profile</h2>
       <p style="color: var(--text-muted); font-size: 14px;">Set your brand details once. AI will use them for all tools!</p>
       <input type="text" id="brandNameInput" placeholder="Brand Name (e.g., Sharma Coffee)">
       <input type="text" id="brandIndustryInput" placeholder="Industry (e.g., Food & Beverage)">
@@ -282,14 +324,14 @@
     <button id="imageGenerateBtn">✨ Analyze Image</button>
     <div id="imageResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
     <div id="imageResultActions" style="display:none; margin-top: 15px;">
-      <button id="imageCopyBtn">📋 Copy</button><button id="imageShareBtn">📤 Share</button>
+      <button id="imageCopyBtn">📋 Copy</button><button id="imageShareBtn"> Share</button>
     </div>
   </div>
 
   <div id="documentWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 style="margin-top:0;">📄 Document AI</h2>
+    <h2 style="margin-top:0;"> Document AI</h2>
     <div id="docUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
-      <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText"> Click to upload document</p>
+      <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText">📤 Click to upload document</p>
     </div>
     <textarea id="docTextInput" rows="4" placeholder="Or paste your text here..."></textarea>
     <button id="docAnalyzeBtn">🔍 Analyze Document</button>
@@ -297,7 +339,7 @@
   </div>
 
   <div id="toolFavoritesSection" style="display:none; margin-top: 30px;"><h3>⭐ Saved Favorites</h3><div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
-  <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3> Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
+  <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3>🕒 Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="hubPanel" id="ideaSection">
     <h2>💡 Startup Idea Analyzer</h2>
@@ -320,22 +362,22 @@
     </div>
     <div id="reportSections"></div>
     <div class="flex-between" style="margin-top: 20px;">
-      <button id="downloadPdfBtn"> Download PDF</button><button id="copyReportBtn">📋 Copy</button><button id="shareReportBtn">📤 Share</button>
+      <button id="downloadPdfBtn">📄 Download PDF</button><button id="copyReportBtn">📋 Copy</button><button id="shareReportBtn">📤 Share</button>
     </div>
     <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
       <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
-      <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
+      <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn"> Generate Investor Pitch Deck</button>
     </div>
-    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn"> Share</button></div></div>
-    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
+    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div></div>
+    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn"> Share</button></div></div>
   </div>
 
   <div id="ideaHistorySection" style="display:none; margin-top: 30px;"><h3>🕰️ Past Ideas</h3><div id="ideaHistoryRow" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="infoGrid" id="infoGrid">
-    <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>🦈 Roast My Idea (Shark Tank)</li><li>👤 Brand Persona (AI Memory)</li><li>🗣️ Bilingual Output</li><li>🖼️ AI Poster Maker</li></ul></div>
-    <div class="infoCard"><h3>💡 Daily AI Tip</h3><p class="tip-text" id="dailyTip">Set your Brand Profile once! The AI will automatically use your brand name and tone in every poster and social post.</p></div>
-    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Roast my idea: A subscription service for socks"</li><li>"Make a bilingual poster for my cafe"</li><li>"Write a LinkedIn post using my brand voice"</li></ul></div>
+    <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>💬 AI Chat (Remembers Context)</li><li> Quote Card Maker</li><li>✉️ Cold Email Templates</li><li>🦈 Roast My Idea</li></ul></div>
+    <div class="infoCard"><h3> Daily AI Tip</h3><p class="tip-text" id="dailyTip">Use the AI Chat to have a continuous conversation. It remembers your last 5 messages!</p></div>
+    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Chat: Help me plan my day"</li><li>"Make a card: Success is not final"</li><li>"Write a cold email to a marketing agency"</li></ul></div>
   </div>
 
   <div id="proModal">
