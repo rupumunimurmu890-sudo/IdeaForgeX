@@ -4,14 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IdeaForge-AI | AI Tools for Everyone</title>
-  
-  <!-- 🌟 Modern UI/UX CSS (Glassmorphism & Animations) -->
   <style>
-    :root {
-      --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899;
-      --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
-      --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444;
-    }
+    :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
     body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
     .reportCard, .pitchSlide, .hubPanel, .toolWorkspace, .imageToolWorkspace { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
     input, select, textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: border-color 0.2s; margin-bottom: 10px; }
@@ -30,8 +24,6 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toastError { border-left-color: var(--error); }
     .toastSuccess { border-left-color: var(--success); }
-    
-    /* Utility */
     .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .scoreBar { background: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
     .scoreBarFill { background: linear-gradient(90deg, var(--primary), var(--secondary)); height: 100%; transition: width 0.5s ease; }
@@ -39,15 +31,13 @@
     .ad-banner { background: linear-gradient(90deg, #ff9800, #ff5722); color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; display: none; }
     #usageBanner { background: #1e293b; border-left: 4px solid var(--primary); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; display: none; font-size: 14px; }
     #usageBanner.limitReached { border-left-color: var(--error); color: var(--error); }
-    
-    /* Modal */
     #proModal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }
     .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; max-width: 400px; width: 90%; text-align: center; border: 1px solid var(--primary); }
+    #generatedImage { max-width: 100%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <header class="flex-between" style="margin-bottom: 20px;">
     <div>
       <h1 style="margin:0; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">IdeaForge-AI</h1>
@@ -66,43 +56,39 @@
     </div>
   </header>
 
-  <!-- Banners -->
   <div id="usageBanner"></div>
   <div id="adContainer" class="ad-banner">
     <p style="margin:0 0 10px 0;">📢 Advertisement Space</p>
     <button onclick="document.getElementById('proModal').style.display='flex'">🚀 Upgrade to Pro</button>
   </div>
 
-  <!-- Hub Panel -->
   <div class="hubPanel">
     <label style="color: var(--text-muted); margin-bottom: 10px; display: block;" data-i18n="hubLabel">✨ What do you want to do?</label>
     <div style="display: flex; gap: 10px;">
-      <textarea id="hubInput" rows="2" placeholder="e.g., Write an email, Calculate 25*4, Translate Hello to Hindi..."></textarea>
+      <textarea id="hubInput" rows="2" placeholder="e.g., Generate an image of a cat, Write an email..."></textarea>
       <button id="hubMicBtn" style="padding: 10px 15px;">🎤</button>
       <button id="hubAskBtn" data-i18n="askAiBtn">➤ Ask AI</button>
     </div>
   </div>
 
-  <!-- Hub Categories (Chips) -->
   <div class="hubCategories">
     <div class="hubChip" data-tool="assistant" data-i18n="chipAssistant">🤖 AI Assistant</div>
-    <div class="hubChip" data-tool="writing" data-i18n="chipWriting">✍️ Writing</div>
+    <div class="hubChip" data-tool="writing" data-i18n="chipWriting">️ Writing</div>
     <div class="hubChip" data-tool="translate" data-i18n="chipTranslate">🌐 Translate</div>
-    <div class="hubChip" data-tool="calculator" data-i18n="chipCalculator">🧮 Calculator</div>
+    <div class="hubChip" data-tool="calculator" data-i18n="chipCalculator"> Calculator</div>
     <div class="hubChip" data-tool="student" data-i18n="chipStudent">📚 Student</div>
-    <!-- 🆕 New Tools -->
     <div class="hubChip" data-tool="code">💻 Code</div>
-    <div class="hubChip" data-tool="logo">🎨 Logo</div>
+    <div class="hubChip" data-tool="logo"> Logo</div>
     <div class="hubChip" data-tool="social">📱 Social</div>
-    <div class="hubChip" data-tool="image" data-i18n="chipImage">📸 Image</div>
-    <div class="hubChip" id="voiceAiChip" data-i18n="chipVoice">🎤 Voice</div>
+    <!-- 🆕 Real Image Generator Chip -->
+    <div class="hubChip" data-tool="ai-image">🖼️ Real Image</div>
+    <div class="hubChip" data-tool="image" data-i18n="chipImage">📸 Image Tools</div>
+    <div class="hubChip" id="voiceAiChip" data-i18n="chipVoice"> Voice</div>
   </div>
 
-  <!-- Tool Workspace -->
   <div id="toolWorkspace" class="toolWorkspace" style="display: none;">
     <h2 id="toolWorkspaceTitle" style="margin-top:0;">🤖 AI Assistant</h2>
     
-    <!-- Dynamic Options for Specific Tools -->
     <div id="writingOptions" class="tool-options-row" style="display:none;">
       <select id="writingTypeSelect"><option value="Email">Email</option><option value="Essay">Essay</option><option value="Letter">Letter</option><option value="Blog">Blog Post</option></select>
       <select id="toneSelect"><option value="Professional">Professional</option><option value="Casual">Casual</option><option value="Friendly">Friendly</option><option value="Formal">Formal</option></select>
@@ -111,7 +97,6 @@
       <select id="fromLanguageSelect"><option value="auto">Auto Detect</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Spanish">Spanish</option></select>
       <select id="toLanguageSelect"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option></select>
     </div>
-    <!-- 🆕 New Tool Options -->
     <div id="codeOptions" class="tool-options-row" style="display:none;">
       <label style="color:var(--text-muted); align-self:center;">Lang:</label>
       <select id="codeLangSelect"><option value="Python">Python</option><option value="JavaScript">JavaScript</option><option value="HTML/CSS">HTML/CSS</option><option value="React">React</option><option value="Java">Java</option><option value="C++">C++</option></select>
@@ -124,11 +109,28 @@
       <label style="color:var(--text-muted); align-self:center;">Platform:</label>
       <select id="platformSelect"><option value="Instagram">Instagram</option><option value="LinkedIn">LinkedIn</option><option value="Twitter/X">Twitter/X</option><option value="Facebook">Facebook</option></select>
     </div>
+    <!-- 🆕 Real Image Style Options -->
+    <div id="aiImageOptions" class="tool-options-row" style="display:none;">
+      <label style="color:var(--text-muted); align-self:center;">Style:</label>
+      <select id="imageStyleSelect">
+        <option value="Photorealistic">Photorealistic</option>
+        <option value="Digital Art">Digital Art</option>
+        <option value="Anime">Anime</option>
+        <option value="Oil Painting">Oil Painting</option>
+        <option value="Cinematic">Cinematic</option>
+        <option value="None">None (Raw)</option>
+      </select>
+    </div>
 
     <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
     <div style="display: flex; gap: 10px; align-items: center;">
-      <button id="toolMicBtn" style="padding: 10px 15px;"></button>
+      <button id="toolMicBtn" style="padding: 10px 15px;">🎤</button>
       <button id="toolGenerateBtn" data-i18n="generateBtn">✨ Generate</button>
+    </div>
+
+    <!--  Real Image Display Area -->
+    <div id="generatedImageBox" style="display:none; text-align:center; margin-top:20px;">
+      <img id="generatedImage" src="" alt="Generated AI Image">
     </div>
 
     <div id="toolResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border); white-space: pre-wrap;"></div>
@@ -141,12 +143,11 @@
     </div>
   </div>
 
-  <!-- Image Tool Workspace -->
   <div id="imageToolWorkspace" class="imageToolWorkspace" style="display: none;">
-    <h2 style="margin-top:0;">📸 Image Tools</h2>
+    <h2 style="margin-top:0;">📸 Image Tools (Analyze)</h2>
     <div id="imageUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
       <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
-      <p id="imageUploadText"> Click to upload an image</p>
+      <p id="imageUploadText">📤 Click to upload an image</p>
       <img id="imagePreview" style="display:none; max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">
     </div>
     <select id="imageActionSelect">
@@ -163,17 +164,15 @@
     </div>
   </div>
 
-  <!-- History & Favorites -->
   <div id="toolFavoritesSection" style="display:none; margin-top: 30px;">
     <h3>⭐ Saved Favorites</h3>
     <div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div>
   </div>
   <div id="toolHistorySection" style="display:none; margin-top: 20px;">
-    <h3>🕒 Recent Tool History</h3>
+    <h3> Recent Tool History</h3>
     <div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div>
   </div>
 
-  <!-- Startup Idea Generator Section -->
   <div class="hubPanel" id="ideaSection">
     <h2>💡 Startup Idea Analyzer</h2>
     <textarea id="ideaInput" rows="3" placeholder="Describe your startup idea here..."></textarea>
@@ -184,12 +183,11 @@
       <div>
         <span id="charCount" style="color: var(--text-muted); margin-right: 10px;">0</span>
         <button id="generateBtn" data-i18n="generateBtn">✨ Generate Report</button>
-        <button id="newIdeaBtn" style="background: #475569;">️ New Idea</button>
+        <button id="newIdeaBtn" style="background: #475569;">🔄 New Idea</button>
       </div>
     </div>
   </div>
 
-  <!-- Report Section -->
   <div id="reportSection" style="display:none;">
     <div class="hubPanel">
       <h2>📊 Analysis Score</h2>
@@ -201,59 +199,43 @@
     </div>
     <div id="reportSections"></div>
     <div class="flex-between" style="margin-top: 20px;">
-      <button id="downloadPdfBtn">📄 Download PDF</button>
+      <button id="downloadPdfBtn"> Download PDF</button>
       <button id="copyReportBtn" data-i18n="copyBtn">📋 Copy</button>
       <button id="shareReportBtn" data-i18n="shareBtn">📤 Share</button>
     </div>
-
-    <!-- Launch Plan & Pitch Deck -->
     <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
       <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
       <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button>
       <button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
     </div>
-    
     <div id="launchPlanSection" style="display:none; margin-top: 20px;">
       <div id="launchPlanSections"></div>
-      <div class="flex-between">
-        <button id="downloadLaunchPlanPdfBtn">📄 PDF</button>
-        <button id="copyLaunchPlanBtn">📋 Copy</button>
-        <button id="shareLaunchPlanBtn"> Share</button>
-      </div>
+      <div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div>
     </div>
-
     <div id="pitchDeckSection" style="display:none; margin-top: 20px;">
       <div id="pitchDeckSlides"></div>
-      <div class="flex-between">
-        <button id="downloadPitchDeckPdfBtn">📄 PDF</button>
-        <button id="copyPitchDeckBtn">📋 Copy</button>
-        <button id="sharePitchDeckBtn">📤 Share</button>
-      </div>
+      <div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div>
     </div>
   </div>
 
-  <!-- Idea History -->
   <div id="ideaHistorySection" style="display:none; margin-top: 30px;">
-    <h3> Past Ideas</h3>
+    <h3>🕰️ Past Ideas</h3>
     <div id="ideaHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div>
   </div>
 
-  <!-- Pro Modal -->
   <div id="proModal">
     <div class="modal-content">
       <h2 style="color: gold;">🚀 Upgrade to Pro</h2>
       <p>Unlimited AI • No Ads • Priority • New Tools</p>
       <h3 style="color: var(--primary);">₹499 / month</h3>
-      <button id="upgradeProBtn" style="width: 100%; margin-top: 10px;"> Pay & Activate Pro</button>
+      <button id="upgradeProBtn" style="width: 100%; margin-top: 10px;">💳 Pay & Activate Pro</button>
       <br><br>
       <button id="closeProModal" style="background: #475569;">Cancel</button>
     </div>
   </div>
 
-  <!-- Toast Container -->
   <div id="toastContainer"></div>
 
-  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="app.js"></script>
