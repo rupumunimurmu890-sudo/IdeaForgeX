@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX Worker v2.1 - New Tools & Modern UI
+// IdeaForgeX Worker v3.0 - Real AI Image Generator
 // ========================================
 
 const corsHeaders = {
@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const IMAGE_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0"; // Real Image Model
 const FREE_DAILY_LIMIT = 15;
 
 // 🛡️ Usage Limit Checker
@@ -91,7 +92,7 @@ Produce pitch deck content in EXACTLY this format (punchy bullets, no fluff):
 ###FUNDING_REQUIREMENT###\n2-3 bullets with ₹ amount.`;
 }
 
-// 🆕 NEW TOOLS PROMPTS (Code, Logo, Social)
+// 🆕 TOOLS PROMPTS
 function buildToolPrompt(tool, input, opts) {
   const ll = opts.language && opts.language !== "auto" ? `Respond in ${opts.language}.` : "Respond in the user's language.";
 
@@ -99,45 +100,17 @@ function buildToolPrompt(tool, input, opts) {
   if (tool === "translate") return `You are a translator. Translate from ${opts.fromLanguage || "auto"} to ${opts.toLanguage || "English"}. Output ONLY the translation.\nText: ${input}`;
   if (tool === "calculator") return `You are a calculator. Solve this, show steps, end with "Answer: ".\nProblem: ${input}`;
   if (tool === "student") return `You are a student helper. Explain clearly.\nRequest: ${input}`;
-  
-  // 💻 Code Generator
-  if (tool === "code") {
-    return `You are an expert software engineer. Write clean, efficient, and well-commented code in ${opts.codeLang || "Python"} for the following request. 
-Wrap the code in standard markdown code blocks (e.g., \`\`\`python ... \`\`\`). Add brief explanations after the code.
-Request: ${input}`;
-  }
-  
-  // 🎨 Logo Maker
-  if (tool === "logo") {
-    return `You are a professional brand designer. Create a detailed logo concept for: "${input}". 
-Style: ${opts.logoStyle || "Minimalist"}.
-Provide: 
-1. Visual Description (shapes, layout).
-2. Color Palette (3-4 Hex codes).
-3. Typography suggestions.
-4. Why this design works for the brand.
-Keep it structured and easy to read.`;
-  }
-  
-  // 📱 Social Media Post
-  if (tool === "social") {
-    return `You are a viral social media expert. Create an engaging post for ${opts.platform || "Instagram"} about: "${input}".
-Include:
-1. A catchy Hook (first line).
-2. Engaging Body (use emojis).
-3. Strong Call to Action (CTA).
-4. 5-10 relevant hashtags.
-Format it perfectly for the chosen platform.`;
-  }
+  if (tool === "code") return `You are an expert software engineer. Write clean, efficient code in ${opts.codeLang || "Python"} for: ${input}. Wrap in markdown blocks.`;
+  if (tool === "logo") return `You are a brand designer. Create a logo concept for: "${input}". Style: ${opts.logoStyle || "Minimalist"}. Provide visual description, Hex colors, and typography.`;
+  if (tool === "social") return `You are a social media expert. Create an engaging post for ${opts.platform || "Instagram"} about: "${input}". Include hook, body, CTA, and hashtags.`;
 
   if (tool === "auto") {
     return `You are IdeaForge-AI. ${ll}
 STEP 1: Output exactly one line: ROUTE: <category> (categories: writing, translate, calculator, student, code, logo, social, assistant).
-STEP 2: Give a direct, useful answer based on that category. Do not repeat the ROUTE line.
+STEP 2: Give a direct answer. Do not repeat ROUTE line.
 User's request: ${input}`;
   }
-
-  return `You are IdeaForge-AI, a helpful assistant. ${ll}\nUnderstand and answer helpfully.\nRequest: ${input}`;
+  return `You are IdeaForge-AI. ${ll}\nAnswer helpfully.\nRequest: ${input}`;
 }
 
 // Parser & Helpers
@@ -230,7 +203,7 @@ export default {
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
-    // 4. AI Tools (Code, Logo, Social included)
+    // 4. AI Tools (Text)
     if (url.pathname === "/api/ai-tool" && request.method === "POST") {
       const check = await checkAndIncrementUsage(env, userId, userPlan);
       if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
@@ -256,7 +229,40 @@ export default {
       } catch (e) { return Response.json({ success: false, error: e.message }, { status: 200, headers: corsHeaders }); }
     }
 
+    // 🆕 5. REAL AI IMAGE GENERATOR
+    if (url.pathname === "/api/generate-image" && request.method === "POST") {
+      const check = await checkAndIncrementUsage(env, userId, userPlan);
+      if (!check.allowed) return Response.json({ success: false, error: check.message, limitReached: true }, { status: 429, headers: corsHeaders });
+      
+      try {
+        const body = await request.json();
+        let prompt = body.prompt || "";
+        const style = body.style || "Photorealistic";
+        
+        // Enhance prompt with style
+        if (style !== "None") {
+          prompt = `${prompt}, ${style} style, high quality, 8k resolution, highly detailed`;
+        }
+
+        // Run Stable Diffusion Model
+        const imageResponse = await env.AI.run(IMAGE_MODEL, { prompt });
+        
+        // Convert ArrayBuffer to Base64
+        const uint8Array = new Uint8Array(imageResponse);
+        let binary = '';
+        for (let i = 0; i < uint8Array.byteLength; i++) {
+          binary += String.fromCharCode(uint8Array[i]);
+        }
+        const base64Image = btoa(binary);
+
+        return Response.json({ success: true, image: `data:image/png;base64,${base64Image}` }, { status: 200, headers: corsHeaders });
+      } catch (e) {
+        console.error("Image generation error:", e);
+        return Response.json({ success: false, error: "Image generate nahi ho payi. " + e.message }, { status: 200, headers: corsHeaders });
+      }
+    }
+
     if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response("IdeaForgeX v2.1 Running 🚀", { status: 200, headers: corsHeaders });
+    return new Response("IdeaForgeX v3.0 Running 🚀", { status: 200, headers: corsHeaders });
   }
 };
