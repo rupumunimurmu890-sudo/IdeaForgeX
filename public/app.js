@@ -1,12 +1,13 @@
 // ========================================
-// IdeaForgeX - Main JavaScript v8.0 (Phase 5: Conversational AI)
+// IdeaForgeX - Main JavaScript v9.0 (Phase 6: PWA & Workspace)
 // ========================================
 
 let currentReport = null, currentIdeaText = "", isProUser = false;
 let userBrand = { name: "", industry: "", audience: "" };
-let chatHistory = []; // 🆕 Phase 5: Chat Memory
+let chatHistory = []; 
 const HISTORY_KEY = "ideaforgex_history", HISTORY_LIMIT = 10;
 const FREE_DAILY_LIMIT = 15, USAGE_KEY = "ideaforge_usage";
+const PROJECTS_KEY = "ideaforge_projects"; // 🆕 Phase 6
 
 function showToast(msg, type) {
   const c = document.getElementById("toastContainer"); if (!c) return;
@@ -34,9 +35,9 @@ function escapeHtml(str) { const d = document.createElement("div"); d.textConten
 
 const SECTION_DISPLAY = [
   { key: "IDEA", title: "💡 The Idea" }, { key: "TARGET_CUSTOMERS", title: "🎯 Target Customers" }, { key: "CUSTOMER_PROBLEM", title: "😣 Customer Problem" },
-  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: "🥊 Competitor Analysis" },
+  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: " Competitor Analysis" },
   { key: "__SWOT__", title: "SWOT Analysis" }, { key: "MARKETING_STRATEGY", title: "📣 Marketing Strategy" }, { key: "STARTUP_COST", title: "💵 Startup Cost" },
-  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "⚠️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
+  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
 ];
 
 function setBar(barId, valId, val) { const b = document.getElementById(barId), v = document.getElementById(valId); if(b) b.style.width = (val||0)+"%"; if(v) v.textContent = (typeof val==="number"?val:"--")+"/100"; }
@@ -50,7 +51,7 @@ function renderReport(report) {
   SECTION_DISPLAY.forEach(item => {
     if (item.key === "__SWOT__") {
       const card = document.createElement("div"); card.className = "reportCard";
-      card.innerHTML = '<div class="reportCardTitle">🧭 SWOT Analysis</div><div class="swotGrid"><div class="swotBox swotStrengths"><div class="swotTitle">Strengths</div>'+escapeHtml(sections.SWOT_STRENGTHS||"")+'</div><div class="swotBox swotWeaknesses"><div class="swotTitle">Weaknesses</div>'+escapeHtml(sections.SWOT_WEAKNESSES||"")+'</div><div class="swotBox swotOpportunities"><div class="swotTitle">Opportunities</div>'+escapeHtml(sections.SWOT_OPPORTUNITIES||"")+'</div><div class="swotBox swotThreats"><div class="swotTitle">Threats</div>'+escapeHtml(sections.SWOT_THREATS||"")+'</div></div>';
+      card.innerHTML = '<div class="reportCardTitle"> SWOT Analysis</div><div class="swotGrid"><div class="swotBox swotStrengths"><div class="swotTitle">Strengths</div>'+escapeHtml(sections.SWOT_STRENGTHS||"")+'</div><div class="swotBox swotWeaknesses"><div class="swotTitle">Weaknesses</div>'+escapeHtml(sections.SWOT_WEAKNESSES||"")+'</div><div class="swotBox swotOpportunities"><div class="swotTitle">Opportunities</div>'+escapeHtml(sections.SWOT_OPPORTUNITIES||"")+'</div><div class="swotBox swotThreats"><div class="swotTitle">Threats</div>'+escapeHtml(sections.SWOT_THREATS||"")+'</div></div>';
       container.appendChild(card); return;
     }
     const content = sections[item.key] || ""; if (!content) return;
@@ -93,7 +94,7 @@ async function generateLaunchPlan() {
   try {
     const res = await fetch("/api/generate-launch-plan", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({idea:currentIdeaText, budget:document.getElementById("budgetInput")?.value||"", language:document.getElementById("languageSelect").value, brand: userBrand}) });
     const data = await res.json(); if(!res.ok||!data.success||!data.plan) throw new Error(data?.error);
-    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:" Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
+    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:" Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
     document.getElementById("launchPlanSection").style.display="block";
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
@@ -129,7 +130,6 @@ function smartRouteInput(input) {
   if (/\b(poster|banner|flyer|graphic design)\b/.test(t)) return 'poster';
   if (/\b(video|script|youtube|reel|shorts|tiktok)\b/.test(t)) return 'video';
   if (/\b(workflow|batch|all in one|complete pack)\b/.test(t)) return 'workflow';
-  // 🆕 Phase 5 Routing
   if (/\b(chat|talk|conversation|baat karo|help me)\b/.test(t)) return 'chat';
   if (/\b(card|quote|instagram story|status|shareable)\b/.test(t)) return 'card';
   if (/\b(cold email|outreach|follow up|proposal|networking email)\b/.test(t)) return 'email';
@@ -137,13 +137,24 @@ function smartRouteInput(input) {
 }
 
 let currentToolResult = "", currentToolInput = "", activeTool = "assistant", lastToolPayload = null;
-const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: "💡 Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "✍️ Writing", translate: "🌐 Translate", calculator: "🧮 Calculator", student: "📚 Student", code: "💻 Code", logo: "🎨 Logo", social: " Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: " Quote Card", email: "✉️ Cold Email" };
+const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: " Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "️ Writing", translate: "🌐 Translate", calculator: "🧮 Calculator", student: " Student", code: "💻 Code", logo: "🎨 Logo", social: " Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: "📸 Quote Card", email: "✉️ Cold Email", projects: "📂 My Projects" };
 
 function openToolWorkspace(tool) {
   activeTool = tool;
   document.querySelectorAll(".hubChip").forEach(c => c.classList.remove("active"));
   const chip = document.querySelector('.hubChip[data-tool="'+tool+'"]'); if(chip) chip.classList.add("active");
   
+  // 🆕 Phase 6: Handle Projects Tab
+  if (tool === "projects") {
+    document.getElementById("projectsSection").style.display = "block";
+    document.getElementById("toolWorkspace").style.display = "none";
+    renderProjects();
+    document.getElementById("projectsSection").scrollIntoView({behavior:"smooth"});
+    return;
+  } else {
+    document.getElementById("projectsSection").style.display = "none";
+  }
+
   document.getElementById("toolWorkspace").style.display = "none";
   document.getElementById("imageToolWorkspace").style.display = "none";
   document.getElementById("documentWorkspace").style.display = "none";
@@ -170,15 +181,15 @@ function openToolWorkspace(tool) {
   if (tool === "workflow") document.getElementById("workflowOptions").style.display = "flex";
   if (tool === "email") document.getElementById("emailOptions").style.display = "flex";
 
-  // 🆕 Phase 5: Toggle Chat vs Standard Input
   if (tool === "chat") {
     document.getElementById("chatInterface").style.display = "block";
     document.getElementById("standardInputArea").style.display = "none";
     document.getElementById("toolResultActions").style.display = "none";
-    document.getElementById("bilingualToggle").parentElement.style.display = "none"; // Hide bilingual for chat
+    document.getElementById("bilingualToggle").parentElement.style.display = "none";
   } else {
     document.getElementById("chatInterface").style.display = "none";
     document.getElementById("standardInputArea").style.display = "block";
+    document.getElementById("toolResultActions").style.display = "none"; // Hide initially
     document.getElementById("bilingualToggle").parentElement.style.display = "flex";
   }
   
@@ -208,7 +219,7 @@ function formatToolResult(text, tool) {
 
 function renderAutopilotResult(pkg) {
   const container = document.getElementById("autopilotResult"); container.innerHTML = "";
-  const sections = [{ key: "AD_COPY", title: "📢 Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: " Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "AD_COPY", title: " Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (pkg[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pkg[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -229,14 +240,14 @@ function renderGoalResult(plan) {
 
 function renderMoneyResult(calc) {
   const container = document.getElementById("moneyResult"); container.innerHTML = "";
-  const sections = [{ key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" }, { key: "MONTHLY_EXPENSES", title: "📉 Monthly Expenses" }, { key: "REVENUE_MODEL", title: "💵 Revenue Model" }, { key: "PROFIT_PROJECTION", title: "📈 Profit Projection" }, { key: "BREAK_EVEN", title: "⚖️ Break-Even Point" }, { key: "RISKS", title: "⚠️ Financial Risks" }];
+  const sections = [{ key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" }, { key: "MONTHLY_EXPENSES", title: "📉 Monthly Expenses" }, { key: "REVENUE_MODEL", title: "💵 Revenue Model" }, { key: "PROFIT_PROJECTION", title: "📈 Profit Projection" }, { key: "BREAK_EVEN", title: "️ Break-Even Point" }, { key: "RISKS", title: "⚠️ Financial Risks" }];
   sections.forEach(s => { if (calc[s.key]) { const div = document.createElement("div"); div.className = "money-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(calc[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderImproveResult(feedback) {
   const container = document.getElementById("improveResult"); container.innerHTML = "";
-  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: " Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: "🚀 Immediate Next Steps" }];
+  const sections = [{ key: "VERDICT", title: "️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: " Immediate Next Steps" }];
   sections.forEach(s => { if (feedback[s.key]) { const div = document.createElement("div"); div.className = "improve-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(feedback[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -245,7 +256,7 @@ function renderRoastResult(roast) {
   const container = document.getElementById("roastResult"); container.innerHTML = "";
   const score = roast.SHARK_SCORE || "?";
   container.innerHTML = `<div class="shark-score">🦈 ${score}/10</div>`;
-  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: "🔥 The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "⚖️ Final Verdict" }];
+  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: "🔥 The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "️ Final Verdict" }];
   sections.forEach(s => { if (roast[s.key]) { const div = document.createElement("div"); div.className = "roast-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(roast[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -259,7 +270,6 @@ function renderPosterResult(poster, theme) {
   document.getElementById("posterPreviewBox").style.display = "block";
 }
 
-// 🆕 Phase 5: Card Renderer
 function renderCardResult(card) {
   document.getElementById("cardHeadline").textContent = card.HEADLINE || "Headline";
   document.getElementById("cardBody").textContent = card.BODY || "Body text goes here.";
@@ -271,19 +281,18 @@ function renderCardResult(card) {
 
 function renderVideoResult(video) {
   const container = document.getElementById("videoResult"); container.innerHTML = "";
-  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "🎙️ Intro" }, { key: "BODY", title: " Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "️ Intro" }, { key: "BODY", title: "🎥 Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (video[s.key]) { const div = document.createElement("div"); div.className = "video-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(video[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderWorkflowResult(workflow) {
   const container = document.getElementById("workflowResult"); container.innerHTML = "";
-  const sections = [{ key: "PART_1", title: "📦 Part 1" }, { key: "PART_2", title: "📦 Part 2" }, { key: "PART_3", title: "📦 Part 3" }];
+  const sections = [{ key: "PART_1", title: "📦 Part 1" }, { key: "PART_2", title: "📦 Part 2" }, { key: "PART_3", title: " Part 3" }];
   sections.forEach(s => { if (workflow[s.key]) { const div = document.createElement("div"); div.className = "workflow-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(workflow[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
-// 🆕 Phase 5: Email Renderer
 function renderEmailResult(email) {
   const container = document.getElementById("emailResult"); container.innerHTML = "";
   const sections = [{ key: "SUBJECT", title: "📧 Subject Line" }, { key: "BODY", title: "📝 Email Body" }, { key: "SIGN_OFF", title: "✍️ Sign Off" }];
@@ -291,7 +300,6 @@ function renderEmailResult(email) {
   container.style.display = "block";
 }
 
-// 🆕 Phase 5: Chat Logic
 function appendChatMessage(role, text) {
   const container = document.getElementById("chatContainer");
   const msgDiv = document.createElement("div");
@@ -311,7 +319,6 @@ async function sendChatMessage() {
   input.value = "";
   chatHistory.push({ role: "user", content: text });
 
-  // Keep only last 10 messages for context
   if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
   const btn = document.getElementById("sendChatBtn");
@@ -325,7 +332,7 @@ async function sendChatMessage() {
     
     appendChatMessage("ai", data.reply);
     chatHistory.push({ role: "assistant", content: data.reply });
-    currentToolResult = data.reply; // For copy/share
+    currentToolResult = data.reply; 
   } catch (e) { showToast(e.message, "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
@@ -421,7 +428,6 @@ async function runAiTool(input, tool) {
       resAct.style.display="flex"; return;
     }
 
-    // 🆕 Phase 5: Card
     if (tool === "card") {
       const res = await fetch("/api/generate-card", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ text: input }) });
       const data = await res.json();
@@ -432,7 +438,6 @@ async function runAiTool(input, tool) {
       resAct.style.display="flex"; return;
     }
 
-    // 🆕 Phase 5: Email
     if (tool === "email") {
       const type = document.getElementById("emailTypeSelect")?.value || "Cold Outreach";
       const res = await fetch("/api/generate-email", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ type, topic: input, brand: userBrand }) });
@@ -521,7 +526,7 @@ async function analyzeDocument() {
     if(!res.ok||!data.success||!data.analysis) throw new Error(data?.error);
     if(!isProUser) incrementUsage();
     const resultDiv = document.getElementById("docResult"); resultDiv.innerHTML = "";
-    const sections = [{ key: "SUMMARY", title: "📋 Summary" }, { key: "KEY_POINTS", title: " Key Points" }, { key: "QUESTIONS_ANSWERS", title: "❓ Q&A" }, { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" }, { key: "MCQS", title: "📝 MCQs" }];
+    const sections = [{ key: "SUMMARY", title: "📋 Summary" }, { key: "KEY_POINTS", title: "🎯 Key Points" }, { key: "QUESTIONS_ANSWERS", title: "❓ Q&A" }, { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" }, { key: "MCQS", title: "📝 MCQs" }];
     sections.forEach(s => { if (data.analysis[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(data.analysis[s.key])}</p>`; resultDiv.appendChild(div); } });
     resultDiv.style.display = "block"; showToast("Document analyzed successfully!", "success");
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
@@ -551,7 +556,6 @@ async function downloadPoster() {
   } catch(e) { showToast("Poster download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
-//  Phase 5: Download Card
 async function downloadCard() {
   if (!window.html2canvas) { showToast("PDF/Image lib load nahi hui.", "error"); return; }
   const btn = document.getElementById("downloadCardBtn");
@@ -567,29 +571,95 @@ async function downloadCard() {
   } catch(e) { showToast("Card download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
+// 🆕 Phase 6: Projects Logic
+function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; } catch(e){ return []; } }
+function saveToProjects() {
+  if (!currentToolResult || !currentToolInput) { showToast("Pehle kuch generate karein!", "error"); return; }
+  const projects = getProjects();
+  projects.unshift({
+    id: Date.now(),
+    tool: activeTool,
+    title: TOOL_TITLES[activeTool] + ": " + currentToolInput.slice(0, 40),
+    content: currentToolResult,
+    date: new Date().toLocaleDateString()
+  });
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+  showToast("📂 Saved to My Projects!", "success");
+}
+function deleteProject(id) {
+  let projects = getProjects();
+  projects = projects.filter(p => p.id !== id);
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+  renderProjects();
+  showToast("Project deleted.", "info");
+}
+function renderProjects() {
+  const projects = getProjects();
+  const grid = document.getElementById("projectsGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  if (projects.length === 0) {
+    grid.innerHTML = "<p style='color:var(--text-muted); text-align:center; grid-column: 1/-1;'>No saved projects yet. Generate something and click 'Save to Projects'!</p>";
+    return;
+  }
+  projects.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "project-card";
+    card.innerHTML = `
+      <button class="delete-btn" onclick="deleteProject(${p.id})">✕</button>
+      <h4>${p.title}</h4>
+      <p>${escapeHtml(p.content).substring(0, 100)}...</p>
+      <p style="margin-top:8px; font-size:11px; color:var(--primary);">${p.date}</p>
+    `;
+    card.onclick = (e) => {
+      if (e.target.className === 'delete-btn') return;
+      currentToolResult = p.content;
+      openToolWorkspace(p.tool);
+      document.getElementById("toolResult").innerHTML = formatToolResult(p.content, p.tool);
+      document.getElementById("toolResult").style.display = "block";
+      document.getElementById("toolResultActions").style.display = "flex";
+    };
+    grid.appendChild(card);
+  });
+}
+
 const TH_KEY="ideaforge_tool_history"; function getTH(){ try{return JSON.parse(localStorage.getItem(TH_KEY))||[];}catch(e){return[];} }
 function saveToTH(t,i,r){ let l=getTH(); l.unshift({tool:t,input:i,result:r,label:(TOOL_TITLES[t]||t)+": "+i.slice(0,50),savedAt:Date.now()}); while(l.length>15)l.pop(); localStorage.setItem(TH_KEY,JSON.stringify(l)); renderTH(); }
 function renderTH(){ const l=getTH(),s=document.getElementById("toolHistorySection"),r=document.getElementById("toolHistoryRow"); if(!s||!r)return; if(l.length===0){s.style.display="none";return;} r.innerHTML=""; l.forEach(i=>{const b=document.createElement("button");b.type="button";b.className="historyItem";b.innerHTML='<span class="historyItemText">'+escapeHtml(i.label)+'</span>';b.onclick=()=>{openToolWorkspace(i.tool);document.getElementById("toolInput").value=i.input;currentToolResult=i.result;document.getElementById("toolResult").innerHTML=formatToolResult(i.result, i.tool);document.getElementById("toolResult").style.display="block";};r.appendChild(b);}); s.style.display="block"; }
 
-const UI_STRINGS = { en: { tagline: "One AI Workspace for Everything", askAiBtn: "➤ Ask AI" }, hi: { tagline: "सबके लिए AI वर्कस्पेस", askAiBtn: " AI से पूछें" } }; 
+const UI_STRINGS = { en: { tagline: "One AI Workspace for Everything", askAiBtn: "➤ Ask AI" }, hi: { tagline: "सबके लिए AI वर्कस्पेस", askAiBtn: "➤ AI से पूछें" } }; 
 function applyUILanguage(lang) { const d = UI_STRINGS[lang]||UI_STRINGS.en; document.querySelectorAll("[data-i18n]").forEach(el => { const k=el.getAttribute("data-i18n"); if(d[k]) el.textContent=d[k]; }); localStorage.setItem("ideaforge_ui_lang", lang); }
 
 function startVoiceInput(targetId, btn) { const S = window.SpeechRecognition||window.webkitSpeechRecognition; if(!S){showToast("Voice support nahi hai.","error");return;} const r=new S(); r.lang="hi-IN"; btn.classList.add("listening"); r.onresult=e=>{document.getElementById(targetId).value += e.results[0][0].transcript;}; r.onend=()=>btn.classList.remove("listening"); try{r.start();}catch(e){btn.classList.remove("listening");} }
 
-function loadBrand() {
-  try { const saved = localStorage.getItem('ideaforge_brand'); if (saved) userBrand = JSON.parse(saved); } catch(e) {}
-}
+function loadBrand() { try { const saved = localStorage.getItem('ideaforge_brand'); if (saved) userBrand = JSON.parse(saved); } catch(e) {} }
 function saveBrand() {
   userBrand = { name: document.getElementById("brandNameInput").value.trim(), industry: document.getElementById("brandIndustryInput").value.trim(), audience: document.getElementById("brandAudienceInput").value.trim() };
   localStorage.setItem('ideaforge_brand', JSON.stringify(userBrand));
-  showToast("👤 Brand Profile Saved! AI will now use it.", "success");
+  showToast(" Brand Profile Saved! AI will now use it.", "success");
   document.getElementById("brandModal").style.display = "none";
+}
+
+// 🆕 Phase 6: Theme Toggle
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('ideaforge_theme', isLight ? 'light' : 'dark');
+  document.getElementById("themeToggleBtn").textContent = isLight ? '🌞' : '';
+}
+function loadTheme() {
+  const savedTheme = localStorage.getItem('ideaforge_theme');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById("themeToggleBtn").textContent = '🌞';
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   isProUser = localStorage.getItem('ideaforge_pro') === 'true'; 
   if(!localStorage.getItem('uid')) localStorage.setItem('uid', 'user_'+Math.random().toString(36).substr(2,9));
   loadBrand();
+  loadTheme(); // 🆕 Phase 6
   renderHistory(); renderTH(); renderUsageBanner(); applyUILanguage(localStorage.getItem("ideaforge_ui_lang")||"en");
   
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
@@ -607,7 +677,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = document.getElementById("toolInput").value.trim(); if(!t) return; runAiTool(t, activeTool);
   });
 
-  // 🆕 Phase 5: Chat Events
   document.getElementById("sendChatBtn")?.addEventListener("click", sendChatMessage);
   document.getElementById("chatInput")?.addEventListener("keypress", (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } });
   document.getElementById("clearChatBtn")?.addEventListener("click", () => { chatHistory = []; document.getElementById("chatContainer").innerHTML = ""; showToast("Chat history cleared!", "info"); });
@@ -620,8 +689,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("toolSaveBtn")?.addEventListener("click", () => { if(currentToolResult && currentToolInput) { saveToTH(activeTool, currentToolInput, currentToolResult); showToast("⭐ Saved!", "success"); } });
   document.getElementById("toolShareBtn")?.addEventListener("click", () => { if(currentToolResult) { if(navigator.share) navigator.share({title:"IdeaForge-AI", text:currentToolResult}); else { copyText(currentToolResult); showToast("Copied for sharing!", "info"); } } });
   
+  // 🆕 Phase 6: Save to Projects Button
+  document.getElementById("saveToProjectBtn")?.addEventListener("click", saveToProjects);
+  document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
+  
   document.getElementById("downloadPosterBtn")?.addEventListener("click", downloadPoster);
-  document.getElementById("downloadCardBtn")?.addEventListener("click", downloadCard); // 🆕 Phase 5
+  document.getElementById("downloadCardBtn")?.addEventListener("click", downloadCard);
   
   document.getElementById("hubMicBtn")?.addEventListener("click", function(){ startVoiceInput("hubInput", this); });
   document.getElementById("toolMicBtn")?.addEventListener("click", function(){ startVoiceInput("toolInput", this); });
