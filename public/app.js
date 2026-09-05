@@ -1,9 +1,10 @@
 // ========================================
-// IdeaForgeX - Main JavaScript (Updated: 19+ Languages + Voice AI)
+// IdeaForgeX - Main JavaScript (Updated: Smart Router + Pro Tier)
 // ========================================
 
 let currentReport = null;
 let currentIdeaText = "";
+let isProUser = false;
 
 const HISTORY_KEY = "ideaforgex_history";
 const HISTORY_LIMIT = 10;
@@ -110,15 +111,15 @@ function escapeHtml(str) {
 const SECTION_DISPLAY = [
   { key: "IDEA", title: "💡 The Idea" },
   { key: "TARGET_CUSTOMERS", title: "🎯 Target Customers" },
-  { key: "CUSTOMER_PROBLEM", title: "😣 Customer Problem" },
+  { key: "CUSTOMER_PROBLEM", title: " Customer Problem" },
   { key: "REVENUE_MODEL", title: "💰 Revenue Model" },
   { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" },
   { key: "COMPETITOR_ANALYSIS", title: "🥊 Competitor Analysis" },
   { key: "__SWOT__", title: "SWOT Analysis" },
   { key: "MARKETING_STRATEGY", title: "📣 Marketing Strategy" },
   { key: "STARTUP_COST", title: "💵 Estimated Startup Cost" },
-  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" },
-  { key: "RISKS", title: "⚠️ Risks" },
+  { key: "ONE_YEAR_PROJECTION", title: " 1-Year Projection" },
+  { key: "RISKS", title: "️ Risks" },
   { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
 ];
 
@@ -223,14 +224,23 @@ async function generateReport() {
   generateBtn.innerHTML = '<span class="spinner"></span> Analyzing your idea...';
 
   try {
+    const userId = localStorage.getItem('ideaforge_uid') || 'anonymous';
     const response = await fetch("/api/generate-report", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-User-ID": userId,
+        "X-User-Plan": isProUser ? "pro" : "free"
+      },
       body: JSON.stringify({ idea, language: languageSelect.value })
     });
 
     const data = await response.json();
     if (!response.ok || !data.success || !data.report) {
+      if (data.limitReached) {
+        showProModal();
+        throw new Error("Daily limit reached. Upgrade to Pro!");
+      }
       throw new Error(data?.error || "Report generate nahi ho paya.");
     }
 
@@ -325,7 +335,7 @@ async function sharePlainText(title, text) {
 let currentLaunchPlan = null;
 const LAUNCH_PLAN_DISPLAY = [
   { key: "BUDGET_BREAKDOWN", title: "💰 Budget Breakdown" },
-  { key: "PREPARATION", title: "📋 Day 1–7: Preparation" },
+  { key: "PREPARATION", title: " Day 1–7: Preparation" },
   { key: "PRODUCT_DEVELOPMENT", title: "🛠️ Day 8–15: Product Development" },
   { key: "BRANDING", title: "🎨 Day 16–20: Branding" },
   { key: "MARKETING_LAUNCH", title: "📣 Day 21–25: Marketing" },
@@ -370,9 +380,14 @@ async function generateLaunchPlan() {
   btn.innerHTML = '<span class="spinner"></span> Launch plan ban raha hai...';
 
   try {
+    const userId = localStorage.getItem('ideaforge_uid') || 'anonymous';
     const response = await fetch("/api/generate-launch-plan", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-User-ID": userId,
+        "X-User-Plan": isProUser ? "pro" : "free"
+      },
       body: JSON.stringify({
         idea: currentIdeaText,
         budget: document.getElementById("budgetInput")?.value.trim() || "",
@@ -382,6 +397,10 @@ async function generateLaunchPlan() {
 
     const data = await response.json();
     if (!response.ok || !data.success || !data.plan) {
+      if (data.limitReached) {
+        showProModal();
+        throw new Error("Daily limit reached. Upgrade to Pro!");
+      }
       throw new Error(data?.error || "Launch plan generate nahi ho paya.");
     }
 
@@ -441,9 +460,14 @@ async function generatePitchDeck() {
   btn.innerHTML = '<span class="spinner"></span> Pitch deck ban raha hai...';
 
   try {
+    const userId = localStorage.getItem('ideaforge_uid') || 'anonymous';
     const response = await fetch("/api/generate-pitch-deck", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-User-ID": userId,
+        "X-User-Plan": isProUser ? "pro" : "free"
+      },
       body: JSON.stringify({
         idea: currentIdeaText,
         language: document.getElementById("languageSelect")?.value || "auto"
@@ -452,6 +476,10 @@ async function generatePitchDeck() {
 
     const data = await response.json();
     if (!response.ok || !data.success || !data.deck) {
+      if (data.limitReached) {
+        showProModal();
+        throw new Error("Daily limit reached. Upgrade to Pro!");
+      }
       throw new Error(data?.error || "Pitch deck generate nahi ho paya.");
     }
 
@@ -470,6 +498,92 @@ async function generatePitchDeck() {
   }
 }
 
+// ========================================
+// 🆕 PHASE 7: AI SMART ROUTER
+// ========================================
+
+function smartRouteInput(input) {
+    const text = input.toLowerCase().trim();
+    
+    // 1. Calculator / Math Detection
+    if (/[\d]+\s*[\+\-\*\/\^]\s*[\d]+/.test(text) || 
+        /\b(calculate|math|kitna|jod|guna|bhag|total|sum|plus|minus|multiply|divide)\b/.test(text)) {
+        return 'calculator';
+    }
+    
+    // 2. Translation Detection
+    if (/\b(translate|anuvad|in hindi|in english|in spanish|meaning of|ka matlab|translate this)\b/.test(text)) {
+        return 'translate';
+    }
+    
+    // 3. Writing / Email Detection
+    if (/\b(write|draft|email|letter|application|essay|likho|letter likho|email bhejo|compose)\b/.test(text)) {
+        return 'writing';
+    }
+    
+    // 4. Student / Study Detection
+    if (/\b(explain|define|what is|kaun hai|kya hai|history of|science|math concept|teach me|help me understand)\b/.test(text)) {
+        return 'student';
+    }
+
+    // Default: AI Assistant
+    return 'assistant';
+}
+
+// ========================================
+// 🆕 PHASE 6: MONETIZATION & ADS SYSTEM
+// ========================================
+
+function showProModal() {
+    const modal = document.getElementById("proModal");
+    if (modal) {
+        modal.style.display = "flex";
+        modal.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+        // Fallback alert if modal not in HTML yet
+        const proFeatures = "🚀 Pro Features:\n\n" +
+            "✅ Unlimited AI requests\n" +
+            "✅ No advertisements\n" +
+            "✅ Priority processing\n" +
+            "✅ Advanced analytics\n" +
+            "✅ Export to multiple formats\n\n" +
+            "💰 Price: ₹499/month or ₹4,999/year\n\n" +
+            "Payment integration coming soon!";
+        alert(proFeatures);
+    }
+}
+
+function closeProModal() {
+    const modal = document.getElementById("proModal");
+    if (modal) modal.style.display = "none";
+}
+
+function activateProTrial() {
+    // For testing - remove in production
+    localStorage.setItem('ideaforge_pro', 'true');
+    isProUser = true;
+    updateProUI();
+    showToast("🎉 Pro activated successfully! (Trial mode)", "success");
+    closeProModal();
+}
+
+function updateProUI() {
+    const proBadge = document.getElementById("proBadge");
+    const adContainer = document.getElementById("adContainer");
+    const upgradeBtns = document.querySelectorAll(".upgrade-to-pro");
+    
+    if (isProUser) {
+        if (proBadge) proBadge.style.display = "inline-block";
+        if (adContainer) adContainer.style.display = "none";
+        upgradeBtns.forEach(btn => btn.style.display = "none");
+        showToast("🌟 Pro features activated!", "success");
+    } else {
+        if (proBadge) proBadge.style.display = "none";
+        if (adContainer) adContainer.style.display = "block";
+        upgradeBtns.forEach(btn => btn.style.display = "inline-block");
+    }
+}
+
 // ------------------------------------
 // IdeaForge-AI Hub
 // ------------------------------------
@@ -483,7 +597,7 @@ const TOOL_TITLES = {
   translate: "🌐 Translate",
   calculator: "🧮 Calculator",
   student: "📚 Student Helper",
-  image: "📸 Image Tools"
+  image: " Image Tools"
 };
 
 function openToolWorkspace(tool) {
@@ -547,11 +661,11 @@ function renderUsageBanner() {
   const remaining = FREE_DAILY_LIMIT - usage.count;
 
   if (remaining <= 0) {
-    banner.textContent = "Aaj ki free limit khatam ho gayi (" + FREE_DAILY_LIMIT + "/" + FREE_DAILY_LIMIT + ") — kal phir try karein, ya Pro jald aa raha hai ✨";
+    banner.textContent = "Aaj ki free limit khatam ho gayi (" + FREE_DAILY_LIMIT + "/" + FREE_DAILY_LIMIT + ") — Pro upgrade karein unlimited access ke liye! ✨";
     banner.classList.add("limitReached");
     banner.style.display = "block";
   } else if (usage.count > 0) {
-    banner.textContent = "Free plan: Aaj " + usage.count + "/" + FREE_DAILY_LIMIT + " uses";
+    banner.textContent = "Free plan: Aaj " + usage.count + "/" + FREE_DAILY_LIMIT + " uses (" + remaining + " remaining)";
     banner.classList.remove("limitReached");
     banner.style.display = "block";
   } else {
@@ -560,13 +674,14 @@ function renderUsageBanner() {
 }
 
 function hasUsageRemaining() {
-  return getTodayUsage().count < FREE_DAILY_LIMIT;
+  return isProUser || getTodayUsage().count < FREE_DAILY_LIMIT;
 }
 
 async function runAiTool(input, tool) {
   if (!hasUsageRemaining()) {
-    showToast("Aaj ki free limit (" + FREE_DAILY_LIMIT + ") khatam ho gayi. Kal phir try karein.", "error");
+    showToast("Aaj ki free limit (" + FREE_DAILY_LIMIT + ") khatam ho gayi. Pro upgrade karein!", "error");
     renderUsageBanner();
+    showProModal();
     return;
   }
 
@@ -598,18 +713,27 @@ async function runAiTool(input, tool) {
 
     lastToolPayload = payload;
 
+    const userId = localStorage.getItem('ideaforge_uid') || 'anonymous';
     const response = await fetch("/api/ai-tool", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-User-ID": userId,
+        "X-User-Plan": isProUser ? "pro" : "free"
+      },
       body: JSON.stringify(payload)
     });
 
     const data = await response.json();
     if (!response.ok || !data.success || !data.result) {
+      if (data.limitReached) {
+        showProModal();
+        throw new Error("Daily limit reached. Upgrade to Pro!");
+      }
       throw new Error(data?.error || "Result generate nahi ho paya.");
     }
 
-    incrementUsage();
+    if (!isProUser) incrementUsage();
 
     let effectiveTool = tool;
     if (tool === "auto" && data.route && TOOL_TITLES[data.route] && data.route !== "auto") {
@@ -742,25 +866,25 @@ function renderToolFavorites() {
 // 🌍 UI Translation (EXPANDED: 19+ Languages)
 // ------------------------------------
 const UI_STRINGS = {
-  en: { tagline: "AI Tools for Everyone", languageLabel: "🌐 Language", hubLabel: "✨ What do you want to do?", askAiBtn: "➤ Ask AI", chipAssistant: "🤖 AI Assistant", chipWriting: "✍️ Writing", chipTranslate: "🌐 Translate", chipCalculator: "🧮 Calculator", chipBusiness: "💼 Business", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Advertisement", chipImage: "📸 Image Tools", chipVoice: "🎤 Voice AI", generateBtn: "✨ Generate", copyBtn: "📋 Copy", regenerateBtn: "🔄 Regenerate", saveBtn: "⭐ Save", shareBtn: "📤 Share" },
-  hi: { tagline: "सबके लिए AI टूल्स", languageLabel: "🌐 भाषा", hubLabel: "✨ आप क्या करना चाहते हैं?", askAiBtn: "➤ AI से पूछें", chipAssistant: "🤖 AI सहायक", chipWriting: "✍️ लेखन", chipTranslate: "🌐 अनुवाद", chipCalculator: "🧮 कैलकुलेटर", chipBusiness: "💼 व्यापार", chipStudent: "📚 छात्र सहायता", chipStatus: "🎨 स्टेटस", chipAd: "📢 विज्ञापन", chipImage: "📸 इमेज टूल्स", chipVoice: "🎤 वॉइस AI", generateBtn: "✨ बनाएं", copyBtn: "📋 कॉपी", regenerateBtn: "🔄 दोबारा बनाएं", saveBtn: "⭐ सेव करें", shareBtn: "📤 शेयर करें" },
-  bn: { tagline: "সবার জন্য AI টুলস", languageLabel: "🌐 ভাষা", hubLabel: "✨ আপনি কী করতে চান?", askAiBtn: "➤ AI কে জিজ্ঞাসা করুন", chipAssistant: "🤖 AI সহায়ক", chipWriting: "✍️ লেখা", chipTranslate: "🌐 অনুবাদ", chipCalculator: "🧮 ক্যালকুলেটর", chipBusiness: "💼 ব্যবসা", chipStudent: "📚 ছাত্র সহায়ক", chipStatus: "🎨 স্ট্যাটাস", chipAd: "📢 বিজ্ঞাপন", chipImage: "📸 ইমেজ টুলস", chipVoice: "🎤 ভয়েস AI", generateBtn: "✨ তৈরি করুন", copyBtn: "📋 কপি", regenerateBtn: "🔄 আবার তৈরি করুন", saveBtn: "⭐ সেভ করুন", shareBtn: "📤 শেয়ার করুন" },
+  en: { tagline: "AI Tools for Everyone", languageLabel: "🌐 Language", hubLabel: "✨ What do you want to do?", askAiBtn: "➤ Ask AI", chipAssistant: " AI Assistant", chipWriting: "✍️ Writing", chipTranslate: "🌐 Translate", chipCalculator: "🧮 Calculator", chipBusiness: "💼 Business", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Advertisement", chipImage: "📸 Image Tools", chipVoice: " Voice AI", generateBtn: "✨ Generate", copyBtn: "📋 Copy", regenerateBtn: "🔄 Regenerate", saveBtn: "⭐ Save", shareBtn: "📤 Share" },
+  hi: { tagline: "सबके लिए AI टूल्स", languageLabel: "🌐 भाषा", hubLabel: "✨ आप क्या करना चाहते हैं?", askAiBtn: "➤ AI से पूछें", chipAssistant: "🤖 AI सहायक", chipWriting: "✍️ लेखन", chipTranslate: "🌐 अनुवाद", chipCalculator: "🧮 कैलकुलेटर", chipBusiness: "💼 व्यापार", chipStudent: "📚 छात्र सहायता", chipStatus: "🎨 स्टेटस", chipAd: "📢 विज्ञापन", chipImage: "📸 इमेज टूल्स", chipVoice: " वॉइस AI", generateBtn: "✨ बनाएं", copyBtn: " कॉपी", regenerateBtn: " दोबारा बनाएं", saveBtn: "⭐ सेव करें", shareBtn: "📤 शेयर करें" },
+  bn: { tagline: "সবার জন্য AI টুলস", languageLabel: "🌐 ভাষা", hubLabel: "✨ আপনি কী করতে চান?", askAiBtn: "➤ AI কে জিজ্ঞাসা করুন", chipAssistant: " AI সহায়ক", chipWriting: "️ লেখা", chipTranslate: "🌐 অনুবাদ", chipCalculator: " ক্যালকুলেটর", chipBusiness: "💼 ব্যবসা", chipStudent: "📚 ছাত্র সহায়ক", chipStatus: "🎨 স্ট্যাটাস", chipAd: "📢 বিজ্ঞাপন", chipImage: "📸 ইমেজ টুলস", chipVoice: " ভয়েস AI", generateBtn: "✨ তৈরি করুন", copyBtn: " কপি", regenerateBtn: " আবার তৈরি করুন", saveBtn: "⭐ সেভ করুন", shareBtn: "📤 শেয়ার করুন" },
   ur: { tagline: "سب کے لیے AI ٹولز", languageLabel: "🌐 زبان", hubLabel: "✨ آپ کیا کرنا چاہتے ہیں؟", askAiBtn: "➤ AI سے پوچھیں", chipAssistant: "🤖 AI اسسٹنٹ", chipWriting: "✍️ تحریر", chipTranslate: "🌐 ترجمہ", chipCalculator: "🧮 کیلکولیٹر", chipBusiness: "💼 کاروبار", chipStudent: "📚 طالب علم مدد", chipStatus: "🎨 اسٹیٹس", chipAd: "📢 اشتہار", chipImage: "📸 امیج ٹولز", chipVoice: "🎤 وائس AI", generateBtn: "✨ بنائیں", copyBtn: "📋 کاپی", regenerateBtn: "🔄 دوبارہ بنائیں", saveBtn: "⭐ محفوظ کریں", shareBtn: "📤 شیئر کریں" },
-  es: { tagline: "Herramientas de IA para todos", languageLabel: "🌐 Idioma", hubLabel: "✨ ¿Qué quieres hacer?", askAiBtn: "➤ Preguntar a la IA", chipAssistant: "🤖 Asistente de IA", chipWriting: "✍️ Escritura", chipTranslate: "🌐 Traducir", chipCalculator: "🧮 Calculadora", chipBusiness: "💼 Negocios", chipStudent: "📚 Estudiante", chipStatus: "🎨 Estado", chipAd: "📢 Anuncio", chipImage: "📸 Herramientas de imagen", chipVoice: "🎤 Voz IA", generateBtn: "✨ Generar", copyBtn: "📋 Copiar", regenerateBtn: "🔄 Regenerar", saveBtn: "⭐ Guardar", shareBtn: "📤 Compartir" },
-  fr: { tagline: "Outils d'IA pour tous", languageLabel: "🌐 Langue", hubLabel: "✨ Que voulez-vous faire ?", askAiBtn: "➤ Demander à l'IA", chipAssistant: "🤖 Assistant IA", chipWriting: "✍️ Rédaction", chipTranslate: "🌐 Traduire", chipCalculator: "🧮 Calculatrice", chipBusiness: "💼 Entreprise", chipStudent: "📚 Étudiant", chipStatus: "🎨 Statut", chipAd: "📢 Publicité", chipImage: "📸 Outils d'image", chipVoice: "🎤 Voix IA", generateBtn: "✨ Générer", copyBtn: "📋 Copier", regenerateBtn: "🔄 Régénérer", saveBtn: "⭐ Sauvegarder", shareBtn: "📤 Partager" },
-  de: { tagline: "KI-Tools für alle", languageLabel: "🌐 Sprache", hubLabel: "✨ Was möchten Sie tun?", askAiBtn: "➤ KI fragen", chipAssistant: "🤖 KI-Assistent", chipWriting: "✍️ Schreiben", chipTranslate: "🌐 Übersetzen", chipCalculator: "🧮 Rechner", chipBusiness: "💼 Geschäft", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Werbung", chipImage: "📸 Bild-Tools", chipVoice: "🎤 Sprach-KI", generateBtn: "✨ Generieren", copyBtn: "📋 Kopieren", regenerateBtn: "🔄 Neu generieren", saveBtn: "⭐ Speichern", shareBtn: "📤 Teilen" },
-  pt: { tagline: "Ferramentas de IA para todos", languageLabel: "🌐 Idioma", hubLabel: "✨ O que você quer fazer?", askAiBtn: "➤ Perguntar à IA", chipAssistant: "🤖 Assistente de IA", chipWriting: "✍️ Escrita", chipTranslate: "🌐 Traduzir", chipCalculator: "🧮 Calculadora", chipBusiness: "💼 Negócios", chipStudent: "📚 Estudante", chipStatus: "🎨 Status", chipAd: "📢 Anúncio", chipImage: "📸 Ferramentas de imagem", chipVoice: "🎤 Voz IA", generateBtn: "✨ Gerar", copyBtn: "📋 Copiar", regenerateBtn: "🔄 Regenerar", saveBtn: "⭐ Salvar", shareBtn: "📤 Compartilhar" },
-  ru: { tagline: "ИИ-инструменты для всех", languageLabel: "🌐 Язык", hubLabel: "✨ Что вы хотите сделать?", askAiBtn: "➤ Спросить ИИ", chipAssistant: "🤖 ИИ-ассистент", chipWriting: "✍️ Письмо", chipTranslate: "🌐 Перевести", chipCalculator: "🧮 Калькулятор", chipBusiness: "💼 Бизнес", chipStudent: "📚 Студент", chipStatus: "🎨 Статус", chipAd: "📢 Реклама", chipImage: "📸 Инструменты изображений", chipVoice: "🎤 Голосовой ИИ", generateBtn: "✨ Создать", copyBtn: "📋 Копировать", regenerateBtn: "🔄 Пересоздать", saveBtn: "⭐ Сохранить", shareBtn: "📤 Поделиться" },
-  ja: { tagline: "すべての人のためのAIツール", languageLabel: "🌐 言語", hubLabel: "✨ 何をしたいですか？", askAiBtn: "➤ AIに質問", chipAssistant: "🤖 AIアシスタント", chipWriting: "✍️ 執筆", chipTranslate: "🌐 翻訳", chipCalculator: "🧮 電卓", chipBusiness: "💼 ビジネス", chipStudent: "📚 学生", chipStatus: "🎨 ステータス", chipAd: "📢 広告", chipImage: "📸 画像ツール", chipVoice: "🎤 ボイスAI", generateBtn: "✨ 生成", copyBtn: "📋 コピー", regenerateBtn: "🔄 再生成", saveBtn: "⭐ 保存", shareBtn: "📤 共有" },
-  ko: { tagline: "모두를 위한 AI 도구", languageLabel: "🌐 언어", hubLabel: "✨ 무엇을 하고 싶으신가요?", askAiBtn: "➤ AI에게 질문", chipAssistant: "🤖 AI 어시스턴트", chipWriting: "✍️ 작문", chipTranslate: "🌐 번역", chipCalculator: "🧮 계산기", chipBusiness: "💼 비즈니스", chipStudent: "📚 학생", chipStatus: "🎨 상태", chipAd: "📢 광고", chipImage: "📸 이미지 도구", chipVoice: "🎤 음성 AI", generateBtn: "✨ 생성", copyBtn: "📋 복사", regenerateBtn: "🔄 재생성", saveBtn: "⭐ 저장", shareBtn: "📤 공유" },
-  zh: { tagline: "适合所有人的AI工具", languageLabel: "🌐 语言", hubLabel: "✨ 你想做什么？", askAiBtn: "➤ 询问AI", chipAssistant: "🤖 AI助手", chipWriting: "✍️ 写作", chipTranslate: "🌐 翻译", chipCalculator: "🧮 计算器", chipBusiness: "💼 商业", chipStudent: "📚 学生", chipStatus: "🎨 状态", chipAd: "📢 广告", chipImage: "📸 图像工具", chipVoice: "🎤 语音AI", generateBtn: "✨ 生成", copyBtn: "📋 复制", regenerateBtn: "🔄 重新生成", saveBtn: "⭐ 保存", shareBtn: "📤 分享" },
-  ar: { tagline: "أدوات الذكاء الاصطناعي للجميع", languageLabel: "🌐 اللغة", hubLabel: "✨ ماذا تريد أن تفعل؟", askAiBtn: "➤ اسأل الذكاء الاصطناعي", chipAssistant: "🤖 مساعد الذكاء الاصطناعي", chipWriting: "✍️ كتابة", chipTranslate: "🌐 ترجمة", chipCalculator: "🧮 حاسبة", chipBusiness: "💼 أعمال", chipStudent: "📚 طالب", chipStatus: "🎨 حالة", chipAd: "📢 إعلان", chipImage: "📸 أدوات الصور", chipVoice: "🎤 صوت الذكاء الاصطناعي", generateBtn: "✨ إنشاء", copyBtn: "📋 نسخ", regenerateBtn: "🔄 إعادة إنشاء", saveBtn: "⭐ حفظ", shareBtn: "📤 مشاركة" },
-  tr: { tagline: "Herkes için Yapay Zeka Araçları", languageLabel: "🌐 Dil", hubLabel: "✨ Ne yapmak istiyorsunuz?", askAiBtn: "➤ Yapay Zekaya Sor", chipAssistant: "🤖 Yapay Zeka Asistanı", chipWriting: "✍️ Yazma", chipTranslate: "🌐 Çevir", chipCalculator: "🧮 Hesap Makinesi", chipBusiness: "💼 İş", chipStudent: "📚 Öğrenci", chipStatus: "🎨 Durum", chipAd: "📢 Reklam", chipImage: "📸 Resim Araçları", chipVoice: "🎤 Sesli Yapay Zeka", generateBtn: "✨ Oluştur", copyBtn: "📋 Kopyala", regenerateBtn: "🔄 Yeniden Oluştur", saveBtn: "⭐ Kaydet", shareBtn: "📤 Paylaş" },
-  vi: { tagline: "Công cụ AI cho mọi người", languageLabel: "🌐 Ngôn ngữ", hubLabel: "✨ Bạn muốn làm gì?", askAiBtn: "➤ Hỏi AI", chipAssistant: "🤖 Trợ lý AI", chipWriting: "✍️ Viết", chipTranslate: "🌐 Dịch", chipCalculator: "🧮 Máy tính", chipBusiness: "💼 Kinh doanh", chipStudent: "📚 Học sinh", chipStatus: "🎨 Trạng thái", chipAd: "📢 Quảng cáo", chipImage: "📸 Công cụ hình ảnh", chipVoice: "🎤 Giọng nói AI", generateBtn: "✨ Tạo", copyBtn: "📋 Sao chép", regenerateBtn: "🔄 Tạo lại", saveBtn: "⭐ Lưu", shareBtn: "📤 Chia sẻ" },
-  id: { tagline: "Alat AI untuk Semua", languageLabel: "🌐 Bahasa", hubLabel: "✨ Apa yang ingin Anda lakukan?", askAiBtn: "➤ Tanya AI", chipAssistant: "🤖 Asisten AI", chipWriting: "✍️ Menulis", chipTranslate: "🌐 Terjemahkan", chipCalculator: "🧮 Kalkulator", chipBusiness: "💼 Bisnis", chipStudent: "📚 Pelajar", chipStatus: "🎨 Status", chipAd: "📢 Iklan", chipImage: "📸 Alat Gambar", chipVoice: "🎤 Suara AI", generateBtn: "✨ Buat", copyBtn: "📋 Salin", regenerateBtn: "🔄 Buat Ulang", saveBtn: "⭐ Simpan", shareBtn: "📤 Bagikan" },
-  nl: { tagline: "AI-tools voor iedereen", languageLabel: "🌐 Taal", hubLabel: "✨ Wat wilt u doen?", askAiBtn: "➤ Vraag het aan AI", chipAssistant: "🤖 AI-assistent", chipWriting: "✍️ Schrijven", chipTranslate: "🌐 Vertalen", chipCalculator: "🧮 Rekenmachine", chipBusiness: "💼 Zakelijk", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Advertentie", chipImage: "📸 Beeldtools", chipVoice: "🎤 Spraak-AI", generateBtn: "✨ Genereren", copyBtn: "📋 Kopiëren", regenerateBtn: "🔄 Opnieuw genereren", saveBtn: "⭐ Opslaan", shareBtn: "📤 Delen" },
-  pl: { tagline: "Narzędzia AI dla wszystkich", languageLabel: "🌐 Język", hubLabel: "✨ Co chcesz zrobić?", askAiBtn: "➤ Zapytaj AI", chipAssistant: "🤖 Asystent AI", chipWriting: "✍️ Pisanie", chipTranslate: "🌐 Tłumacz", chipCalculator: "🧮 Kalkulator", chipBusiness: "💼 Biznes", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Reklama", chipImage: "📸 Narzędzia obrazowe", chipVoice: "🎤 Głos AI", generateBtn: "✨ Generuj", copyBtn: "📋 Kopiuj", regenerateBtn: "🔄 Wygeneruj ponownie", saveBtn: "⭐ Zapisz", shareBtn: "📤 Udostępnij" },
-  sv: { tagline: "AI-verktyg för alla", languageLabel: "🌐 Språk", hubLabel: "✨ Vad vill du göra?", askAiBtn: "➤ Fråga AI", chipAssistant: "🤖 AI-assistent", chipWriting: "✍️ Skrivande", chipTranslate: "🌐 Översätt", chipCalculator: "🧮 Kalkylator", chipBusiness: "💼 Företag", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Annons", chipImage: "📸 Bildverktyg", chipVoice: "🎤 Röst-AI", generateBtn: "✨ Generera", copyBtn: "📋 Kopiera", regenerateBtn: "🔄 Generera om", saveBtn: "⭐ Spara", shareBtn: "📤 Dela" }
+  es: { tagline: "Herramientas de IA para todos", languageLabel: "🌐 Idioma", hubLabel: "✨ ¿Qué quieres hacer?", askAiBtn: "➤ Preguntar a la IA", chipAssistant: "🤖 Asistente de IA", chipWriting: "✍️ Escritura", chipTranslate: "🌐 Traducir", chipCalculator: "🧮 Calculadora", chipBusiness: "💼 Negocios", chipStudent: "📚 Estudiante", chipStatus: " Estado", chipAd: "📢 Anuncio", chipImage: "📸 Herramientas de imagen", chipVoice: "🎤 Voz IA", generateBtn: "✨ Generar", copyBtn: "📋 Copiar", regenerateBtn: "🔄 Regenerar", saveBtn: "⭐ Guardar", shareBtn: " Compartir" },
+  fr: { tagline: "Outils d'IA pour tous", languageLabel: "🌐 Langue", hubLabel: "✨ Que voulez-vous faire ?", askAiBtn: "➤ Demander à l'IA", chipAssistant: "🤖 Assistant IA", chipWriting: "✍️ Rédaction", chipTranslate: " Traduire", chipCalculator: " Calculatrice", chipBusiness: "💼 Entreprise", chipStudent: "📚 Étudiant", chipStatus: "🎨 Statut", chipAd: "📢 Publicité", chipImage: "📸 Outils d'image", chipVoice: "🎤 Voix IA", generateBtn: "✨ Générer", copyBtn: "📋 Copier", regenerateBtn: "🔄 Régénérer", saveBtn: "⭐ Sauvegarder", shareBtn: "📤 Partager" },
+  de: { tagline: "KI-Tools für alle", languageLabel: "🌐 Sprache", hubLabel: "✨ Was möchten Sie tun?", askAiBtn: "➤ KI fragen", chipAssistant: " KI-Assistent", chipWriting: "✍️ Schreiben", chipTranslate: "🌐 Übersetzen", chipCalculator: "🧮 Rechner", chipBusiness: "💼 Geschäft", chipStudent: "📚 Student", chipStatus: " Status", chipAd: "📢 Werbung", chipImage: "📸 Bild-Tools", chipVoice: "🎤 Sprach-KI", generateBtn: "✨ Generieren", copyBtn: " Kopieren", regenerateBtn: " Neu generieren", saveBtn: "⭐ Speichern", shareBtn: "📤 Teilen" },
+  pt: { tagline: "Ferramentas de IA para todos", languageLabel: " Idioma", hubLabel: "✨ O que você quer fazer?", askAiBtn: "➤ Perguntar à IA", chipAssistant: "🤖 Assistente de IA", chipWriting: "✍️ Escrita", chipTranslate: "🌐 Traduzir", chipCalculator: "🧮 Calculadora", chipBusiness: "💼 Negócios", chipStudent: "📚 Estudante", chipStatus: "🎨 Status", chipAd: " Anúncio", chipImage: " Ferramentas de imagem", chipVoice: " Voz IA", generateBtn: "✨ Gerar", copyBtn: "📋 Copiar", regenerateBtn: "🔄 Regenerar", saveBtn: "⭐ Salvar", shareBtn: " Compartilhar" },
+  ru: { tagline: "ИИ-инструменты для всех", languageLabel: "🌐 Язык", hubLabel: "✨ Что вы хотите сделать?", askAiBtn: "➤ Спросить ИИ", chipAssistant: "🤖 ИИ-ассистент", chipWriting: "✍️ Письмо", chipTranslate: " Перевести", chipCalculator: " Калькулятор", chipBusiness: "💼 Бизнес", chipStudent: "📚 Студент", chipStatus: "🎨 Статус", chipAd: "📢 Реклама", chipImage: "📸 Инструменты изображений", chipVoice: "🎤 Голосовой ИИ", generateBtn: "✨ Создать", copyBtn: "📋 Копировать", regenerateBtn: "🔄 Пересоздать", saveBtn: "⭐ Сохранить", shareBtn: "📤 Поделиться" },
+  ja: { tagline: "すべての人のためのAIツール", languageLabel: "🌐 言語", hubLabel: "✨ 何をしたいですか？", askAiBtn: "➤ AIに質問", chipAssistant: " AIアシスタント", chipWriting: "️ 執筆", chipTranslate: " 翻訳", chipCalculator: " 電卓", chipBusiness: "💼 ビジネス", chipStudent: "📚 学生", chipStatus: "🎨 ステータス", chipAd: "📢 広告", chipImage: "📸 画像ツール", chipVoice: "🎤 ボイスAI", generateBtn: "✨ 生成", copyBtn: "📋 コピー", regenerateBtn: "🔄 再生成", saveBtn: "⭐ 保存", shareBtn: " 共有" },
+  ko: { tagline: "모두를 위한 AI 도구", languageLabel: "🌐 언어", hubLabel: "✨ 무엇을 하고 싶으신가요?", askAiBtn: "➤ AI에게 질문", chipAssistant: "🤖 AI 어시스턴트", chipWriting: "✍️ 작문", chipTranslate: "🌐 번역", chipCalculator: "🧮 계산기", chipBusiness: "💼 비즈니스", chipStudent: " 학생", chipStatus: "🎨 상태", chipAd: "📢 광고", chipImage: "📸 이미지 도구", chipVoice: "🎤 음성 AI", generateBtn: "✨ 생성", copyBtn: " 복사", regenerateBtn: "🔄 재생성", saveBtn: "⭐ 저장", shareBtn: "📤 공유" },
+  zh: { tagline: "适合所有人的AI工具", languageLabel: "🌐 语言", hubLabel: "✨ 你想做什么？", askAiBtn: "➤ 询问AI", chipAssistant: " AI助手", chipWriting: "✍️ 写作", chipTranslate: "🌐 翻译", chipCalculator: "🧮 计算器", chipBusiness: "💼 商业", chipStudent: "📚 学生", chipStatus: "🎨 状态", chipAd: "📢 广告", chipImage: " 图像工具", chipVoice: "🎤 语音AI", generateBtn: "✨ 生成", copyBtn: "📋 复制", regenerateBtn: "🔄 重新生成", saveBtn: "⭐ 保存", shareBtn: " 分享" },
+  ar: { tagline: "أدوات الذكاء الاصطناعي للجميع", languageLabel: "🌐 اللغة", hubLabel: "✨ ماذا تريد أن تفعل؟", askAiBtn: "➤ اسأل الذكاء الاصطناعي", chipAssistant: "🤖 مساعد الذكاء الاصطناعي", chipWriting: "✍️ كتابة", chipTranslate: "🌐 ترجمة", chipCalculator: "🧮 حاسبة", chipBusiness: "💼 أعمال", chipStudent: "📚 طالب", chipStatus: " حالة", chipAd: "📢 إعلان", chipImage: "📸 أدوات الصور", chipVoice: "🎤 صوت الذكاء الاصطناعي", generateBtn: "✨ إنشاء", copyBtn: "📋 نسخ", regenerateBtn: " إعادة إنشاء", saveBtn: "⭐ حفظ", shareBtn: "📤 مشاركة" },
+  tr: { tagline: "Herkes için Yapay Zeka Araçları", languageLabel: "🌐 Dil", hubLabel: "✨ Ne yapmak istiyorsunuz?", askAiBtn: "➤ Yapay Zekaya Sor", chipAssistant: "🤖 Yapay Zeka Asistanı", chipWriting: "✍️ Yazma", chipTranslate: "🌐 Çevir", chipCalculator: "🧮 Hesap Makinesi", chipBusiness: "💼 İş", chipStudent: "📚 Öğrenci", chipStatus: " Durum", chipAd: " Reklam", chipImage: "📸 Resim Araçları", chipVoice: " Sesli Yapay Zeka", generateBtn: "✨ Oluştur", copyBtn: "📋 Kopyala", regenerateBtn: " Yeniden Oluştur", saveBtn: "⭐ Kaydet", shareBtn: "📤 Paylaş" },
+  vi: { tagline: "Công cụ AI cho mọi người", languageLabel: "🌐 Ngôn ngữ", hubLabel: "✨ Bạn muốn làm gì?", askAiBtn: "➤ Hỏi AI", chipAssistant: "🤖 Trợ lý AI", chipWriting: "✍️ Viết", chipTranslate: "🌐 Dịch", chipCalculator: "🧮 Máy tính", chipBusiness: "💼 Kinh doanh", chipStudent: "📚 Học sinh", chipStatus: "🎨 Trạng thái", chipAd: "📢 Quảng cáo", chipImage: "📸 Công cụ hình ảnh", chipVoice: "🎤 Giọng nói AI", generateBtn: "✨ Tạo", copyBtn: "📋 Sao chép", regenerateBtn: "🔄 Tạo lại", saveBtn: "⭐ Lưu", shareBtn: " Chia sẻ" },
+  id: { tagline: "Alat AI untuk Semua", languageLabel: "🌐 Bahasa", hubLabel: "✨ Apa yang ingin Anda lakukan?", askAiBtn: "➤ Tanya AI", chipAssistant: "🤖 Asisten AI", chipWriting: "️ Menulis", chipTranslate: " Terjemahkan", chipCalculator: " Kalkulator", chipBusiness: " Bisnis", chipStudent: "📚 Pelajar", chipStatus: "🎨 Status", chipAd: "📢 Iklan", chipImage: "📸 Alat Gambar", chipVoice: "🎤 Suara AI", generateBtn: "✨ Buat", copyBtn: "📋 Salin", regenerateBtn: "🔄 Buat Ulang", saveBtn: "⭐ Simpan", shareBtn: "📤 Bagikan" },
+  nl: { tagline: "AI-tools voor iedereen", languageLabel: "🌐 Taal", hubLabel: "✨ Wat wilt u doen?", askAiBtn: "➤ Vraag het aan AI", chipAssistant: "🤖 AI-assistent", chipWriting: "✍️ Schrijven", chipTranslate: "🌐 Vertalen", chipCalculator: "🧮 Rekenmachine", chipBusiness: "💼 Zakelijk", chipStudent: " Student", chipStatus: "🎨 Status", chipAd: "📢 Advertentie", chipImage: "📸 Beeldtools", chipVoice: "🎤 Spraak-AI", generateBtn: "✨ Genereren", copyBtn: "📋 Kopiëren", regenerateBtn: " Opnieuw genereren", saveBtn: "⭐ Opslaan", shareBtn: "📤 Delen" },
+  pl: { tagline: "Narzędzia AI dla wszystkich", languageLabel: " Język", hubLabel: "✨ Co chcesz zrobić?", askAiBtn: "➤ Zapytaj AI", chipAssistant: " Asystent AI", chipWriting: "️ Pisanie", chipTranslate: " Tłumacz", chipCalculator: " Kalkulator", chipBusiness: " Biznes", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: "📢 Reklama", chipImage: "📸 Narzędzia obrazowe", chipVoice: "🎤 Głos AI", generateBtn: "✨ Generuj", copyBtn: "📋 Kopiuj", regenerateBtn: " Wygeneruj ponownie", saveBtn: "⭐ Zapisz", shareBtn: "📤 Udostępnij" },
+  sv: { tagline: "AI-verktyg för alla", languageLabel: "🌐 Språk", hubLabel: "✨ Vad vill du göra?", askAiBtn: "➤ Fråga AI", chipAssistant: "🤖 AI-assistent", chipWriting: "✍️ Skrivande", chipTranslate: "🌐 Översätt", chipCalculator: "🧮 Kalkylator", chipBusiness: "💼 Företag", chipStudent: "📚 Student", chipStatus: "🎨 Status", chipAd: " Annons", chipImage: "📸 Bildverktyg", chipVoice: "🎤 Röst-AI", generateBtn: "✨ Generera", copyBtn: "📋 Kopiera", regenerateBtn: "🔄 Generera om", saveBtn: "⭐ Spara", shareBtn: " Dela" }
 };
 
 const UI_LANG_KEY = "ideaforge_ui_lang";
@@ -851,6 +975,7 @@ async function runImageTool() {
   }
   if (!hasUsageRemaining()) {
     showToast("Aaj ki free limit khatam ho gayi.", "error");
+    showProModal();
     return;
   }
 
@@ -869,14 +994,23 @@ async function runImageTool() {
     const question = document.getElementById("imageQuestionInput")?.value.trim() || "";
     const language = document.getElementById("languageSelect")?.value || "auto";
 
+    const userId = localStorage.getItem('ideaforge_uid') || 'anonymous';
     const response = await fetch("/api/image-tool", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-User-ID": userId,
+        "X-User-Plan": isProUser ? "pro" : "free"
+      },
       body: JSON.stringify({ imageBase64: currentImageBase64, action, question, language })
     });
 
     const data = await response.json();
     if (!response.ok || !data.success || !data.result) {
+      if (data.limitReached) {
+        showProModal();
+        throw new Error("Daily limit reached. Upgrade to Pro!");
+      }
       throw new Error(data?.error || "Image analyze nahi ho payi.");
     }
 
@@ -884,7 +1018,7 @@ async function runImageTool() {
     resultBox.textContent = data.result;
     resultBox.style.display = "block";
     resultActions.style.display = "flex";
-    incrementUsage();
+    if (!isProUser) incrementUsage();
   } catch (error) {
     console.error("Image tool error:", error);
     showToast(error.message || "Kuch galat ho gaya, phir try karein.", "error");
@@ -898,6 +1032,17 @@ async function runImageTool() {
 // Init
 // ------------------------------------
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize Pro status
+  isProUser = localStorage.getItem('ideaforge_pro') === 'true';
+  updateProUI();
+  
+  // Initialize User ID
+  let userId = localStorage.getItem('ideaforge_uid');
+  if (!userId) {
+    userId = 'user_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('ideaforge_uid', userId);
+  }
+  
   renderHistory();
   renderToolHistory();
   renderToolFavorites();
@@ -1043,14 +1188,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // 🆕 HUB ASK BUTTON with SMART ROUTER
   const hubAskBtn = document.getElementById("hubAskBtn");
   if (hubAskBtn) {
     hubAskBtn.addEventListener("click", function () {
       const text = document.getElementById("hubInput").value.trim();
       if (!text) { showToast("Pehle kuch likhein.", "error"); return; }
-      openToolWorkspace("assistant");
+      
+      // Smart Router detect karega kaunsa tool best hai
+      const detectedTool = smartRouteInput(text);
+      
+      // Tool workspace open karein
+      openToolWorkspace(detectedTool);
+      
+      // Input box mein text daalein
       document.getElementById("toolInput").value = text;
-      runAiTool(text, "assistant");
+      
+      // Tool run karein
+      runAiTool(text, detectedTool);
     });
   }
 
@@ -1164,5 +1319,17 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!currentImageResult) return;
       sharePlainText("IdeaForge-AI Image Tool", currentImageResult);
     });
+  }
+  
+  // Pro modal close button
+  const closeProModalBtn = document.getElementById("closeProModal");
+  if (closeProModalBtn) {
+    closeProModalBtn.addEventListener("click", closeProModal);
+  }
+  
+  // Activate Pro (testing)
+  const activateProBtn = document.getElementById("activateProBtn");
+  if (activateProBtn) {
+    activateProBtn.addEventListener("click", activateProTrial);
   }
 });
