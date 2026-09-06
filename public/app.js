@@ -117,7 +117,7 @@ async function generateLaunchPlan() {
   try {
     const res = await fetch("/api/generate-launch-plan", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({idea:currentIdeaText, budget:document.getElementById("budgetInput")?.value||"", language:document.getElementById("languageSelect").value, brand: userBrand}) });
     const data = await res.json(); if(!res.ok||!data.success||!data.plan) throw new Error(data?.error);
-    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
+    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:" Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:" Sales"}], data.plan);
     document.getElementById("launchPlanSection").style.display="block";
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
@@ -161,7 +161,7 @@ function smartRouteInput(input) {
 }
 
 let currentToolResult = "", currentToolInput = "", activeTool = "assistant", lastToolPayload = null;
-const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: " Money Calc", improveidea: "💡 Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "✍️ Writing", translate: "🌐 Translate", calculator: " Calculator", student: "📚 Student", code: "💻 Code", logo: " Logo", social: "📱 Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: "📸 Quote Card", email: "️ Cold Email", projects: " My Projects", agent: "🤖 Business Agent" };
+const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: " Goal Plan", moneycalc: "💰 Money Calc", improveidea: "💡 Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: " Video Script", workflow: "⚙️ AI Workflow", writing: "✍️ Writing", translate: "🌐 Translate", calculator: " Calculator", student: "📚 Student", code: "💻 Code", logo: "🎨 Logo", social: "📱 Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: " Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: "📸 Quote Card", email: "✉️ Cold Email", projects: "📂 My Projects", agent: "🤖 Business Agent" };
 
 function openToolWorkspace(tool) {
   activeTool = tool;
@@ -244,19 +244,19 @@ function formatToolResult(text, tool) {
 
 function renderAutopilotResult(pkg) {
   const container = document.getElementById("autopilotResult"); container.innerHTML = "";
-  const sections = [{ key: "AD_COPY", title: " Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "AD_COPY", title: "📢 Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (pkg[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pkg[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 function renderSocialPackResult(pack) {
   const container = document.getElementById("socialPackResult"); container.innerHTML = "";
-  const sections = [{ key: "INSTAGRAM", title: " Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: "📝 YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "🖼️ Thumbnail Prompt" }];
+  const sections = [{ key: "INSTAGRAM", title: "📸 Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: " YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "️ Thumbnail Prompt" }];
   sections.forEach(s => { if (pack[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pack[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 function renderGoalResult(plan) {
   const container = document.getElementById("goalResult"); container.innerHTML = "";
-  const sections = [{ key: "OVERVIEW", title: "🎯 Strategy Overview" }, { key: "MILESTONES", title: "🏆 Key Milestones" }, { key: "ACTION_PLAN", title: "📅 Action Plan" }, { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" }, { key: "POTENTIAL_OBSTACLES", title: "⚠️ Potential Obstacles" }];
+  const sections = [{ key: "OVERVIEW", title: "🎯 Strategy Overview" }, { key: "MILESTONES", title: "🏆 Key Milestones" }, { key: "ACTION_PLAN", title: " Action Plan" }, { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" }, { key: "POTENTIAL_OBSTACLES", title: "⚠️ Potential Obstacles" }];
   sections.forEach(s => { if (plan[s.key]) { const div = document.createElement("div"); div.className = "goal-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(plan[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -268,7 +268,7 @@ function renderMoneyResult(calc) {
 }
 function renderImproveResult(feedback) {
   const container = document.getElementById("improveResult"); container.innerHTML = "";
-  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: "🚀 Immediate Next Steps" }];
+  const sections = [{ key: "VERDICT", title: "️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: " What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: " Immediate Next Steps" }];
   sections.forEach(s => { if (feedback[s.key]) { const div = document.createElement("div"); div.className = "improve-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(feedback[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -276,7 +276,7 @@ function renderRoastResult(roast) {
   const container = document.getElementById("roastResult"); container.innerHTML = "";
   const score = roast.SHARK_SCORE || "?";
   container.innerHTML = `<div class="shark-score">🦈 ${score}/10</div>`;
-  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: " The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "⚖️ Final Verdict" }];
+  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: "🔥 The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "️ Final Verdict" }];
   sections.forEach(s => { if (roast[s.key]) { const div = document.createElement("div"); div.className = "roast-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(roast[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -298,7 +298,7 @@ function renderCardResult(card) {
 }
 function renderVideoResult(video) {
   const container = document.getElementById("videoResult"); container.innerHTML = "";
-  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "️ Intro" }, { key: "BODY", title: "🎥 Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "TITLE", title: "🎬 Video Title" }, { key: "HOOK", title: "🪝 Hook (First 3s)" }, { key: "INTRO", title: "🎙️ Intro" }, { key: "BODY", title: " Main Script / Scenes" }, { key: "CTA", title: "📢 Call to Action" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (video[s.key]) { const div = document.createElement("div"); div.className = "video-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(video[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -310,7 +310,7 @@ function renderWorkflowResult(workflow) {
 }
 function renderEmailResult(email) {
   const container = document.getElementById("emailResult"); container.innerHTML = "";
-  const sections = [{ key: "SUBJECT", title: "📧 Subject Line" }, { key: "BODY", title: " Email Body" }, { key: "SIGN_OFF", title: "✍️ Sign Off" }];
+  const sections = [{ key: "SUBJECT", title: "📧 Subject Line" }, { key: "BODY", title: "📝 Email Body" }, { key: "SIGN_OFF", title: "️ Sign Off" }];
   sections.forEach(s => { if (email[s.key]) { const div = document.createElement("div"); div.className = "email-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(email[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -389,7 +389,7 @@ async function runBusinessAgent() {
       projects[projectIndex].assets = [...(projects[projectIndex].assets || []), ...newAssets];
       localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
       renderProjectDetail(currentProjectId); 
-      showToast(" Full Business Pack Generated & Saved!", "success");
+      showToast("🎉 Full Business Pack Generated & Saved!", "success");
       document.getElementById("agentInput").value = "";
     }
   } catch (e) { showToast(e.message, "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
@@ -471,7 +471,7 @@ async function makeItBetter() {
     if(!isProUser) incrementUsage();
     currentToolResult = data.result;
     document.getElementById("toolResult").innerHTML = formatToolResult(data.result, activeTool);
-    showToast("🚀 Content improved!", "success");
+    showToast(" Content improved!", "success");
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
 
@@ -663,7 +663,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tool = smartRouteInput(t); 
     openToolWorkspace(tool); 
     
-    // 📊 Tracking: Jab user Hub se kuch puche
+    //  Tracking: Jab user Hub se kuch puche
     trackEvent('hub_ask_ai', { tool_detected: tool });
 
     if (tool !== "chat") { document.getElementById("toolInput").value = t; runAiTool(t, tool); }
