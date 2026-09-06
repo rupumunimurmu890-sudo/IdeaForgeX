@@ -1,14 +1,22 @@
 // ========================================
-// IdeaForgeX - Main JavaScript v10.0 (The AI Agent)
+// IdeaForgeX - Main JavaScript v10.1 (Analytics Integrated)
 // ========================================
 
 let currentReport = null, currentIdeaText = "", isProUser = false;
 let userBrand = { name: "", industry: "", audience: "" };
 let chatHistory = []; 
-let currentProjectId = null; // 🆕 Track active project
+let currentProjectId = null; 
 const HISTORY_KEY = "ideaforgex_history", HISTORY_LIMIT = 10;
 const FREE_DAILY_LIMIT = 15, USAGE_KEY = "ideaforge_usage";
-const PROJECTS_KEY = "ideaforge_projects_v2"; // 🆕 Updated key for new structure
+const PROJECTS_KEY = "ideaforge_projects_v2"; 
+
+// 📊 Analytics Helper Function
+function trackEvent(eventName, params = {}) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', eventName, params);
+  }
+  console.log("📊 Analytics Tracked:", eventName, params);
+}
 
 function showToast(msg, type) {
   const c = document.getElementById("toastContainer"); if (!c) return;
@@ -234,9 +242,6 @@ function formatToolResult(text, tool) {
   return escapeHtml(text).replace(/\n/g, '<br>');
 }
 
-// ... [Keep all other render functions like renderAutopilotResult, renderSocialPackResult, etc. as they were in v9.1] ...
-// For brevity, I am skipping the unchanged render functions. They remain exactly the same as v9.1.
-
 function renderAutopilotResult(pkg) {
   const container = document.getElementById("autopilotResult"); container.innerHTML = "";
   const sections = [{ key: "AD_COPY", title: " Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
@@ -346,7 +351,6 @@ async function sendChatMessage() {
   } catch (e) { showToast(e.message, "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
-// 🆕 THE AGENT RUNNER
 async function runBusinessAgent() {
   const input = document.getElementById("agentInput").value.trim();
   if (!input) { showToast("Apna business idea likhein!", "error"); return; }
@@ -357,17 +361,18 @@ async function runBusinessAgent() {
   const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Agent is working...';
 
   try {
+    // 📊 Tracking: Jab user Business Agent run kare
+    trackEvent('run_business_agent', { project_id: currentProjectId });
+
     const res = await fetch("/api/agent-generate", { method: "POST", headers: { "Content-Type": "application/json", "X-User-ID": localStorage.getItem('uid')||'anon', "X-User-Plan": isProUser?"pro":"free" }, body: JSON.stringify({ input, language: document.getElementById("uiLanguageSelect").value }) });
     const data = await res.json();
     if (!res.ok || !data.success || !data.data) throw new Error(data?.error || "Agent failed to generate JSON.");
     if (!isProUser) incrementUsage();
 
-    // Save to current project
     const projects = getProjects();
     const projectIndex = projects.findIndex(p => p.id === currentProjectId);
     if (projectIndex !== -1) {
       const assets = data.data;
-      // Add each asset to the project
       const newAssets = [
         { type: "Brand Name", title: "Brand Name", content: assets.brand_name },
         { type: "Tagline", title: "Tagline", content: assets.tagline },
@@ -383,7 +388,7 @@ async function runBusinessAgent() {
       
       projects[projectIndex].assets = [...(projects[projectIndex].assets || []), ...newAssets];
       localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-      renderProjectDetail(currentProjectId); // Refresh view
+      renderProjectDetail(currentProjectId); 
       showToast(" Full Business Pack Generated & Saved!", "success");
       document.getElementById("agentInput").value = "";
     }
@@ -420,8 +425,6 @@ async function runAiTool(input, tool) {
     if(tool==="ai-image") { payload.style = document.getElementById("imageStyleSelect")?.value; }
     lastToolPayload = payload;
     
-    // ... [Keep all existing tool logic (autopilot, socialpack, goalplan, etc.) exactly as v9.1] ...
-    // For brevity, I am skipping the unchanged tool logic blocks. They remain exactly the same as v9.1.
     if (tool === "autopilot") {
       const res = await fetch("/api/ai-autopilot", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({ input, brand: userBrand }) });
       const data = await res.json();
@@ -429,9 +432,7 @@ async function runAiTool(input, tool) {
       if(!isProUser) incrementUsage();
       renderAutopilotResult(data.package); currentToolResult = JSON.stringify(data.package); resAct.style.display="flex"; return;
     }
-    // ... (Assume all other tools like socialpack, goalplan, moneycalc, improveidea, roast, poster, card, email, video, workflow, ai-image are here) ...
     
-    // Fallback to standard AI tool
     const res = await fetch("/api/ai-tool", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify(payload) });
     const data = await res.json();
     if(!res.ok||!data.success||!data.result) throw new Error(data?.error);
@@ -529,7 +530,6 @@ async function downloadCard() {
   } catch(e) { showToast("Card download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
-// 🆕 ENHANCED PROJECTS LOGIC
 function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; } catch(e){ return []; } }
 function saveProjects(projects) { localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects)); }
 
@@ -603,7 +603,6 @@ function renderProjectDetail(id) {
     return;
   }
   
-  // Group assets by type for better UI (Optional, but keeping it simple for now)
   project.assets.forEach(asset => {
     const card = document.createElement("div");
     card.className = "asset-card";
@@ -661,7 +660,12 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById("hubAskBtn")?.addEventListener("click", () => {
     const t = document.getElementById("hubInput").value.trim(); if(!t) return;
-    const tool = smartRouteInput(t); openToolWorkspace(tool); 
+    const tool = smartRouteInput(t); 
+    openToolWorkspace(tool); 
+    
+    // 📊 Tracking: Jab user Hub se kuch puche
+    trackEvent('hub_ask_ai', { tool_detected: tool });
+
     if (tool !== "chat") { document.getElementById("toolInput").value = t; runAiTool(t, tool); }
     else { document.getElementById("chatInput").value = t; sendChatMessage(); }
   });
@@ -709,7 +713,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("saveBrandBtn")?.addEventListener("click", saveBrand);
   document.getElementById("closeBrandBtn")?.addEventListener("click", () => { document.getElementById("brandModal").style.display = "none"; });
   
-  //  Project Event Listeners
   document.getElementById("newProjectBtn")?.addEventListener("click", () => { document.getElementById("newProjectModal").style.display = "flex"; });
   document.getElementById("createProjectBtn")?.addEventListener("click", createProject);
   document.getElementById("closeNewProjectBtn")?.addEventListener("click", () => { document.getElementById("newProjectModal").style.display = "none"; });
@@ -780,7 +783,11 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.querySelectorAll(".hubChip").forEach(chip => {
     chip.addEventListener("click", () => {
-      const t = chip.getAttribute("data-tool"); if(t) openToolWorkspace(t);
+      const t = chip.getAttribute("data-tool"); 
+      if(t) openToolWorkspace(t);
+      
+      // 📊 Tracking: Jab user koi specific tool chip click kare
+      trackEvent('select_tool', { tool_name: t });
     });
   });
   
