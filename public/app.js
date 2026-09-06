@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX - Main JavaScript v9.0 (Phase 6: PWA & Workspace)
+// IdeaForgeX - Main JavaScript v9.1 (Optimized for Core Web Vitals)
 // ========================================
 
 let currentReport = null, currentIdeaText = "", isProUser = false;
@@ -7,7 +7,7 @@ let userBrand = { name: "", industry: "", audience: "" };
 let chatHistory = []; 
 const HISTORY_KEY = "ideaforgex_history", HISTORY_LIMIT = 10;
 const FREE_DAILY_LIMIT = 15, USAGE_KEY = "ideaforge_usage";
-const PROJECTS_KEY = "ideaforge_projects"; // 🆕 Phase 6
+const PROJECTS_KEY = "ideaforge_projects";
 
 function showToast(msg, type) {
   const c = document.getElementById("toastContainer"); if (!c) return;
@@ -21,23 +21,39 @@ function saveToHistory(idea, report) {
   let list = getHistory(); list.unshift({ idea: idea.slice(0,80), score: report.score.overall, report, fullIdea: idea, savedAt: Date.now() });
   while(list.length > HISTORY_LIMIT) list.pop(); localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); renderHistory();
 }
+
+// 🚀 INP Fix: Cached i18n elements
+let i18nCache = null;
+function applyUILanguage(lang) {
+  const d = UI_STRINGS[lang]||UI_STRINGS.en;
+  if (!i18nCache) i18nCache = Array.from(document.querySelectorAll("[data-i18n]")).map(el => ({el, key: el.getAttribute("data-i18n")}));
+  i18nCache.forEach(({el, key}) => { if(d[key]) el.textContent=d[key]; });
+  localStorage.setItem("ideaforge_ui_lang", lang);
+}
+
 function renderHistory() {
   const list = getHistory(), sec = document.getElementById("ideaHistorySection"), row = document.getElementById("ideaHistoryRow");
-  if (!sec || !row) return; if (list.length === 0) { sec.style.display = "none"; return; }
-  row.innerHTML = ""; list.forEach(item => {
+  if (!sec || !row) return; 
+  row.innerHTML = ""; 
+  if (list.length === 0) { 
+    // 🚀 CLS Fix: Show placeholder instead of hiding to prevent layout shift
+    row.innerHTML = '<p style="color:var(--text-muted); font-size:13px; margin:0;">No past ideas yet. Generate your first report!</p>';
+    return; 
+  }
+  list.forEach(item => {
     const btn = document.createElement("button"); btn.type="button"; btn.className="historyItem";
     btn.innerHTML = '<span class="historyItemScore">'+item.score+'/100</span><span class="historyItemText">' + escapeHtml(item.idea) + '</span>';
     btn.onclick = () => { currentIdeaText = item.fullIdea; currentReport = item.report; document.getElementById("ideaInput").value = item.fullIdea; renderReport(item.report); };
     row.appendChild(btn);
-  }); sec.style.display = "block";
+  }); 
 }
 function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str; return d.innerHTML; }
 
 const SECTION_DISPLAY = [
   { key: "IDEA", title: "💡 The Idea" }, { key: "TARGET_CUSTOMERS", title: "🎯 Target Customers" }, { key: "CUSTOMER_PROBLEM", title: "😣 Customer Problem" },
-  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: " Competitor Analysis" },
+  { key: "REVENUE_MODEL", title: "💰 Revenue Model" }, { key: "MARKET_ANALYSIS", title: "📊 Market Analysis" }, { key: "COMPETITOR_ANALYSIS", title: "🥊 Competitor Analysis" },
   { key: "__SWOT__", title: "SWOT Analysis" }, { key: "MARKETING_STRATEGY", title: "📣 Marketing Strategy" }, { key: "STARTUP_COST", title: "💵 Startup Cost" },
-  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
+  { key: "ONE_YEAR_PROJECTION", title: "📈 1-Year Projection" }, { key: "RISKS", title: "⚠️ Risks" }, { key: "GROWTH_STRATEGY", title: "🚀 Growth Strategy" }
 ];
 
 function setBar(barId, valId, val) { const b = document.getElementById(barId), v = document.getElementById(valId); if(b) b.style.width = (val||0)+"%"; if(v) v.textContent = (typeof val==="number"?val:"--")+"/100"; }
@@ -51,7 +67,7 @@ function renderReport(report) {
   SECTION_DISPLAY.forEach(item => {
     if (item.key === "__SWOT__") {
       const card = document.createElement("div"); card.className = "reportCard";
-      card.innerHTML = '<div class="reportCardTitle"> SWOT Analysis</div><div class="swotGrid"><div class="swotBox swotStrengths"><div class="swotTitle">Strengths</div>'+escapeHtml(sections.SWOT_STRENGTHS||"")+'</div><div class="swotBox swotWeaknesses"><div class="swotTitle">Weaknesses</div>'+escapeHtml(sections.SWOT_WEAKNESSES||"")+'</div><div class="swotBox swotOpportunities"><div class="swotTitle">Opportunities</div>'+escapeHtml(sections.SWOT_OPPORTUNITIES||"")+'</div><div class="swotBox swotThreats"><div class="swotTitle">Threats</div>'+escapeHtml(sections.SWOT_THREATS||"")+'</div></div>';
+      card.innerHTML = '<div class="reportCardTitle">🧭 SWOT Analysis</div><div class="swotGrid"><div class="swotBox swotStrengths"><div class="swotTitle">Strengths</div>'+escapeHtml(sections.SWOT_STRENGTHS||"")+'</div><div class="swotBox swotWeaknesses"><div class="swotTitle">Weaknesses</div>'+escapeHtml(sections.SWOT_WEAKNESSES||"")+'</div><div class="swotBox swotOpportunities"><div class="swotTitle">Opportunities</div>'+escapeHtml(sections.SWOT_OPPORTUNITIES||"")+'</div><div class="swotBox swotThreats"><div class="swotTitle">Threats</div>'+escapeHtml(sections.SWOT_THREATS||"")+'</div></div>';
       container.appendChild(card); return;
     }
     const content = sections[item.key] || ""; if (!content) return;
@@ -94,7 +110,7 @@ async function generateLaunchPlan() {
   try {
     const res = await fetch("/api/generate-launch-plan", { method:"POST", headers:{"Content-Type":"application/json","X-User-ID":localStorage.getItem('uid')||'anon',"X-User-Plan":isProUser?"pro":"free"}, body:JSON.stringify({idea:currentIdeaText, budget:document.getElementById("budgetInput")?.value||"", language:document.getElementById("languageSelect").value, brand: userBrand}) });
     const data = await res.json(); if(!res.ok||!data.success||!data.plan) throw new Error(data?.error);
-    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:" Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
+    renderSectionsInto("launchPlanSections", [{key:"BUDGET_BREAKDOWN",title:"💰 Budget"},{key:"PREPARATION",title:"📋 Prep"},{key:"PRODUCT_DEVELOPMENT",title:"🛠️ Dev"},{key:"BRANDING",title:"🎨 Brand"},{key:"MARKETING_LAUNCH",title:"📣 Marketing"},{key:"LAUNCH_WEEK",title:"🚀 Launch"},{key:"PRODUCT_IDEAS",title:"💡 Ideas"},{key:"PRICING",title:"🏷️ Pricing"},{key:"EXPECTED_SALES",title:"📈 Sales"}], data.plan);
     document.getElementById("launchPlanSection").style.display="block";
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
@@ -137,14 +153,13 @@ function smartRouteInput(input) {
 }
 
 let currentToolResult = "", currentToolInput = "", activeTool = "assistant", lastToolPayload = null;
-const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: " Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "⚙️ AI Workflow", writing: "️ Writing", translate: "🌐 Translate", calculator: "🧮 Calculator", student: " Student", code: "💻 Code", logo: "🎨 Logo", social: " Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: "📸 Quote Card", email: "✉️ Cold Email", projects: "📂 My Projects" };
+const TOOL_TITLES = { assistant: "🤖 AI Assistant", autopilot: "🚀 Auto-Pilot", goalplan: "🎯 Goal Plan", moneycalc: "💰 Money Calc", improveidea: "💡 Improve Idea", roast: "🦈 Roast Idea", poster: "🖼️ Poster Maker", video: "🎬 Video Script", workflow: "️ AI Workflow", writing: "✍️ Writing", translate: "🌐 Translate", calculator: "🧮 Calculator", student: " Student", code: "💻 Code", logo: "🎨 Logo", social: " Social", socialpack: "📦 Social Pack", "ai-image": "🖼️ Real Image", document: "📄 Doc AI", image: "📸 Image Tools", chat: "💬 AI Chat", card: "📸 Quote Card", email: "✉️ Cold Email", projects: "📂 My Projects" };
 
 function openToolWorkspace(tool) {
   activeTool = tool;
   document.querySelectorAll(".hubChip").forEach(c => c.classList.remove("active"));
   const chip = document.querySelector('.hubChip[data-tool="'+tool+'"]'); if(chip) chip.classList.add("active");
   
-  // 🆕 Phase 6: Handle Projects Tab
   if (tool === "projects") {
     document.getElementById("projectsSection").style.display = "block";
     document.getElementById("toolWorkspace").style.display = "none";
@@ -189,7 +204,7 @@ function openToolWorkspace(tool) {
   } else {
     document.getElementById("chatInterface").style.display = "none";
     document.getElementById("standardInputArea").style.display = "block";
-    document.getElementById("toolResultActions").style.display = "none"; // Hide initially
+    document.getElementById("toolResultActions").style.display = "none";
     document.getElementById("bilingualToggle").parentElement.style.display = "flex";
   }
   
@@ -219,35 +234,35 @@ function formatToolResult(text, tool) {
 
 function renderAutopilotResult(pkg) {
   const container = document.getElementById("autopilotResult"); container.innerHTML = "";
-  const sections = [{ key: "AD_COPY", title: " Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
+  const sections = [{ key: "AD_COPY", title: "📢 Ad Copy" }, { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" }, { key: "FACEBOOK_POST", title: "📘 Facebook Post" }, { key: "WHATSAPP_MESSAGE", title: "💬 WhatsApp Message" }, { key: "POSTER_TEXT", title: "🎨 Poster Text" }, { key: "IMAGE_PROMPT", title: "🖼️ Image Prompt" }, { key: "VIDEO_PROMPT", title: "🎥 Video Prompt" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }];
   sections.forEach(s => { if (pkg[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pkg[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderSocialPackResult(pack) {
   const container = document.getElementById("socialPackResult"); container.innerHTML = "";
-  const sections = [{ key: "INSTAGRAM", title: " Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: "📝 YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "🖼️ Thumbnail Prompt" }];
+  const sections = [{ key: "INSTAGRAM", title: "📸 Instagram" }, { key: "FACEBOOK", title: "📘 Facebook" }, { key: "WHATSAPP", title: "💬 WhatsApp" }, { key: "YOUTUBE_TITLE", title: "🎬 YouTube Title" }, { key: "YOUTUBE_DESCRIPTION", title: " YouTube Description" }, { key: "SHORTS_CAPTION", title: "⚡ Shorts Caption" }, { key: "HASHTAGS", title: "#️⃣ Hashtags" }, { key: "THUMBNAIL_PROMPT", title: "️ Thumbnail Prompt" }];
   sections.forEach(s => { if (pack[s.key]) { const div = document.createElement("div"); div.className = "autopilot-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(pack[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderGoalResult(plan) {
   const container = document.getElementById("goalResult"); container.innerHTML = "";
-  const sections = [{ key: "OVERVIEW", title: "🎯 Strategy Overview" }, { key: "MILESTONES", title: "🏆 Key Milestones" }, { key: "ACTION_PLAN", title: "📅 Action Plan" }, { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" }, { key: "POTENTIAL_OBSTACLES", title: "⚠️ Potential Obstacles" }];
+  const sections = [{ key: "OVERVIEW", title: "🎯 Strategy Overview" }, { key: "MILESTONES", title: "🏆 Key Milestones" }, { key: "ACTION_PLAN", title: " Action Plan" }, { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" }, { key: "POTENTIAL_OBSTACLES", title: "⚠️ Potential Obstacles" }];
   sections.forEach(s => { if (plan[s.key]) { const div = document.createElement("div"); div.className = "goal-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(plan[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderMoneyResult(calc) {
   const container = document.getElementById("moneyResult"); container.innerHTML = "";
-  const sections = [{ key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" }, { key: "MONTHLY_EXPENSES", title: "📉 Monthly Expenses" }, { key: "REVENUE_MODEL", title: "💵 Revenue Model" }, { key: "PROFIT_PROJECTION", title: "📈 Profit Projection" }, { key: "BREAK_EVEN", title: "️ Break-Even Point" }, { key: "RISKS", title: "⚠️ Financial Risks" }];
+  const sections = [{ key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" }, { key: "MONTHLY_EXPENSES", title: "📉 Monthly Expenses" }, { key: "REVENUE_MODEL", title: "💵 Revenue Model" }, { key: "PROFIT_PROJECTION", title: "📈 Profit Projection" }, { key: "BREAK_EVEN", title: "⚖️ Break-Even Point" }, { key: "RISKS", title: "⚠️ Financial Risks" }];
   sections.forEach(s => { if (calc[s.key]) { const div = document.createElement("div"); div.className = "money-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(calc[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderImproveResult(feedback) {
   const container = document.getElementById("improveResult"); container.innerHTML = "";
-  const sections = [{ key: "VERDICT", title: "️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "🏷️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: " Immediate Next Steps" }];
+  const sections = [{ key: "VERDICT", title: "⚖️ Final Verdict" }, { key: "WHAT_WORKS", title: "✅ What Works" }, { key: "WHAT_IS_MISSING", title: "❌ What is Missing" }, { key: "PRICING_STRATEGY", title: "️ Pricing Strategy" }, { key: "TARGET_AUDIENCE", title: "🎯 Target Audience" }, { key: "IMMEDIATE_NEXT_STEPS", title: "🚀 Immediate Next Steps" }];
   sections.forEach(s => { if (feedback[s.key]) { const div = document.createElement("div"); div.className = "improve-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(feedback[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -256,7 +271,7 @@ function renderRoastResult(roast) {
   const container = document.getElementById("roastResult"); container.innerHTML = "";
   const score = roast.SHARK_SCORE || "?";
   container.innerHTML = `<div class="shark-score">🦈 ${score}/10</div>`;
-  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: "🔥 The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "️ Final Verdict" }];
+  const sections = [{ key: "THE_GOOD", title: "✅ The Good" }, { key: "THE_ROAST", title: " The Brutal Truth" }, { key: "THE_FIX", title: "🛠️ The Fix" }, { key: "FINAL_VERDICT", title: "⚖️ Final Verdict" }];
   sections.forEach(s => { if (roast[s.key]) { const div = document.createElement("div"); div.className = "roast-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(roast[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -288,14 +303,14 @@ function renderVideoResult(video) {
 
 function renderWorkflowResult(workflow) {
   const container = document.getElementById("workflowResult"); container.innerHTML = "";
-  const sections = [{ key: "PART_1", title: "📦 Part 1" }, { key: "PART_2", title: "📦 Part 2" }, { key: "PART_3", title: " Part 3" }];
+  const sections = [{ key: "PART_1", title: "📦 Part 1" }, { key: "PART_2", title: "📦 Part 2" }, { key: "PART_3", title: "📦 Part 3" }];
   sections.forEach(s => { if (workflow[s.key]) { const div = document.createElement("div"); div.className = "workflow-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(workflow[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
 
 function renderEmailResult(email) {
   const container = document.getElementById("emailResult"); container.innerHTML = "";
-  const sections = [{ key: "SUBJECT", title: "📧 Subject Line" }, { key: "BODY", title: "📝 Email Body" }, { key: "SIGN_OFF", title: "✍️ Sign Off" }];
+  const sections = [{ key: "SUBJECT", title: "📧 Subject Line" }, { key: "BODY", title: " Email Body" }, { key: "SIGN_OFF", title: "✍️ Sign Off" }];
   sections.forEach(s => { if (email[s.key]) { const div = document.createElement("div"); div.className = "email-section"; div.innerHTML = `<h4>${s.title}</h4><p>${escapeHtml(email[s.key])}</p>`; container.appendChild(div); } });
   container.style.display = "block";
 }
@@ -512,7 +527,7 @@ async function makeItBetter() {
     if(!isProUser) incrementUsage();
     currentToolResult = data.result;
     document.getElementById("toolResult").innerHTML = formatToolResult(data.result, activeTool);
-    showToast("🚀 Content improved!", "success");
+    showToast(" Content improved!", "success");
   } catch(e) { showToast(e.message, "error"); } finally { btn.disabled=false; btn.innerHTML=orig; }
 }
 
@@ -571,7 +586,6 @@ async function downloadCard() {
   } catch(e) { showToast("Card download failed.", "error"); } finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
-// 🆕 Phase 6: Projects Logic
 function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; } catch(e){ return []; } }
 function saveToProjects() {
   if (!currentToolResult || !currentToolInput) { showToast("Pehle kuch generate karein!", "error"); return; }
@@ -584,7 +598,7 @@ function saveToProjects() {
     date: new Date().toLocaleDateString()
   });
   localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-  showToast("📂 Saved to My Projects!", "success");
+  showToast(" Saved to My Projects!", "success");
 }
 function deleteProject(id) {
   let projects = getProjects();
@@ -628,7 +642,6 @@ function saveToTH(t,i,r){ let l=getTH(); l.unshift({tool:t,input:i,result:r,labe
 function renderTH(){ const l=getTH(),s=document.getElementById("toolHistorySection"),r=document.getElementById("toolHistoryRow"); if(!s||!r)return; if(l.length===0){s.style.display="none";return;} r.innerHTML=""; l.forEach(i=>{const b=document.createElement("button");b.type="button";b.className="historyItem";b.innerHTML='<span class="historyItemText">'+escapeHtml(i.label)+'</span>';b.onclick=()=>{openToolWorkspace(i.tool);document.getElementById("toolInput").value=i.input;currentToolResult=i.result;document.getElementById("toolResult").innerHTML=formatToolResult(i.result, i.tool);document.getElementById("toolResult").style.display="block";};r.appendChild(b);}); s.style.display="block"; }
 
 const UI_STRINGS = { en: { tagline: "One AI Workspace for Everything", askAiBtn: "➤ Ask AI" }, hi: { tagline: "सबके लिए AI वर्कस्पेस", askAiBtn: "➤ AI से पूछें" } }; 
-function applyUILanguage(lang) { const d = UI_STRINGS[lang]||UI_STRINGS.en; document.querySelectorAll("[data-i18n]").forEach(el => { const k=el.getAttribute("data-i18n"); if(d[k]) el.textContent=d[k]; }); localStorage.setItem("ideaforge_ui_lang", lang); }
 
 function startVoiceInput(targetId, btn) { const S = window.SpeechRecognition||window.webkitSpeechRecognition; if(!S){showToast("Voice support nahi hai.","error");return;} const r=new S(); r.lang="hi-IN"; btn.classList.add("listening"); r.onresult=e=>{document.getElementById(targetId).value += e.results[0][0].transcript;}; r.onend=()=>btn.classList.remove("listening"); try{r.start();}catch(e){btn.classList.remove("listening");} }
 
@@ -636,16 +649,15 @@ function loadBrand() { try { const saved = localStorage.getItem('ideaforge_brand
 function saveBrand() {
   userBrand = { name: document.getElementById("brandNameInput").value.trim(), industry: document.getElementById("brandIndustryInput").value.trim(), audience: document.getElementById("brandAudienceInput").value.trim() };
   localStorage.setItem('ideaforge_brand', JSON.stringify(userBrand));
-  showToast(" Brand Profile Saved! AI will now use it.", "success");
+  showToast("👤 Brand Profile Saved! AI will now use it.", "success");
   document.getElementById("brandModal").style.display = "none";
 }
 
-// 🆕 Phase 6: Theme Toggle
 function toggleTheme() {
   document.body.classList.toggle('light-mode');
   const isLight = document.body.classList.contains('light-mode');
   localStorage.setItem('ideaforge_theme', isLight ? 'light' : 'dark');
-  document.getElementById("themeToggleBtn").textContent = isLight ? '🌞' : '';
+  document.getElementById("themeToggleBtn").textContent = isLight ? '🌞' : '🌗';
 }
 function loadTheme() {
   const savedTheme = localStorage.getItem('ideaforge_theme');
@@ -659,9 +671,16 @@ document.addEventListener("DOMContentLoaded", () => {
   isProUser = localStorage.getItem('ideaforge_pro') === 'true'; 
   if(!localStorage.getItem('uid')) localStorage.setItem('uid', 'user_'+Math.random().toString(36).substr(2,9));
   loadBrand();
-  loadTheme(); // 🆕 Phase 6
-  renderHistory(); renderTH(); renderUsageBanner(); applyUILanguage(localStorage.getItem("ideaforge_ui_lang")||"en");
+  loadTheme();
+  applyUILanguage(localStorage.getItem("ideaforge_ui_lang")||"en");
   
+  //  INP Fix: Defer heavy rendering tasks to free up main thread
+  setTimeout(() => {
+    renderHistory();
+    renderTH();
+    renderUsageBanner();
+  }, 0);
+
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
   document.getElementById("generateLaunchPlanBtn")?.addEventListener("click", generateLaunchPlan);
   document.getElementById("generatePitchDeckBtn")?.addEventListener("click", generatePitchDeck);
@@ -689,7 +708,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("toolSaveBtn")?.addEventListener("click", () => { if(currentToolResult && currentToolInput) { saveToTH(activeTool, currentToolInput, currentToolResult); showToast("⭐ Saved!", "success"); } });
   document.getElementById("toolShareBtn")?.addEventListener("click", () => { if(currentToolResult) { if(navigator.share) navigator.share({title:"IdeaForge-AI", text:currentToolResult}); else { copyText(currentToolResult); showToast("Copied for sharing!", "info"); } } });
   
-  // 🆕 Phase 6: Save to Projects Button
   document.getElementById("saveToProjectBtn")?.addEventListener("click", saveToProjects);
   document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
   
@@ -781,6 +799,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
+  // 🚀 INP Fix: Debounced charCount update
+  let charCountTimeout;
+  const ideaInput = document.getElementById("ideaInput");
+  const charCount = document.getElementById("charCount");
+  if (ideaInput && charCount) {
+    ideaInput.addEventListener("input", function () {
+      cancelAnimationFrame(charCountTimeout);
+      charCountTimeout = requestAnimationFrame(() => {
+        charCount.textContent = ideaInput.value.length;
+      });
+    });
+  }
+
   const tips = [
     "Try AI Chat! It remembers your last 5 messages for a real conversation.",
     "Use Quote Card Maker to turn any text into a beautiful Instagram image.",
