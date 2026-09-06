@@ -3,10 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IdeaForge-AI v10.0 | The AI Agent</title>
+  <title>IdeaForge-AI v10.1 | The AI Agent</title>
   <meta name="theme-color" content="#6366f1">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4359/4359960.png">
+
+  <!-- ✅ Google Analytics 4 (Correct ID) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4DYR62JJ4B"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4DYR62JJ4B');
+  </script>
 
   <style>
     :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
@@ -83,8 +92,6 @@
     .chat-ai { align-self: flex-start; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
     .chat-input-area { display: flex; gap: 10px; }
     .chat-input-area textarea { flex: 1; margin-bottom: 0; resize: none; height: 50px; }
-    
-    /* 🆕 Project Workspace Styles */
     .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
     .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.2s; position: relative; }
     .project-card:hover { border-color: var(--primary); transform: translateY(-3px); }
@@ -145,16 +152,16 @@
     <div class="hubChip" data-tool="poster"><span class="chip-icon">🖼️</span><span>Poster</span></div>
     <div class="hubChip" data-tool="video"><span class="chip-icon">🎬</span><span>Video Script</span></div>
     <div class="hubChip" data-tool="workflow"><span class="chip-icon">⚙️</span><span>Workflow</span></div>
-    <div class="hubChip" data-tool="writing"><span class="chip-icon">✍️</span><span>Writing</span></div>
-    <div class="hubChip" data-tool="translate"><span class="chip-icon"></span><span>Translate</span></div>
-    <div class="hubChip" data-tool="calculator"><span class="chip-icon"></span><span>Calculator</span></div>
-    <div class="hubChip" data-tool="student"><span class="chip-icon"></span><span>Student</span></div>
+    <div class="hubChip" data-tool="writing"><span class="chip-icon">️</span><span>Writing</span></div>
+    <div class="hubChip" data-tool="translate"><span class="chip-icon">🌐</span><span>Translate</span></div>
+    <div class="hubChip" data-tool="calculator"><span class="chip-icon">🧮</span><span>Calculator</span></div>
+    <div class="hubChip" data-tool="student"><span class="chip-icon">📚</span><span>Student</span></div>
     <div class="hubChip" data-tool="code"><span class="chip-icon">💻</span><span>Code</span></div>
     <div class="hubChip" data-tool="logo"><span class="chip-icon">🎨</span><span>Logo</span></div>
-    <div class="hubChip" data-tool="social"><span class="chip-icon">📱</span><span>Social</span></div>
-    <div class="hubChip" data-tool="socialpack"><span class="chip-icon">📦</span><span>Social Pack</span></div>
-    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">🖼️</span><span>Real Image</span></div>
-    <div class="hubChip" data-tool="document"><span class="chip-icon">📄</span><span>Doc AI</span></div>
+    <div class="hubChip" data-tool="social"><span class="chip-icon"></span><span>Social</span></div>
+    <div class="hubChip" data-tool="socialpack"><span class="chip-icon"></span><span>Social Pack</span></div>
+    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">️</span><span>Real Image</span></div>
+    <div class="hubChip" data-tool="document"><span class="chip-icon"></span><span>Doc AI</span></div>
     <div class="hubChip" data-tool="image"><span class="chip-icon">📸</span><span>Analyze Img</span></div>
     <div class="hubChip" data-tool="projects" data-scroll="projectsSection"><span class="chip-icon">📂</span><span>My Projects</span></div>
   </div>
@@ -284,13 +291,13 @@
     <div id="emailResult" style="display:none; margin-top: 20px;"></div>
 
     <div id="toolResultActions" class="result-actions" style="display:none;">
-      <button id="toolCopyBtn">📋 Copy</button>
+      <button id="toolCopyBtn"> Copy</button>
       <button id="toolRegenerateBtn">🔄 Regenerate</button>
       <button id="remixBtn" class="btn-secondary">✨ Remix</button>
-      <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);">🚀 Make It Better</button>
+      <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);"> Make It Better</button>
       <button id="toolSaveBtn">⭐ Save</button>
-      <button id="saveToProjectBtn" class="btn-brand" style="padding: 10px 15px;"> Save to Projects</button>
-      <button id="toolShareBtn">📤 Share</button>
+      <button id="saveToProjectBtn" class="btn-brand" style="padding: 10px 15px;">📂 Save to Projects</button>
+      <button id="toolShareBtn"> Share</button>
     </div>
   </div>
 
@@ -298,7 +305,7 @@
     <div class="modal-content">
       <h2 style="color: var(--primary);">✨ Remix Your Content</h2>
       <div class="remix-options">
-        <button class="remix-btn" data-style="shorter">⚡ Shorter</button>
+        <button class="remix-btn" data-style="shorter"> Shorter</button>
         <button class="remix-btn" data-style="professional">💼 Professional</button>
         <button class="remix-btn" data-style="funny">😄 Funny</button>
         <button class="remix-btn" data-style="viral">🔥 Viral</button>
@@ -306,9 +313,9 @@
         <button class="remix-btn" data-style="english">🇬🇧 English</button>
         <button class="remix-btn" data-style="simple">📖 Simple</button>
         <button class="remix-btn" data-style="emotional">❤️ Emotional</button>
-        <button class="remix-btn" data-style="seo"> SEO</button>
+        <button class="remix-btn" data-style="seo">🔍 SEO</button>
         <button class="remix-btn" data-style="instagram">📸 Instagram</button>
-        <button class="remix-btn" data-style="youtube">🎬 YouTube</button>
+        <button class="remix-btn" data-style="youtube"> YouTube</button>
       </div>
       <br><button id="closeRemixModal" class="btn-secondary">Cancel</button>
     </div>
@@ -328,13 +335,12 @@
     </div>
   </div>
 
-  <!-- 🆕 New Project Modal -->
   <div id="newProjectModal">
     <div class="modal-content">
-      <h2 style="color: var(--primary);">📁 Create New Project</h2>
+      <h2 style="color: var(--primary);"> Create New Project</h2>
       <input type="text" id="newProjectNameInput" placeholder="Project Name (e.g., My Clothing Brand)">
       <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-        <button id="createProjectBtn"> Create Project</button>
+        <button id="createProjectBtn">📁 Create Project</button>
         <button id="closeNewProjectBtn" class="btn-secondary">Cancel</button>
       </div>
     </div>
@@ -343,7 +349,7 @@
   <div id="imageToolWorkspace" class="imageToolWorkspace" style="display: none;">
     <h2 style="margin-top:0;">📸 Image Analysis</h2>
     <div id="imageUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
-      <input type="file" id="imageFileInput" accept="image/*" style="display: none;"><p id="imageUploadText">📤 Click to upload an image</p>
+      <input type="file" id="imageFileInput" accept="image/*" style="display: none;"><p id="imageUploadText"> Click to upload an image</p>
       <img id="imagePreview" style="display:none; max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">
     </div>
     <select id="imageActionSelect">
@@ -356,12 +362,12 @@
     <button id="imageGenerateBtn">✨ Analyze Image</button>
     <div id="imageResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
     <div id="imageResultActions" style="display:none; margin-top: 15px;">
-      <button id="imageCopyBtn">📋 Copy</button><button id="imageShareBtn">📤 Share</button>
+      <button id="imageCopyBtn"> Copy</button><button id="imageShareBtn">📤 Share</button>
     </div>
   </div>
 
   <div id="documentWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 style="margin-top:0;"> Document AI</h2>
+    <h2 style="margin-top:0;">📄 Document AI</h2>
     <div id="docUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
       <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText">📤 Click to upload document</p>
     </div>
@@ -370,11 +376,10 @@
     <div id="docResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
   </div>
 
-  <!--  Enhanced Projects Workspace -->
   <div id="projectsSection" class="hubPanel" style="display:none;">
     <div id="projectListView">
       <div class="flex-between" style="margin-bottom: 20px;">
-        <h2 style="margin:0;"> My Projects Workspace</h2>
+        <h2 style="margin:0;">📂 My Projects Workspace</h2>
         <button id="newProjectBtn" class="btn-brand">+ New Project</button>
       </div>
       <p style="color: var(--text-muted); font-size: 14px;">Your AI-generated business assets, organized by project.</p>
@@ -385,17 +390,14 @@
       <button id="backToProjectsBtn" class="btn-secondary" style="margin-bottom: 20px;">⬅️ Back to Projects</button>
       <h2 id="currentProjectTitle" style="margin-top:0; color: var(--primary);">Project Name</h2>
       
-      <!-- The Magic Agent Input -->
       <div class="agent-input-box">
-        <h3 style="margin-top:0; color: var(--text-main);"> Business Agent</h3>
+        <h3 style="margin-top:0; color: var(--text-main);">🤖 Business Agent</h3>
         <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 10px;">Describe your business idea. The AI will generate a Name, Logo Prompt, Ad Copy, Social Posts, and a Marketing Plan.</p>
         <textarea id="agentInput" rows="2" placeholder="e.g., Mujhe ek kapde ka business shuru karna hai..."></textarea>
         <button id="runAgentBtn" style="width: 100%; margin-top: 10px;">✨ Generate Full Business Pack</button>
       </div>
 
-      <div id="projectAssetsContainer">
-        <!-- Assets will be injected here -->
-      </div>
+      <div id="projectAssetsContainer"></div>
     </div>
   </div>
 
@@ -403,7 +405,7 @@
   <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3>🕒 Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="hubPanel" id="ideaSection">
-    <h2> Startup Idea Analyzer</h2>
+    <h2>💡 Startup Idea Analyzer</h2>
     <textarea id="ideaInput" rows="3" placeholder="Describe your startup idea here..."></textarea>
     <div class="flex-between">
       <select id="languageSelect" style="width: auto;"><option value="auto">Auto Detect</option><option value="English">English</option><option value="Hindi">Hindi</option></select>
@@ -423,25 +425,25 @@
     </div>
     <div id="reportSections"></div>
     <div class="flex-between" style="margin-top: 20px;">
-      <button id="downloadPdfBtn">📄 Download PDF</button><button id="copyReportBtn">📋 Copy</button><button id="shareReportBtn">📤 Share</button>
+      <button id="downloadPdfBtn"> Download PDF</button><button id="copyReportBtn">📋 Copy</button><button id="shareReportBtn">📤 Share</button>
     </div>
     <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
       <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
       <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
     </div>
-    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn"> Share</button></div></div>
-    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn"> Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
+    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn"> Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div></div>
+    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn"> PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
   </div>
 
   <div class="infoGrid" id="infoGrid">
     <div class="infoCard"><h3> Popular Tools</h3><ul><li>🤖 Business Agent (One-Click)</li><li>💬 AI Chat (Remembers Context)</li><li>📸 Quote Card Maker</li><li>✉️ Cold Email Templates</li></ul></div>
     <div class="infoCard"><h3>💡 Daily AI Tip</h3><p class="tip-text" id="dailyTip">Use the Business Agent to generate a full startup plan in one click!</p></div>
-    <div class="infoCard"><h3> Trending Prompts</h3><ul><li>"Agent: Mujhe ek kapde ka business shuru karna hai"</li><li>"Chat: Help me plan my day"</li><li>"Make a card: Success is not final"</li></ul></div>
+    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Agent: Mujhe ek kapde ka business shuru karna hai"</li><li>"Chat: Help me plan my day"</li><li>"Make a card: Success is not final"</li></ul></div>
   </div>
 
   <div id="proModal">
     <div class="modal-content">
-      <h2 style="color: gold;"> Upgrade to Pro</h2><p>Unlimited AI • No Ads • Priority • All Tools</p><h3 style="color: var(--primary);">₹499 / month</h3>
+      <h2 style="color: gold;">🚀 Upgrade to Pro</h2><p>Unlimited AI • No Ads • Priority • All Tools</p><h3 style="color: var(--primary);">₹499 / month</h3>
       <button id="upgradeProBtn" style="width: 100%; margin-top: 10px;">💳 Pay & Activate Pro</button><br><br>
       <button id="closeProModal" class="btn-secondary">Cancel</button>
     </div>
