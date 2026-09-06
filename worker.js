@@ -26,7 +26,13 @@ const REPORT_KEYS = ["IDEA", "TARGET_CUSTOMERS", "CUSTOMER_PROBLEM", "REVENUE_MO
 const LAUNCH_KEYS = ["BUDGET_BREAKDOWN", "PREPARATION", "PRODUCT_DEVELOPMENT", "BRANDING", "MARKETING_LAUNCH", "LAUNCH_WEEK", "PRODUCT_IDEAS", "PRICING", "EXPECTED_SALES"];
 const PITCH_KEYS = ["PROBLEM", "SOLUTION", "MARKET", "PRODUCT", "BUSINESS_MODEL", "COMPETITION", "FINANCIALS", "GROWTH", "FUNDING_REQUIREMENT"];
 
-function langLine(lang) { return lang && lang !== "auto" ? `Respond entirely in ${lang}.` : "Respond in the user's language."; }
+// ✅ Nayi line ko yahan paste karein:
+function langLine(lang) {
+  if (lang && lang !== "auto") {
+    return `CRITICAL: You MUST respond entirely in ${lang}. Do not use any other language.`;
+  }
+  return `CRITICAL LANGUAGE DETECTION: Analyze the user's input text carefully. Identify the exact language and script they are using (e.g., Hindi, Marathi, Nepali, English, Spanish, etc.). You MUST respond 100% in that exact same language and script. If they type in Devanagari script, reply in Devanagari. If they type in Roman script, reply in Roman. NEVER switch to English unless the input is strictly in English.`;
+}
 function getBrandContext(opts) {
   if (opts.brand && opts.brand.name) return `\n[USER BRAND CONTEXT: Brand Name: "${opts.brand.name}", Industry: "${opts.brand.industry || 'General'}", Target Audience: "${opts.brand.audience || 'General'}". Please incorporate this brand identity naturally into your output.]\n`;
   return "";
