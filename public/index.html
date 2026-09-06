@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IdeaForge-AI v9.0 | Installable App</title>
-  
-  <!--  Phase 6: PWA Meta Tags -->
+  <title>IdeaForge-AI v9.1 | Fast & Stable</title>
   <meta name="theme-color" content="#6366f1">
   <meta name="description" content="One AI Workspace for Everything.">
   <link rel="manifest" href="/manifest.json">
@@ -13,11 +11,11 @@
 
   <style>
     :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
-    /* 🆕 Phase 6: Light Mode Variables */
     body.light-mode { --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
     body.light-mode input, body.light-mode select, body.light-mode textarea { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
     body.light-mode .chat-ai { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
     body.light-mode .chat-container { background: #f1f5f9; border-color: #cbd5e1; }
+    body.light-mode .autopilot-section, body.light-mode .goal-section, body.light-mode .money-section, body.light-mode .improve-section, body.light-mode .video-section, body.light-mode .workflow-section, body.light-mode .roast-section, body.light-mode .email-section { background: #f1f5f9; }
     
     * { box-sizing: border-box; }
     body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 15px; line-height: 1.6; max-width: 1200px; margin: 0 auto; transition: background-color 0.3s, color 0.3s; }
@@ -72,7 +70,6 @@
     .remix-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; }
     .remix-btn:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
     .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section, .roast-section, .email-section { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
-    body.light-mode .autopilot-section, body.light-mode .goal-section, body.light-mode .money-section, body.light-mode .improve-section, body.light-mode .video-section, body.light-mode .workflow-section, body.light-mode .roast-section, body.light-mode .email-section { background: #f1f5f9; }
     .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4, .roast-section h4, .email-section h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
     .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p, .roast-section p, .email-section p { margin: 0; font-size: 13px; line-height: 1.5; }
     .poster-preview, .card-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; color: white; }
@@ -87,14 +84,19 @@
     .chat-ai { align-self: flex-start; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
     .chat-input-area { display: flex; gap: 10px; }
     .chat-input-area textarea { flex: 1; margin-bottom: 0; resize: none; height: 50px; }
-    
-    /* 🆕 Phase 6: Projects Grid */
     .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
     .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.2s; position: relative; }
     .project-card:hover { border-color: var(--primary); transform: translateY(-3px); }
     .project-card h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 15px; }
     .project-card p { margin: 0; font-size: 12px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .project-card .delete-btn { position: absolute; top: 10px; right: 10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; }
+    
+    /* 🚀 CLS Fix: Reserve space for history section */
+    #ideaHistorySection {
+      margin-top: 30px;
+      min-height: 100px; /* Prevents layout shift */
+      transition: all 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -119,7 +121,7 @@
     <button class="usage-upgrade-btn" onclick="document.getElementById('proModal').style.display='flex'">Upgrade to Pro</button>
   </div>
   <div id="adContainer" class="ad-banner">
-    <p style="margin:0 0 10px 0;"> Advertisement Space</p>
+    <p style="margin:0 0 10px 0;">Advertisement Space</p>
     <button onclick="document.getElementById('proModal').style.display='flex'">Upgrade to Pro</button>
   </div>
 
@@ -135,28 +137,27 @@
   <div class="hubCategories">
     <div class="hubChip" data-tool="chat"><span class="chip-icon">💬</span><span>AI Chat</span></div>
     <div class="hubChip" data-tool="card"><span class="chip-icon">📸</span><span>Quote Card</span></div>
-    <div class="hubChip" data-tool="email"><span class="chip-icon">✉️</span><span>Cold Email</span></div>
-    <div class="hubChip" data-tool="assistant"><span class="chip-icon">🤖</span><span>Assistant</span></div>
+    <div class="hubChip" data-tool="email"><span class="chip-icon">️</span><span>Cold Email</span></div>
+    <div class="hubChip" data-tool="assistant"><span class="chip-icon"></span><span>Assistant</span></div>
     <div class="hubChip" data-tool="roast"><span class="chip-icon">🦈</span><span>Roast Idea</span></div>
-    <div class="hubChip" data-tool="autopilot"><span class="chip-icon">🚀</span><span>Auto-Pilot</span></div>
-    <div class="hubChip" data-tool="goalplan"><span class="chip-icon">🎯</span><span>Goal Plan</span></div>
+    <div class="hubChip" data-tool="autopilot"><span class="chip-icon"></span><span>Auto-Pilot</span></div>
+    <div class="hubChip" data-tool="goalplan"><span class="chip-icon"></span><span>Goal Plan</span></div>
     <div class="hubChip" data-tool="moneycalc"><span class="chip-icon">💰</span><span>Money Calc</span></div>
     <div class="hubChip" data-tool="improveidea"><span class="chip-icon">💡</span><span>Improve Idea</span></div>
     <div class="hubChip" data-tool="poster"><span class="chip-icon">🖼️</span><span>Poster</span></div>
-    <div class="hubChip" data-tool="video"><span class="chip-icon">🎬</span><span>Video Script</span></div>
-    <div class="hubChip" data-tool="workflow"><span class="chip-icon">⚙️</span><span>Workflow</span></div>
-    <div class="hubChip" data-tool="writing"><span class="chip-icon">️</span><span>Writing</span></div>
-    <div class="hubChip" data-tool="translate"><span class="chip-icon"></span><span>Translate</span></div>
+    <div class="hubChip" data-tool="video"><span class="chip-icon"></span><span>Video Script</span></div>
+    <div class="hubChip" data-tool="workflow"><span class="chip-icon">️</span><span>Workflow</span></div>
+    <div class="hubChip" data-tool="writing"><span class="chip-icon">✍️</span><span>Writing</span></div>
+    <div class="hubChip" data-tool="translate"><span class="chip-icon">🌐</span><span>Translate</span></div>
     <div class="hubChip" data-tool="calculator"><span class="chip-icon">🧮</span><span>Calculator</span></div>
     <div class="hubChip" data-tool="student"><span class="chip-icon">📚</span><span>Student</span></div>
     <div class="hubChip" data-tool="code"><span class="chip-icon">💻</span><span>Code</span></div>
-    <div class="hubChip" data-tool="logo"><span class="chip-icon">🎨</span><span>Logo</span></div>
-    <div class="hubChip" data-tool="social"><span class="chip-icon"></span><span>Social</span></div>
-    <div class="hubChip" data-tool="socialpack"><span class="chip-icon"></span><span>Social Pack</span></div>
-    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">️</span><span>Real Image</span></div>
+    <div class="hubChip" data-tool="logo"><span class="chip-icon"></span><span>Logo</span></div>
+    <div class="hubChip" data-tool="social"><span class="chip-icon">📱</span><span>Social</span></div>
+    <div class="hubChip" data-tool="socialpack"><span class="chip-icon">📦</span><span>Social Pack</span></div>
+    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">🖼️</span><span>Real Image</span></div>
     <div class="hubChip" data-tool="document"><span class="chip-icon">📄</span><span>Doc AI</span></div>
     <div class="hubChip" data-tool="image"><span class="chip-icon">📸</span><span>Analyze Img</span></div>
-    <!-- 🆕 Phase 6: My Projects Chip -->
     <div class="hubChip" data-tool="projects" data-scroll="projectsSection"><span class="chip-icon"></span><span>My Projects</span></div>
   </div>
 
@@ -230,7 +231,7 @@
     <div class="tool-options-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
       <label class="checkbox-label">
         <input type="checkbox" id="bilingualToggle" style="width: auto; margin: 0;">
-        🗣️ Bilingual Output (English + Hindi)
+        ️ Bilingual Output (English + Hindi)
       </label>
     </div>
 
@@ -290,7 +291,6 @@
       <button id="remixBtn" class="btn-secondary">✨ Remix</button>
       <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);">🚀 Make It Better</button>
       <button id="toolSaveBtn">⭐ Save</button>
-      <!-- 🆕 Phase 6: Save to Projects -->
       <button id="saveToProjectBtn" class="btn-brand" style="padding: 10px 15px;">📂 Save to Projects</button>
       <button id="toolShareBtn">📤 Share</button>
     </div>
@@ -300,17 +300,17 @@
     <div class="modal-content">
       <h2 style="color: var(--primary);">✨ Remix Your Content</h2>
       <div class="remix-options">
-        <button class="remix-btn" data-style="shorter">⚡ Shorter</button>
+        <button class="remix-btn" data-style="shorter"> Shorter</button>
         <button class="remix-btn" data-style="professional">💼 Professional</button>
         <button class="remix-btn" data-style="funny">😄 Funny</button>
-        <button class="remix-btn" data-style="viral"> Viral</button>
-        <button class="remix-btn" data-style="hindi">🇳 Hindi</button>
-        <button class="remix-btn" data-style="english">🇧 English</button>
+        <button class="remix-btn" data-style="viral">🔥 Viral</button>
+        <button class="remix-btn" data-style="hindi">🇮🇳 Hindi</button>
+        <button class="remix-btn" data-style="english">🇬🇧 English</button>
         <button class="remix-btn" data-style="simple">📖 Simple</button>
         <button class="remix-btn" data-style="emotional">❤️ Emotional</button>
         <button class="remix-btn" data-style="seo">🔍 SEO</button>
         <button class="remix-btn" data-style="instagram">📸 Instagram</button>
-        <button class="remix-btn" data-style="youtube">🎬 YouTube</button>
+        <button class="remix-btn" data-style="youtube"> YouTube</button>
       </div>
       <br><button id="closeRemixModal" class="btn-secondary">Cancel</button>
     </div>
@@ -318,7 +318,7 @@
 
   <div id="brandModal">
     <div class="modal-content">
-      <h2 style="color: var(--primary);"> My Brand Profile</h2>
+      <h2 style="color: var(--primary);">👤 My Brand Profile</h2>
       <p style="color: var(--text-muted); font-size: 14px;">Set your brand details once. AI will use them for all tools!</p>
       <input type="text" id="brandNameInput" placeholder="Brand Name (e.g., Sharma Coffee)">
       <input type="text" id="brandIndustryInput" placeholder="Industry (e.g., Food & Beverage)">
@@ -351,16 +351,15 @@
   </div>
 
   <div id="documentWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 style="margin-top:0;"> Document AI</h2>
+    <h2 style="margin-top:0;">📄 Document AI</h2>
     <div id="docUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
       <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText">📤 Click to upload document</p>
     </div>
     <textarea id="docTextInput" rows="4" placeholder="Or paste your text here..."></textarea>
-    <button id="docAnalyzeBtn">🔍 Analyze Document</button>
+    <button id="docAnalyzeBtn"> Analyze Document</button>
     <div id="docResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
   </div>
 
-  <!-- 🆕 Phase 6: My Projects Section -->
   <div id="projectsSection" class="hubPanel" style="display:none;">
     <h2>📂 My Projects Workspace</h2>
     <p style="color: var(--text-muted); font-size: 14px;">All your saved reports, emails, and ideas in one place.</p>
@@ -368,7 +367,12 @@
   </div>
 
   <div id="toolFavoritesSection" style="display:none; margin-top: 30px;"><h3>⭐ Saved Favorites</h3><div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
-  <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3>🕒 Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
+  
+  <!-- 🚀 CLS Fix: Removed display:none, added min-height in CSS -->
+  <div id="ideaHistorySection">
+    <h3>🕰️ Past Ideas</h3>
+    <div id="ideaHistoryRow" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px;"></div>
+  </div>
 
   <div class="hubPanel" id="ideaSection">
     <h2>💡 Startup Idea Analyzer</h2>
@@ -395,13 +399,11 @@
     </div>
     <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
       <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
-      <button id="generateLaunchPlanBtn"> Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
+      <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
     </div>
     <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn"> PDF</button><button id="copyLaunchPlanBtn">📋 Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div></div>
     <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn">📄 PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
   </div>
-
-  <div id="ideaHistorySection" style="display:none; margin-top: 30px;"><h3>🕰️ Past Ideas</h3><div id="ideaHistoryRow" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
   <div class="infoGrid" id="infoGrid">
     <div class="infoCard"><h3>🔥 Popular Tools</h3><ul><li>💬 AI Chat (Remembers Context)</li><li>📸 Quote Card Maker</li><li>✉️ Cold Email Templates</li><li>📂 My Projects Workspace</li></ul></div>
@@ -418,8 +420,9 @@
   </div>
   <div id="toastContainer"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="app.js"></script>
+  <!-- 🚀 LCP/INP Fix: Added 'defer' to all scripts -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="app.js"></script>
 </body>
 </html>
