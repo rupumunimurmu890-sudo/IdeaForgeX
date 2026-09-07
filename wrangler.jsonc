@@ -3,6 +3,7 @@
   "name": "universal-helper",
   "main": "worker.js",
   "compatibility_date": "2026-08-11",
+
   "assets": {
     "directory": "public",
     "binding": "ASSETS",
@@ -10,15 +11,18 @@
       "/api/*"
     ]
   },
+
   "ai": {
     "binding": "AI"
   },
+
   "kv_namespaces": [
     {
       "binding": "SESSIONS_KV",
       "id": "ee7bkaa2753f43e0ac1f80be4560d7be"
     }
   ],
+
   "durable_objects": {
     "bindings": [
       {
@@ -27,6 +31,7 @@
       }
     ]
   },
+
   "migrations": [
     {
       "tag": "v1",
@@ -35,6 +40,7 @@
       ]
     }
   ],
+
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -51,4 +57,3 @@
     }
   }
 }
-
