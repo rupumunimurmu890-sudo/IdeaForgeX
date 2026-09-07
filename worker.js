@@ -1,5 +1,5 @@
 // ========================================
-// IdeaForgeX Worker v12.0
+// IdeaForgeX Worker v12.1
 // Secure AI Multi-Tool + Agent + Vision
 // Sessions KV + SQLite Durable Object Quota
 // ========================================
@@ -11,7 +11,7 @@ import { DurableObject } from "cloudflare:workers";
 // ========================================
 
 const APP_NAME = "IdeaForgeX";
-const VERSION = "12.0";
+const VERSION = "12.1";
 
 const AI_MODEL =
   "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -26,7 +26,7 @@ const FREE_DAILY_LIMIT = 15;
 const PRO_DAILY_LIMIT = 1000;
 
 const SESSION_TTL =
-  60 * 60 * 24 * 30; // 30 days
+  60 * 60 * 24 * 30;
 
 const MAX_TEXT_LENGTH = 20000;
 const MAX_REQUEST_SIZE = 12 * 1024 * 1024;
@@ -110,6 +110,35 @@ function cleanString(
 
 
 // ========================================
+// SAFE NUMBER
+// ========================================
+
+function safeInteger(
+  value,
+  fallback = 0,
+  min = 0,
+  max = Number.MAX_SAFE_INTEGER
+) {
+  const number =
+    Number(value);
+
+  if (
+    !Number.isFinite(number)
+  ) {
+    return fallback;
+  }
+
+  return Math.min(
+    max,
+    Math.max(
+      min,
+      Math.floor(number)
+    )
+  );
+}
+
+
+// ========================================
 // DATE
 // ========================================
 
@@ -153,7 +182,7 @@ function langLine(lang) {
 CRITICAL LANGUAGE RULE:
 
 Respond entirely in:
-${lang}
+${cleanString(lang, 100)}
 
 Do not switch languages.
 Do not change script unnecessarily.
@@ -295,12 +324,10 @@ social_posts:
 Exactly 3 social captions.
 
 video_prompt:
-Detailed 30-second promotional video
-concept/script.
+Detailed 30-second promotional video concept/script.
 
 marketing_plan:
-Practical 30-day launch plan
-divided into weeks.
+Practical 30-day launch plan divided into weeks.
 
 Do not make unrealistic guarantees.
 `;
@@ -311,9 +338,7 @@ Do not make unrealistic guarantees.
 // AGENT JSON PARSER
 // ========================================
 
-function parseAgentResponse(
-  rawText
-) {
+function parseAgentResponse(rawText) {
   try {
     if (!rawText) {
       return null;
@@ -356,22 +381,31 @@ function parseAgentResponse(
 
     if (
       !parsed ||
-      typeof parsed !==
-        "object"
+      typeof parsed !== "object"
     ) {
       return null;
     }
 
     if (
-      !parsed.brand_name
+      !cleanString(
+        parsed.brand_name,
+        300
+      )
     ) {
       return null;
+    }
+
+    if (
+      !Array.isArray(
+        parsed.social_posts
+      )
+    ) {
+      parsed.social_posts = [];
     }
 
     return parsed;
 
   } catch (error) {
-
     console.error(
       "Agent JSON parse error:",
       error
@@ -429,8 +463,7 @@ How the business can make money.
 Market size, trends and opportunity.
 
 ###COMPETITOR_ANALYSIS###
-3-4 likely competitors
-and differentiation.
+3-4 likely competitors and differentiation.
 
 ###SWOT_STRENGTHS###
 3-4 points.
@@ -476,7 +509,10 @@ function buildToolPrompt(
   const language =
     opts.language &&
     opts.language !== "auto"
-      ? `Respond entirely in ${opts.language}.`
+      ? `Respond entirely in ${cleanString(
+          opts.language,
+          100
+        )}.`
       : "Respond in the user's language.";
 
   const brandContext =
@@ -683,8 +719,7 @@ ${request}
     tool === "auto"
   ) {
     return `
-You are IdeaForgeX
-smart router.
+You are IdeaForgeX smart router.
 
 ${language}
 
@@ -746,9 +781,7 @@ function parseSections(
   }
 
   const sections = {};
-
-  let anyMarkerFound =
-    false;
+  let anyMarkerFound = false;
 
   for (
     let i = 0;
@@ -762,9 +795,7 @@ function parseSections(
       `###${key}###`;
 
     const startIdx =
-      rawText.indexOf(
-        marker
-      );
+      rawText.indexOf(marker);
 
     if (
       startIdx === -1
@@ -773,8 +804,7 @@ function parseSections(
       continue;
     }
 
-    anyMarkerFound =
-      true;
+    anyMarkerFound = true;
 
     const contentStart =
       startIdx +
@@ -846,7 +876,6 @@ function extractScores(
 ) {
   const getScore =
     (key) => {
-
       const regex =
         new RegExp(
           key +
@@ -912,8 +941,7 @@ function extractScores(
         score.difficulty
       ].filter(
         (value) =>
-          typeof value ===
-          "number"
+          typeof value === "number"
       );
 
     if (
@@ -958,26 +986,43 @@ async function runTextAI(
         messages: [
           {
             role: "user",
-            content:
-              prompt
+            content: prompt
           }
         ],
 
         max_tokens:
           Math.min(
-            maxTokens,
+            safeInteger(
+              maxTokens,
+              2048,
+              1,
+              4000
+            ),
             4000
           ),
 
-        temperature
+        temperature:
+          Math.max(
+            0,
+            Math.min(
+              1,
+              Number(
+                temperature
+              ) || 0.6
+            )
+          )
       }
     );
 
-  return (
+  const response =
     result?.response ||
     result?.output ||
-    ""
-  ).trim();
+    "";
+
+  return cleanString(
+    response,
+    MAX_TEXT_LENGTH
+  );
 }
 
 
@@ -1032,9 +1077,13 @@ function getCookie(
     if (
       key === name
     ) {
-      return decodeURIComponent(
-        value
-      );
+      try {
+        return decodeURIComponent(
+          value
+        );
+      } catch {
+        return null;
+      }
     }
   }
 
@@ -1060,9 +1109,19 @@ function getBearerToken(
     return null;
   }
 
-  return header
-    .slice(7)
-    .trim() || null;
+  const token =
+    header
+      .slice(7)
+      .trim();
+
+  if (
+    !token ||
+    token.length > 200
+  ) {
+    return null;
+  }
+
+  return token;
 }
 
 
@@ -1116,7 +1175,6 @@ async function getSession(
     return session;
 
   } catch (error) {
-
     console.error(
       "Session read error:",
       error
@@ -1184,6 +1242,15 @@ async function saveSession(
   env,
   session
 ) {
+  if (
+    !env.SESSIONS_KV ||
+    !session?.id
+  ) {
+    throw new Error(
+      "Invalid session."
+    );
+  }
+
   await env.SESSIONS_KV.put(
     `session:${session.id}`,
     JSON.stringify(
@@ -1231,6 +1298,7 @@ async function getOrCreateSession(
       return {
         session:
           existing,
+
         isNew:
           false
       };
@@ -1244,6 +1312,7 @@ async function getOrCreateSession(
 
   return {
     session,
+
     isNew:
       true
   };
@@ -1293,7 +1362,7 @@ function attachSessionCookie(
 
 
 // ========================================
-// QUOTA
+// QUOTA CHECK
 // ========================================
 
 async function checkQuota(
@@ -1303,6 +1372,15 @@ async function checkQuota(
   if (!env.QUOTA_DO) {
     throw new Error(
       "QUOTA_DO binding missing. Add the QuotaDO Durable Object binding in Cloudflare."
+    );
+  }
+
+  if (
+    !session ||
+    !session.id
+  ) {
+    throw new Error(
+      "Invalid session."
     );
   }
 
@@ -1331,6 +1409,40 @@ async function checkQuota(
     ...result,
     plan
   };
+}
+
+
+// ========================================
+// QUOTA ROLLBACK
+// ========================================
+
+async function rollbackQuota(
+  env,
+  session
+) {
+  if (
+    !env.QUOTA_DO ||
+    !session?.id
+  ) {
+    return;
+  }
+
+  try {
+    const stub =
+      env.QUOTA_DO.getByName(
+        session.id
+      );
+
+    await stub.rollback(
+      today()
+    );
+
+  } catch (error) {
+    console.error(
+      "Quota rollback error:",
+      error
+    );
+  }
 }
 
 
@@ -1385,8 +1497,7 @@ async function generateReport(
           "DAILY_LIMIT_REACHED",
 
         message:
-          session.plan ===
-          "pro"
+          session.plan === "pro"
             ? "Pro daily limit reached."
             : "Free limit khatam! Pro upgrade karein.",
 
@@ -1458,13 +1569,16 @@ async function generateReport(
         );
 
       if (
-        parsed
+        parsed &&
+        (
+          parsed.anyMarkerFound ||
+          lastRaw.length > 20
+        )
       ) {
         break;
       }
 
     } catch (error) {
-
       console.error(
         "Report attempt failed:",
         error
@@ -1473,6 +1587,11 @@ async function generateReport(
   }
 
   if (!parsed) {
+    await rollbackQuota(
+      env,
+      session
+    );
+
     return jsonResponse(
       {
         success:
@@ -1651,14 +1770,12 @@ async function aiTool(
         );
 
       if (
-        resultText.length >
-        3
+        resultText.length > 3
       ) {
         break;
       }
 
     } catch (error) {
-
       console.error(
         "AI tool attempt failed:",
         error
@@ -1667,6 +1784,11 @@ async function aiTool(
   }
 
   if (!resultText) {
+    await rollbackQuota(
+      env,
+      session
+    );
+
     return jsonResponse(
       {
         success:
@@ -1705,8 +1827,7 @@ async function aiTool(
       resultText =
         resultText
           .slice(
-            routeMatch[0]
-              .length
+            routeMatch[0].length
           )
           .trim();
     }
@@ -1790,7 +1911,16 @@ async function agentGenerate(
           "DAILY_LIMIT_REACHED",
 
         message:
-          "Daily AI limit reached."
+          "Daily AI limit reached.",
+
+        usage:
+          quota.usage,
+
+        limit:
+          quota.limit,
+
+        remaining:
+          quota.remaining
       },
 
       429,
@@ -1856,13 +1986,17 @@ async function agentGenerate(
       }
 
     } catch (error) {
-
       console.error(
         "Agent attempt failed:",
         error
       );
     }
   }
+
+  await rollbackQuota(
+    env,
+    session
+  );
 
   return jsonResponse(
     {
@@ -1894,7 +2028,8 @@ function cleanImageBase64(
   }
 
   let base64 =
-    String(value);
+    String(value)
+      .trim();
 
   if (
     base64.includes(",")
@@ -1944,11 +2079,32 @@ async function vision(
   session,
   body
 ) {
-  const image =
-    cleanImageBase64(
-      body.image ||
-        body.imageBase64
+  let image;
+
+  try {
+    image =
+      cleanImageBase64(
+        body.image ||
+          body.imageBase64
+      );
+  } catch (error) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "INVALID_IMAGE",
+
+        message:
+          error?.message ||
+          "Invalid image."
+      },
+
+      400,
+      request
     );
+  }
 
   if (!image) {
     return jsonResponse(
@@ -1983,7 +2139,16 @@ async function vision(
           false,
 
         error:
-          "DAILY_LIMIT_REACHED"
+          "DAILY_LIMIT_REACHED",
+
+        usage:
+          quota.usage,
+
+        limit:
+          quota.limit,
+
+        remaining:
+          quota.remaining
       },
 
       429,
@@ -2006,75 +2171,122 @@ async function vision(
       5000
     );
 
-  const result =
-    await env.AI.run(
-      VISION_MODEL,
-      {
-        messages: [
-          {
-            role:
-              "system",
+  try {
+    if (!env.AI) {
+      throw new Error(
+        "Workers AI binding 'AI' missing."
+      );
+    }
 
-            content:
-              `You are an expert image analysis assistant. Respond in ${language}. Clearly separate observations from uncertain guesses.`
-          },
+    const result =
+      await env.AI.run(
+        VISION_MODEL,
+        {
+          messages: [
+            {
+              role:
+                "system",
 
-          {
-            role:
-              "user",
+              content:
+                `You are an expert image analysis assistant. Respond in ${language}. Clearly separate observations from uncertain guesses.`
+            },
 
-            content: [
-              {
-                type:
-                  "text",
+            {
+              role:
+                "user",
 
-                text:
-                  question
-              },
+              content: [
+                {
+                  type:
+                    "text",
 
-              {
-                type:
-                  "image_url",
+                  text:
+                    question
+                },
 
-                image_url: {
-                  url:
-                    `data:image/jpeg;base64,${image}`
+                {
+                  type:
+                    "image_url",
+
+                  image_url: {
+                    url:
+                      `data:image/jpeg;base64,${image}`
+                  }
                 }
-              }
-            ]
-          }
-        ],
+              ]
+            }
+          ],
 
-        max_tokens:
-          1800
-      }
+          max_tokens:
+            1800
+        }
+      );
+
+    const resultText =
+      cleanString(
+        result?.response ||
+          result?.output ||
+          "",
+        MAX_TEXT_LENGTH
+      );
+
+    if (!resultText) {
+      throw new Error(
+        "Vision model returned an empty result."
+      );
+    }
+
+    return jsonResponse(
+      {
+        success:
+          true,
+
+        result:
+          resultText,
+
+        usage: {
+          current:
+            quota.usage,
+
+          limit:
+            quota.limit,
+
+          remaining:
+            quota.remaining
+        }
+      },
+
+      200,
+      request
     );
 
-  return jsonResponse(
-    {
-      success:
-        true,
+  } catch (error) {
+    console.error(
+      "Vision error:",
+      error
+    );
 
-      result:
-        result?.response ||
-        result?.output ||
-        "",
+    await rollbackQuota(
+      env,
+      session
+    );
 
-      usage: {
-        current:
-          quota.usage,
+    return jsonResponse(
+      {
+        success:
+          false,
 
-        limit:
-          quota.limit,
+        error:
+          "VISION_FAILED",
 
-        remaining:
-          quota.remaining
-      }
-    },
+        message:
+          "Image analysis failed. Please try again."
+      },
 
-    200,
-    request
-  );
+      500,
+      request
+    );
+  }
 }
 
 
@@ -2124,7 +2336,16 @@ async function generateImage(
           false,
 
         error:
-          "DAILY_LIMIT_REACHED"
+          "DAILY_LIMIT_REACHED",
+
+        usage:
+          quota.usage,
+
+        limit:
+          quota.limit,
+
+        remaining:
+          quota.remaining
       },
 
       429,
@@ -2133,66 +2354,96 @@ async function generateImage(
   }
 
   const steps =
-    Math.min(
-      Math.max(
-        Number(
-          body.steps
-        ) || 4,
-
-        1
-      ),
-
+    safeInteger(
+      body.steps,
+      4,
+      1,
       8
     );
 
-  const result =
-    await env.AI.run(
-      IMAGE_MODEL,
+  try {
+    if (!env.AI) {
+      throw new Error(
+        "Workers AI binding 'AI' missing."
+      );
+    }
+
+    const result =
+      await env.AI.run(
+        IMAGE_MODEL,
+        {
+          prompt,
+
+          steps,
+
+          seed:
+            Math.floor(
+              Math.random() *
+                1000000000
+            )
+        }
+      );
+
+    if (
+      !result ||
+      !result.image
+    ) {
+      throw new Error(
+        "Image generation failed."
+      );
+    }
+
+    return jsonResponse(
       {
-        prompt,
+        success:
+          true,
 
-        steps,
+        image:
+          `data:image/jpeg;base64,${result.image}`,
 
-        seed:
-          Math.floor(
-            Math.random() *
-              1000000000
-          )
-      }
+        usage: {
+          current:
+            quota.usage,
+
+          limit:
+            quota.limit,
+
+          remaining:
+            quota.remaining
+        }
+      },
+
+      200,
+      request
     );
 
-  if (
-    !result ||
-    !result.image
-  ) {
-    throw new Error(
-      "Image generation failed."
+  } catch (error) {
+    console.error(
+      "Image generation error:",
+      error
+    );
+
+    await rollbackQuota(
+      env,
+      session
+    );
+
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "IMAGE_GENERATION_FAILED",
+
+        message:
+          "Image generate nahi hui. Please try again."
+      },
+
+      500,
+      request
     );
   }
-
-  return jsonResponse(
-    {
-      success:
-        true,
-
-      image:
-        `data:image/jpeg;base64,${result.image}`,
-
-      usage: {
-        current:
-          quota.usage,
-
-        limit:
-          quota.limit,
-
-        remaining:
-          quota.remaining
-      }
-    },
-
-    200,
-    request
-  );
 }
 
 
@@ -2434,7 +2685,10 @@ async function handleAPI(
     }
 
 
+    // ------------------------------------
     // Request size check
+    // ------------------------------------
+
     const contentLength =
       Number(
         request.headers.get(
@@ -2443,8 +2697,11 @@ async function handleAPI(
       );
 
     if (
+      Number.isFinite(
+        contentLength
+      ) &&
       contentLength >
-      MAX_REQUEST_SIZE
+        MAX_REQUEST_SIZE
     ) {
       return jsonResponse(
         {
@@ -2464,7 +2721,10 @@ async function handleAPI(
     }
 
 
-    // Get/create secure session
+    // ------------------------------------
+    // Session
+    // ------------------------------------
+
     const sessionResult =
       await getOrCreateSession(
         request,
@@ -2475,7 +2735,10 @@ async function handleAPI(
       sessionResult.session;
 
 
-    // Parse JSON
+    // ------------------------------------
+    // JSON BODY
+    // ------------------------------------
+
     let body;
 
     try {
@@ -2489,7 +2752,32 @@ async function handleAPI(
             false,
 
           error:
-            "INVALID_JSON"
+            "INVALID_JSON",
+
+          message:
+            "Invalid JSON request."
+        },
+
+        400,
+        request
+      );
+    }
+
+    if (
+      !body ||
+      typeof body !== "object" ||
+      Array.isArray(body)
+    ) {
+      return jsonResponse(
+        {
+          success:
+            false,
+
+          error:
+            "INVALID_BODY",
+
+          message:
+            "Request body must be a JSON object."
         },
 
         400,
@@ -2506,13 +2794,39 @@ async function handleAPI(
       path ===
       "/api/generate-report"
     ) {
-      let response =
-        await generateReport(
-          request,
-          env,
-          session,
-          body
+      let response;
+
+      try {
+        response =
+          await generateReport(
+            request,
+            env,
+            session,
+            body
+          );
+      } catch (error) {
+        console.error(
+          "Report handler error:",
+          error
         );
+
+        response =
+          jsonResponse(
+            {
+              success:
+                false,
+
+              error:
+                "REPORT_SERVER_ERROR",
+
+              message:
+                "Report generation failed."
+            },
+
+            500,
+            request
+          );
+      }
 
       if (
         sessionResult.isNew
@@ -2536,13 +2850,39 @@ async function handleAPI(
       path ===
       "/api/ai-tool"
     ) {
-      let response =
-        await aiTool(
-          request,
-          env,
-          session,
-          body
+      let response;
+
+      try {
+        response =
+          await aiTool(
+            request,
+            env,
+            session,
+            body
+          );
+      } catch (error) {
+        console.error(
+          "AI tool handler error:",
+          error
         );
+
+        response =
+          jsonResponse(
+            {
+              success:
+                false,
+
+              error:
+                "AI_TOOL_SERVER_ERROR",
+
+              message:
+                "AI tool failed."
+            },
+
+            500,
+            request
+          );
+      }
 
       if (
         sessionResult.isNew
@@ -2566,13 +2906,44 @@ async function handleAPI(
       path ===
       "/api/agent-generate"
     ) {
-      let response =
-        await agentGenerate(
-          request,
-          env,
-          session,
-          body
+      let response;
+
+      try {
+        response =
+          await agentGenerate(
+            request,
+            env,
+            session,
+            body
+          );
+      } catch (error) {
+        console.error(
+          "Agent handler error:",
+          error
         );
+
+        await rollbackQuota(
+          env,
+          session
+        );
+
+        response =
+          jsonResponse(
+            {
+              success:
+                false,
+
+              error:
+                "AGENT_SERVER_ERROR",
+
+              message:
+                "Agent generation failed."
+            },
+
+            500,
+            request
+          );
+      }
 
       if (
         sessionResult.isNew
@@ -2596,13 +2967,44 @@ async function handleAPI(
       path ===
       "/api/vision"
     ) {
-      let response =
-        await vision(
-          request,
-          env,
-          session,
-          body
+      let response;
+
+      try {
+        response =
+          await vision(
+            request,
+            env,
+            session,
+            body
+          );
+      } catch (error) {
+        console.error(
+          "Vision handler error:",
+          error
         );
+
+        await rollbackQuota(
+          env,
+          session
+        );
+
+        response =
+          jsonResponse(
+            {
+              success:
+                false,
+
+              error:
+                "VISION_SERVER_ERROR",
+
+              message:
+                "Image analysis failed."
+            },
+
+            500,
+            request
+          );
+      }
 
       if (
         sessionResult.isNew
@@ -2626,13 +3028,44 @@ async function handleAPI(
       path ===
       "/api/generate-image"
     ) {
-      let response =
-        await generateImage(
-          request,
-          env,
-          session,
-          body
+      let response;
+
+      try {
+        response =
+          await generateImage(
+            request,
+            env,
+            session,
+            body
+          );
+      } catch (error) {
+        console.error(
+          "Image handler error:",
+          error
         );
+
+        await rollbackQuota(
+          env,
+          session
+        );
+
+        response =
+          jsonResponse(
+            {
+              success:
+                false,
+
+              error:
+                "IMAGE_SERVER_ERROR",
+
+              message:
+                "Image generation failed."
+            },
+
+            500,
+            request
+          );
+      }
 
       if (
         sessionResult.isNew
@@ -2684,7 +3117,6 @@ export default {
     env
   ) {
     try {
-
       const apiResponse =
         await handleAPI(
           request,
@@ -2698,7 +3130,10 @@ export default {
       }
 
 
-      // Serve frontend
+      // ----------------------------------
+      // FRONTEND ASSETS
+      // ----------------------------------
+
       if (
         env.ASSETS
       ) {
@@ -2707,6 +3142,10 @@ export default {
         );
       }
 
+
+      // ----------------------------------
+      // FALLBACK
+      // ----------------------------------
 
       return new Response(
         `${APP_NAME} v${VERSION} Running 🚀`,
@@ -2722,7 +3161,6 @@ export default {
       );
 
     } catch (error) {
-
       console.error(
         "Worker error:",
         error
@@ -2737,7 +3175,6 @@ export default {
             "INTERNAL_SERVER_ERROR",
 
           message:
-            error?.message ||
             "Server error. Please try again."
         },
 
@@ -2772,8 +3209,10 @@ export class QuotaDO
     this.env =
       env;
 
-
+    // ------------------------------------
     // Create quota table
+    // ------------------------------------
+
     this.ctx.storage.sql.exec(`
       CREATE TABLE IF NOT EXISTS daily_usage (
         date TEXT PRIMARY KEY,
@@ -2797,17 +3236,28 @@ export class QuotaDO
         20
       );
 
+    if (!safeDate) {
+      throw new Error(
+        "Invalid quota date."
+      );
+    }
+
     const safeLimit =
       Math.max(
         1,
-        Number(
-          limit
-        ) ||
-          FREE_DAILY_LIMIT
+        safeInteger(
+          limit,
+          FREE_DAILY_LIMIT,
+          1,
+          PRO_DAILY_LIMIT
+        )
       );
 
 
+    // ------------------------------------
     // Read current usage
+    // ------------------------------------
+
     const rows =
       this.ctx.storage.sql
         .exec(
@@ -2820,7 +3270,6 @@ export class QuotaDO
         )
         .toArray();
 
-
     let usage =
       rows.length
         ? Number(
@@ -2828,8 +3277,17 @@ export class QuotaDO
           )
         : 0;
 
+    usage =
+      Math.max(
+        0,
+        usage
+      );
 
+
+    // ------------------------------------
     // Limit reached
+    // ------------------------------------
+
     if (
       usage >=
       safeLimit
@@ -2849,7 +3307,10 @@ export class QuotaDO
     }
 
 
-    // Increment atomically
+    // ------------------------------------
+    // Increment
+    // ------------------------------------
+
     usage += 1;
 
 
@@ -2868,8 +3329,10 @@ export class QuotaDO
     );
 
 
-    // Optional cleanup:
-    // Keep only recent rows.
+    // ------------------------------------
+    // Cleanup old records
+    // ------------------------------------
+
     this.ctx.storage.sql.exec(
       `
       DELETE FROM daily_usage
@@ -2895,5 +3358,142 @@ export class QuotaDO
             usage
         )
     };
+  }
+
+
+  // --------------------------------------
+  // ROLLBACK QUOTA
+  // --------------------------------------
+
+  async rollback(
+    date
+  ) {
+    const safeDate =
+      cleanString(
+        date,
+        20
+      );
+
+    if (!safeDate) {
+      return {
+        success:
+          false,
+
+        usage:
+          0
+      };
+    }
+
+
+    const rows =
+      this.ctx.storage.sql
+        .exec(
+          `
+          SELECT usage
+          FROM daily_usage
+          WHERE date = ?
+          `,
+          safeDate
+        )
+        .toArray();
+
+    if (
+      !rows.length
+    ) {
+      return {
+        success:
+          true,
+
+        usage:
+          0
+      };
+    }
+
+    let usage =
+      Number(
+        rows[0].usage
+      ) || 0;
+
+    usage =
+      Math.max(
+        0,
+        usage - 1
+      );
+
+
+    if (
+      usage === 0
+    ) {
+      this.ctx.storage.sql.exec(
+        `
+        DELETE FROM daily_usage
+        WHERE date = ?
+        `,
+        safeDate
+      );
+
+    } else {
+      this.ctx.storage.sql.exec(
+        `
+        UPDATE daily_usage
+        SET usage = ?
+        WHERE date = ?
+        `,
+        usage,
+        safeDate
+      );
+    }
+
+
+    return {
+      success:
+        true,
+
+      usage
+    };
+  }
+
+
+  // --------------------------------------
+  // GET USAGE
+  // --------------------------------------
+
+  async getUsage(
+    date
+  ) {
+    const safeDate =
+      cleanString(
+        date,
+        20
+      );
+
+    if (!safeDate) {
+      return 0;
+    }
+
+    const rows =
+      this.ctx.storage.sql
+        .exec(
+          `
+          SELECT usage
+          FROM daily_usage
+          WHERE date = ?
+          `,
+          safeDate
+        )
+        .toArray();
+
+    if (
+      !rows.length
+    ) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Number(
+        rows[0].usage
+      ) || 0
+    );
   }
 }
