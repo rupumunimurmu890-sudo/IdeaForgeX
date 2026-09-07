@@ -1,457 +1,3441 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IdeaForge-AI v10.1 | The AI Agent</title>
-  <meta name="theme-color" content="#6366f1">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4359/4359960.png">
 
-  <!-- ✅ Google Analytics 4 (Correct ID) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4DYR62JJ4B"></script>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>IdeaForge-AI v12.1 | AI Workspace</title>
+
+  <meta
+    name="description"
+    content="IdeaForge-AI — One AI Workspace for ideas, business, writing, coding, images, documents and more."
+  >
+
+  <meta name="theme-color" content="#6366f1">
+
+  <meta property="og:title" content="IdeaForge-AI">
+  <meta
+    property="og:description"
+    content="One AI Workspace for Everything"
+  >
+  <meta property="og:type" content="website">
+
+  <link rel="manifest" href="/manifest.json">
+  <link
+    rel="apple-touch-icon"
+    href="https://cdn-icons-png.flaticon.com/512/4359/4359960.png"
+  >
+
+  <!-- Google Analytics 4 -->
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-4DYR62JJ4B"
+  ></script>
+
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-4DYR62JJ4B');
+
+    function gtag() {
+      window.dataLayer.push(arguments);
+    }
+
+    gtag("js", new Date());
+    gtag("config", "G-4DYR62JJ4B");
   </script>
 
   <style>
-    :root { --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #ec4899; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --error: #ef4444; }
-    body.light-mode { --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
-    body.light-mode input, body.light-mode select, body.light-mode textarea { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
-    body.light-mode .chat-ai { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
-    body.light-mode .chat-container { background: #f1f5f9; border-color: #cbd5e1; }
-    body.light-mode .asset-card { background: #f1f5f9; border-color: #cbd5e1; }
-    
-    * { box-sizing: border-box; }
-    body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 15px; line-height: 1.6; max-width: 1200px; margin: 0 auto; transition: background-color 0.3s, color 0.3s; }
-    .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
-    .header h1 { margin: 0; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; }
-    .tagline { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
-    .reportCard, .pitchSlide, .hubPanel, .toolWorkspace, .imageToolWorkspace, .infoCard { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: background-color 0.3s; }
-    input, select, textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 10px; font-size: 15px; box-sizing: border-box; transition: border-color 0.2s; margin-bottom: 10px; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
-    button { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; margin: 4px; }
-    button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.4); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-secondary { background: #475569; }
-    .btn-brand { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .btn-theme { background: #334155; padding: 8px 12px; font-size: 16px; }
-    .hubCategories { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 20px 0; }
-    .hubChip { background: var(--card-bg); padding: 12px 8px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; font-size: 11px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .hubChip .chip-icon { font-size: 20px; }
-    .hubChip:hover { border-color: var(--primary); transform: scale(1.03); }
-    .hubChip.active { background: var(--primary); color: white; border-color: var(--primary); }
-    pre { background: #000; color: #00ff00; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid var(--border); }
-    .tool-options-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
-    .tool-options-row select, .tool-options-row input { flex: 1; min-width: 140px; margin-bottom: 0; }
-    .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text-main); }
-    .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); color: var(--text-main); padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 1000; max-width: 300px; }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toastError { border-left-color: var(--error); }
-    .toastSuccess { border-left-color: var(--success); }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .scoreBar { background: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
-    .scoreBarFill { background: linear-gradient(90deg, var(--primary), var(--secondary)); height: 100%; transition: width 0.5s ease; }
-    #proBadge { background: gold; color: black; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: none; }
-    .ad-banner { background: linear-gradient(90deg, #ff9800, #ff5722); color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; display: none; }
-    #usageBanner { background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1)); border: 1px solid var(--primary); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: none; font-size: 14px; }
-    #usageBanner.limitReached { border-color: var(--error); background: rgba(239, 68, 68, 0.1); }
-    .usage-text { font-weight: 600; margin-bottom: 8px; }
-    .usage-upgrade-btn { background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 6px 14px; font-size: 12px; margin: 0; }
-    #proModal, #remixModal, #brandModal, #newProjectModal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-    .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; max-width: 450px; width: 100%; text-align: center; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; }
-    #generatedImage { max-width: 100%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-top: 10px; }
-    .historyItem { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 200px; max-width: 250px; text-align: left; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
-    .historyItem:hover { border-color: var(--primary); transform: translateY(-2px); }
-    .historyItemScore { display: block; color: var(--primary); font-weight: bold; font-size: 14px; margin-bottom: 6px; }
-    .historyItemText { font-size: 13px; color: var(--text-main); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .infoGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 20px 0; }
-    .infoCard h3 { margin-top: 0; color: var(--primary); font-size: 16px; }
-    .infoCard ul { margin: 10px 0; padding-left: 20px; }
-    .infoCard li { margin-bottom: 8px; font-size: 14px; }
-    .tip-text { font-style: italic; color: var(--text-muted); font-size: 14px; }
-    .result-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
-    .remix-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 15px; }
-    .remix-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; font-size: 12px; }
-    .remix-btn:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
-    .autopilot-section, .goal-section, .money-section, .improve-section, .video-section, .workflow-section, .roast-section, .email-section, .asset-card { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
-    .autopilot-section h4, .goal-section h4, .money-section h4, .improve-section h4, .video-section h4, .workflow-section h4, .roast-section h4, .email-section h4, .asset-card h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 14px; }
-    .autopilot-section p, .goal-section p, .money-section p, .improve-section p, .video-section p, .workflow-section p, .roast-section p, .email-section p, .asset-card p { margin: 0; font-size: 13px; line-height: 1.5; }
-    .poster-preview, .card-preview { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 20px auto; border-radius: 12px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden; color: white; }
-    .poster-headline, .card-headline { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
-    .poster-subhead, .card-subhead { font-size: 16px; font-weight: 500; margin-bottom: 20px; opacity: 0.9; }
-    .poster-body, .card-body { font-size: 14px; line-height: 1.5; margin-bottom: 20px; opacity: 0.85; }
-    .poster-footer, .card-footer { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; }
-    .shark-score { font-size: 48px; font-weight: bold; color: #f59e0b; text-align: center; margin: 10px 0; }
-    .chat-container { height: 400px; overflow-y: auto; background: #0f172a; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-    .chat-message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
-    .chat-user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-    .chat-ai { align-self: flex-start; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
-    .chat-input-area { display: flex; gap: 10px; }
-    .chat-input-area textarea { flex: 1; margin-bottom: 0; resize: none; height: 50px; }
-    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
-    .project-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.2s; position: relative; }
-    .project-card:hover { border-color: var(--primary); transform: translateY(-3px); }
-    .project-card h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 15px; }
-    .project-card p { margin: 0; font-size: 12px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .project-card .delete-btn { position: absolute; top: 10px; right: 10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; }
-    .agent-input-box { background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-    .agent-input-box textarea { background: transparent; border: none; font-size: 16px; resize: none; }
-    .agent-input-box textarea:focus { box-shadow: none; }
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+
+      --border: #334155;
+
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+
+      --input-bg: #0b1220;
+    }
+
+    body.light-mode {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+
+      --border: #e2e8f0;
+      --input-bg: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+
+      font-family:
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+
+      margin: 0 auto;
+      padding: 15px;
+
+      line-height: 1.6;
+
+      max-width: 1200px;
+
+      transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font-family: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ==============================
+       HEADER
+    ============================== */
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      flex-wrap: wrap;
+      gap: 15px;
+
+      margin-bottom: 10px;
+      padding-bottom: 15px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      margin: 0;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--primary),
+          var(--secondary)
+        );
+
+      -webkit-background-clip: text;
+      background-clip: text;
+
+      -webkit-text-fill-color: transparent;
+
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .tagline {
+      margin: 5px 0 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* ==============================
+       CARDS
+    ============================== */
+
+    .reportCard,
+    .pitchSlide,
+    .hubPanel,
+    .toolWorkspace,
+    .imageToolWorkspace,
+    .infoCard {
+      background: var(--card-bg);
+
+      backdrop-filter: blur(12px);
+
+      border: 1px solid var(--border);
+      border-radius: 16px;
+
+      padding: 20px;
+      margin-bottom: 20px;
+
+      box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+      transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease;
+    }
+
+    /* ==============================
+       FORMS
+    ============================== */
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+
+      background: var(--input-bg);
+
+      border: 1px solid var(--border);
+
+      color: var(--text-main);
+
+      padding: 12px 16px;
+
+      border-radius: 10px;
+
+      font-size: 15px;
+
+      margin-bottom: 10px;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+
+      border-color: var(--primary);
+
+      box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ==============================
+       BUTTONS
+    ============================== */
+
+    button {
+      background:
+        linear-gradient(
+          135deg,
+          var(--primary),
+          var(--secondary)
+        );
+
+      color: white;
+
+      border: none;
+
+      padding: 12px 20px;
+
+      border-radius: 10px;
+
+      font-weight: 600;
+      font-size: 14px;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 8px 15px -3px
+        rgba(99, 102, 241, 0.4);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #475569;
+    }
+
+    .btn-brand {
+      background:
+        linear-gradient(
+          135deg,
+          #f59e0b,
+          #d97706
+        );
+    }
+
+    .btn-theme {
+      background: #334155;
+      padding: 8px 12px;
+      font-size: 16px;
+    }
+
+    /* ==============================
+       HUB
+    ============================== */
+
+    .hubCategories {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(100px, 1fr));
+
+      gap: 10px;
+
+      margin: 20px 0;
+    }
+
+    .hubChip {
+      background: var(--card-bg);
+
+      padding: 12px 8px;
+
+      border-radius: 12px;
+
+      text-align: center;
+
+      cursor: pointer;
+
+      border: 1px solid var(--border);
+
+      transition: all 0.3s ease;
+
+      font-size: 11px;
+      font-weight: 500;
+
+      display: flex;
+      flex-direction: column;
+
+      align-items: center;
+      justify-content: center;
+
+      gap: 5px;
+
+      min-height: 72px;
+
+      user-select: none;
+    }
+
+    .hubChip .chip-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .hubChip:hover {
+      border-color: var(--primary);
+      transform: scale(1.03);
+    }
+
+    .hubChip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ==============================
+       CODE
+    ============================== */
+
+    pre {
+      background: #000;
+
+      color: #00ff00;
+
+      padding: 15px;
+
+      border-radius: 8px;
+
+      overflow-x: auto;
+
+      font-family:
+        "Courier New",
+        monospace;
+
+      font-size: 13px;
+
+      border: 1px solid var(--border);
+
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ==============================
+       OPTIONS
+    ============================== */
+
+    .tool-options-row {
+      display: flex;
+
+      gap: 10px;
+
+      margin-bottom: 15px;
+
+      flex-wrap: wrap;
+
+      align-items: center;
+    }
+
+    .tool-options-row select,
+    .tool-options-row input {
+      flex: 1;
+      min-width: 140px;
+      margin-bottom: 0;
+    }
+
+    .checkbox-label {
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+      color: var(--text-main);
+    }
+
+    /* ==============================
+       TOAST
+    ============================== */
+
+    .toast {
+      position: fixed;
+
+      bottom: 20px;
+      right: 20px;
+
+      background: var(--card-bg);
+
+      color: var(--text-main);
+
+      padding: 12px 20px;
+
+      border-radius: 8px;
+
+      border-left: 4px solid var(--primary);
+
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.3);
+
+      opacity: 0;
+
+      transform: translateY(20px);
+
+      transition: all 0.3s ease;
+
+      z-index: 10000;
+
+      max-width: 320px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toastError {
+      border-left-color: var(--error);
+    }
+
+    .toastSuccess {
+      border-left-color: var(--success);
+    }
+
+    /* ==============================
+       COMMON
+    ============================== */
+
+    .flex-between {
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      flex-wrap: wrap;
+
+      gap: 10px;
+    }
+
+    .scoreBar {
+      background: #334155;
+
+      height: 8px;
+
+      border-radius: 4px;
+
+      overflow: hidden;
+
+      margin-top: 5px;
+    }
+
+    .scoreBarFill {
+      background:
+        linear-gradient(
+          90deg,
+          var(--primary),
+          var(--secondary)
+        );
+
+      height: 100%;
+
+      transition: width 0.5s ease;
+    }
+
+    #proBadge {
+      background: gold;
+
+      color: black;
+
+      padding: 4px 8px;
+
+      border-radius: 4px;
+
+      font-size: 11px;
+
+      font-weight: bold;
+
+      display: none;
+    }
+
+    /* ==============================
+       USAGE
+    ============================== */
+
+    #usageBanner {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.1),
+          rgba(236, 72, 153, 0.1)
+        );
+
+      border: 1px solid var(--primary);
+
+      padding: 12px 16px;
+
+      border-radius: 10px;
+
+      margin-bottom: 20px;
+
+      display: none;
+
+      font-size: 14px;
+    }
+
+    #usageBanner.limitReached {
+      border-color: var(--error);
+
+      background:
+        rgba(239, 68, 68, 0.1);
+    }
+
+    .usage-text {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .usage-upgrade-btn {
+      background:
+        linear-gradient(
+          135deg,
+          #f59e0b,
+          #ef4444
+        );
+
+      padding: 6px 14px;
+
+      font-size: 12px;
+
+      margin: 0;
+    }
+
+    /* ==============================
+       ADS
+    ============================== */
+
+    .ad-banner {
+      background:
+        linear-gradient(
+          90deg,
+          #ff9800,
+          #ff5722
+        );
+
+      color: white;
+
+      padding: 15px;
+
+      border-radius: 8px;
+
+      text-align: center;
+
+      margin: 20px 0;
+
+      display: none;
+    }
+
+    /* ==============================
+       MODALS
+    ============================== */
+
+    #proModal,
+    #remixModal,
+    #brandModal,
+    #newProjectModal {
+      position: fixed;
+
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      background:
+        rgba(0, 0, 0, 0.8);
+
+      display: none;
+
+      justify-content: center;
+      align-items: center;
+
+      z-index: 9999;
+
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+
+      padding: 30px;
+
+      border-radius: 16px;
+
+      max-width: 450px;
+
+      width: 100%;
+
+      text-align: center;
+
+      border: 1px solid var(--primary);
+
+      max-height: 90vh;
+
+      overflow-y: auto;
+    }
+
+    /* ==============================
+       GENERATED IMAGE
+    ============================== */
+
+    #generatedImage {
+      max-width: 100%;
+
+      height: auto;
+
+      border-radius: 12px;
+
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.5);
+
+      margin-top: 10px;
+    }
+
+    /* ==============================
+       HISTORY
+    ============================== */
+
+    .historyItem {
+      background: var(--card-bg);
+
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      padding: 12px 16px;
+
+      min-width: 200px;
+      max-width: 250px;
+
+      text-align: left;
+
+      cursor: pointer;
+
+      transition: all 0.2s;
+
+      flex-shrink: 0;
+    }
+
+    .historyItem:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .historyItemScore {
+      display: block;
+
+      color: var(--primary);
+
+      font-weight: bold;
+
+      font-size: 14px;
+
+      margin-bottom: 6px;
+    }
+
+    .historyItemText {
+      font-size: 13px;
+
+      color: var(--text-main);
+
+      line-height: 1.4;
+
+      display: -webkit-box;
+
+      -webkit-line-clamp: 3;
+
+      -webkit-box-orient: vertical;
+
+      overflow: hidden;
+    }
+
+    /* ==============================
+       INFO
+    ============================== */
+
+    .infoGrid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(280px, 1fr));
+
+      gap: 15px;
+
+      margin: 20px 0;
+    }
+
+    .infoCard h3 {
+      margin-top: 0;
+
+      color: var(--primary);
+
+      font-size: 16px;
+    }
+
+    .infoCard ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .infoCard li {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .tip-text {
+      font-style: italic;
+
+      color: var(--text-muted);
+
+      font-size: 14px;
+    }
+
+    /* ==============================
+       RESULTS
+    ============================== */
+
+    .result-actions {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 8px;
+
+      margin-top: 15px;
+    }
+
+    .remix-options {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(100px, 1fr));
+
+      gap: 8px;
+
+      margin-top: 15px;
+    }
+
+    .remix-btn {
+      background: var(--card-bg);
+
+      border: 1px solid var(--border);
+
+      padding: 8px 12px;
+
+      font-size: 12px;
+    }
+
+    .remix-btn:hover {
+      border-color: var(--primary);
+
+      background:
+        rgba(99, 102, 241, 0.1);
+    }
+
+    /* ==============================
+       TOOL RESULT CARDS
+    ============================== */
+
+    .autopilot-section,
+    .goal-section,
+    .money-section,
+    .improve-section,
+    .video-section,
+    .workflow-section,
+    .roast-section,
+    .email-section,
+    .asset-card {
+      background:
+        rgba(15, 23, 42, 0.6);
+
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      padding: 15px;
+
+      margin-bottom: 12px;
+    }
+
+    .autopilot-section h4,
+    .goal-section h4,
+    .money-section h4,
+    .improve-section h4,
+    .video-section h4,
+    .workflow-section h4,
+    .roast-section h4,
+    .email-section h4,
+    .asset-card h4 {
+      margin: 0 0 8px;
+
+      color: var(--primary);
+
+      font-size: 14px;
+    }
+
+    .autopilot-section p,
+    .goal-section p,
+    .money-section p,
+    .improve-section p,
+    .video-section p,
+    .workflow-section p,
+    .roast-section p,
+    .email-section p,
+    .asset-card p {
+      margin: 0;
+
+      font-size: 13px;
+
+      line-height: 1.5;
+    }
+
+    /* ==============================
+       POSTER / CARD
+    ============================== */
+
+    .poster-preview,
+    .card-preview {
+      width: 100%;
+
+      max-width: 400px;
+
+      aspect-ratio: 4 / 5;
+
+      margin: 20px auto;
+
+      border-radius: 12px;
+
+      padding: 30px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      justify-content: space-between;
+
+      text-align: center;
+
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.5);
+
+      position: relative;
+
+      overflow: hidden;
+
+      color: white;
+    }
+
+    .poster-headline,
+    .card-headline {
+      font-size: 28px;
+
+      font-weight: 800;
+
+      line-height: 1.2;
+
+      margin-bottom: 15px;
+
+      text-transform: uppercase;
+    }
+
+    .poster-subhead,
+    .card-subhead {
+      font-size: 16px;
+
+      font-weight: 500;
+
+      margin-bottom: 20px;
+
+      opacity: 0.9;
+    }
+
+    .poster-body,
+    .card-body {
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      margin-bottom: 20px;
+
+      opacity: 0.85;
+    }
+
+    .poster-footer,
+    .card-footer {
+      font-size: 12px;
+
+      font-weight: bold;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1px;
+
+      opacity: 0.7;
+
+      border-top:
+        1px solid rgba(255, 255, 255, 0.3);
+
+      padding-top: 15px;
+    }
+
+    .shark-score {
+      font-size: 48px;
+
+      font-weight: bold;
+
+      color: #f59e0b;
+
+      text-align: center;
+
+      margin: 10px 0;
+    }
+
+    /* ==============================
+       CHAT
+    ============================== */
+
+    .chat-container {
+      height: 400px;
+
+      overflow-y: auto;
+
+      background: var(--input-bg);
+
+      border-radius: 10px;
+
+      padding: 15px;
+
+      margin-bottom: 15px;
+
+      border: 1px solid var(--border);
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 10px;
+    }
+
+    .chat-message {
+      max-width: 80%;
+
+      padding: 10px 15px;
+
+      border-radius: 15px;
+
+      font-size: 14px;
+
+      line-height: 1.4;
+
+      word-wrap: break-word;
+
+      overflow-wrap: anywhere;
+    }
+
+    .chat-user {
+      align-self: flex-end;
+
+      background: var(--primary);
+
+      color: white;
+
+      border-bottom-right-radius: 2px;
+    }
+
+    .chat-ai {
+      align-self: flex-start;
+
+      background: var(--card-bg);
+
+      color: var(--text-main);
+
+      border: 1px solid var(--border);
+
+      border-bottom-left-radius: 2px;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-input-area textarea {
+      flex: 1;
+
+      margin-bottom: 0;
+
+      resize: none;
+
+      height: 50px;
+    }
+
+    /* ==============================
+       PROJECTS
+    ============================== */
+
+    .projects-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fill, minmax(250px, 1fr));
+
+      gap: 15px;
+
+      margin-top: 15px;
+    }
+
+    .project-card {
+      background: var(--card-bg);
+
+      border: 1px solid var(--border);
+
+      border-radius: 12px;
+
+      padding: 15px;
+
+      cursor: pointer;
+
+      transition: all 0.2s;
+
+      position: relative;
+    }
+
+    .project-card:hover {
+      border-color: var(--primary);
+
+      transform: translateY(-3px);
+    }
+
+    .project-card h4 {
+      margin: 0 0 8px;
+
+      color: var(--primary);
+
+      font-size: 15px;
+
+      padding-right: 30px;
+    }
+
+    .project-card p {
+      margin: 0;
+
+      font-size: 12px;
+
+      color: var(--text-muted);
+
+      display: -webkit-box;
+
+      -webkit-line-clamp: 2;
+
+      -webkit-box-orient: vertical;
+
+      overflow: hidden;
+    }
+
+    .project-card .delete-btn {
+      position: absolute;
+
+      top: 10px;
+      right: 10px;
+
+      background: var(--error);
+
+      color: white;
+
+      border: none;
+
+      border-radius: 50%;
+
+      width: 24px;
+      height: 24px;
+
+      font-size: 12px;
+
+      cursor: pointer;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 0;
+
+      margin: 0;
+    }
+
+    .agent-input-box {
+      background:
+        rgba(99, 102, 241, 0.1);
+
+      border: 1px solid var(--primary);
+
+      border-radius: 12px;
+
+      padding: 20px;
+
+      margin-bottom: 20px;
+    }
+
+    .agent-input-box textarea {
+      background: transparent;
+
+      border: none;
+
+      font-size: 16px;
+
+      resize: vertical;
+    }
+
+    .agent-input-box textarea:focus {
+      box-shadow: none;
+    }
+
+    /* ==============================
+       RESPONSIVE
+    ============================== */
+
+    @media (max-width: 700px) {
+
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        align-items: flex-start;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .header-controls {
+        width: 100%;
+      }
+
+      .header-controls select {
+        flex: 1;
+      }
+
+      .hubPanel,
+      .toolWorkspace,
+      .imageToolWorkspace,
+      .infoCard {
+        padding: 15px;
+      }
+
+      .hubPanel > div[style*="display: flex"] {
+        flex-direction: column;
+      }
+
+      .hubPanel > div[style*="display: flex"] button {
+        width: 100%;
+        margin: 2px 0;
+      }
+
+      .tool-options-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tool-options-row select,
+      .tool-options-row input {
+        width: 100%;
+      }
+
+      .chat-input-area {
+        flex-wrap: wrap;
+      }
+
+      .chat-input-area textarea {
+        width: 100%;
+        flex-basis: 100%;
+      }
+
+      .chat-input-area button {
+        flex: 1;
+      }
+
+      .chat-message {
+        max-width: 92%;
+      }
+
+      .poster-preview,
+      .card-preview {
+        padding: 20px;
+      }
+
+      .poster-headline,
+      .card-headline {
+        font-size: 22px;
+      }
+
+      .flex-between {
+        align-items: stretch;
+      }
+
+      .flex-between > * {
+        max-width: 100%;
+      }
+
+      #languageSelect {
+        width: 100% !important;
+      }
+
+      #generateBtn,
+      #newIdeaBtn {
+        width: 100%;
+        margin: 3px 0;
+      }
+
+      .result-actions button {
+        flex: 1;
+        min-width: 120px;
+      }
+
+      .modal-content {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 420px) {
+
+      .hubCategories {
+        grid-template-columns:
+          repeat(3, 1fr);
+      }
+
+      .hubChip {
+        font-size: 10px;
+        min-height: 68px;
+      }
+
+      .hubChip .chip-icon {
+        font-size: 18px;
+      }
+
+      .infoGrid {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        font-size: 13px;
+      }
+    }
+
+    /* ==============================
+       ACCESSIBILITY
+    ============================== */
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    .hubChip:focus-visible {
+      outline: 3px solid
+        rgba(99, 102, 241, 0.45);
+
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+
+        transition-duration: 0.01ms !important;
+
+        animation-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
+
 <body>
 
+  <!-- =========================================
+       HEADER
+  ========================================== -->
+
   <header class="header">
+
     <div>
       <h1>IdeaForge-AI</h1>
-      <p class="tagline">One AI Workspace for Everything</p>
+
+      <p class="tagline">
+        One AI Workspace for Everything
+      </p>
     </div>
-    <div class="flex-between">
-      <span id="proBadge">PRO</span>
-      <button id="themeToggleBtn" class="btn-theme" title="Toggle Theme">🌗</button>
-      <button id="openBrandBtn" class="btn-brand" style="padding: 8px 15px; font-size: 12px;">👤 My Brand</button>
-      <select id="uiLanguageSelect" style="width: auto; margin:0;">
-        <option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="ur">Urdu</option><option value="mr">Marathi</option><option value="ne">Nepali</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="pt">Portuguese</option><option value="ru">Russian</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option><option value="ar">Arabic</option><option value="tr">Turkish</option><option value="vi">Vietnamese</option><option value="id">Indonesian</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="sv">Swedish</option>
+
+    <div class="header-controls">
+
+      <span id="proBadge">
+        PRO
+      </span>
+
+      <button
+        id="themeToggleBtn"
+        class="btn-theme"
+        title="Toggle Theme"
+        aria-label="Toggle Theme"
+        type="button"
+      >
+        🌗
+      </button>
+
+      <button
+        id="openBrandBtn"
+        class="btn-brand"
+        type="button"
+        style="padding:8px 15px;font-size:12px;"
+      >
+        👤 My Brand
+      </button>
+
+      <select
+        id="uiLanguageSelect"
+        aria-label="Interface Language"
+        style="width:auto;margin:0;"
+      >
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="bn">Bengali</option>
+        <option value="ur">Urdu</option>
+        <option value="mr">Marathi</option>
+        <option value="ne">Nepali</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="pt">Portuguese</option>
+        <option value="ru">Russian</option>
+        <option value="ja">Japanese</option>
+        <option value="ko">Korean</option>
+        <option value="zh">Chinese</option>
+        <option value="ar">Arabic</option>
+        <option value="tr">Turkish</option>
+        <option value="vi">Vietnamese</option>
+        <option value="id">Indonesian</option>
+        <option value="nl">Dutch</option>
+        <option value="pl">Polish</option>
+        <option value="sv">Swedish</option>
       </select>
+
     </div>
+
   </header>
 
+
+  <!-- =========================================
+       USAGE
+  ========================================== -->
+
   <div id="usageBanner">
-    <div class="usage-text" id="usageText">Free Plan • 15 AI uses remaining</div>
-    <button class="usage-upgrade-btn" onclick="document.getElementById('proModal').style.display='flex'">Upgrade to Pro</button>
+
+    <div
+      class="usage-text"
+      id="usageText"
+    >
+      Free Plan • 15 AI uses remaining
+    </div>
+
+    <button
+      class="usage-upgrade-btn"
+      type="button"
+      onclick="document.getElementById('proModal').style.display='flex'"
+    >
+      Upgrade to Pro
+    </button>
+
   </div>
-  <div id="adContainer" class="ad-banner">
-    <p style="margin:0 0 10px 0;">Advertisement Space</p>
-    <button onclick="document.getElementById('proModal').style.display='flex'">Upgrade to Pro</button>
+
+
+  <!-- =========================================
+       AD
+  ========================================== -->
+
+  <div
+    id="adContainer"
+    class="ad-banner"
+  >
+    <p style="margin:0 0 10px;">
+      Advertisement Space
+    </p>
+
+    <button
+      type="button"
+      onclick="document.getElementById('proModal').style.display='flex'"
+    >
+      Upgrade to Pro
+    </button>
   </div>
+
+
+  <!-- =========================================
+       AI HUB
+  ========================================== -->
 
   <div class="hubPanel">
-    <label style="color: var(--text-muted); margin-bottom: 10px; display: block; font-weight: 500;">✨ What do you want to do today?</label>
-    <div style="display: flex; gap: 10px;">
-      <textarea id="hubInput" rows="2" placeholder="e.g., 'Chat with AI', 'Make a quote card', or 'Start a clothing brand'..."></textarea>
-      <button id="hubMicBtn" style="padding: 10px 15px;">🎤</button>
-      <button id="hubAskBtn">➤ Ask AI</button>
+
+    <label
+      for="hubInput"
+      style="
+        color:var(--text-muted);
+        margin-bottom:10px;
+        display:block;
+        font-weight:500;
+      "
+    >
+      ✨ What do you want to do today?
+    </label>
+
+    <div style="display:flex;gap:10px;">
+
+      <textarea
+        id="hubInput"
+        rows="2"
+        placeholder="e.g., Chat with AI, make a quote card, or start a clothing brand..."
+      ></textarea>
+
+      <button
+        id="hubMicBtn"
+        type="button"
+        style="padding:10px 15px;"
+        aria-label="Voice input"
+      >
+        🎤
+      </button>
+
+      <button
+        id="hubAskBtn"
+        type="button"
+      >
+        ➤ Ask AI
+      </button>
+
     </div>
+
   </div>
+
+
+  <!-- =========================================
+       TOOL CATEGORIES
+  ========================================== -->
 
   <div class="hubCategories">
-    <div class="hubChip" data-tool="agent"><span class="chip-icon">🤖</span><span>Business Agent</span></div>
-    <div class="hubChip" data-tool="chat"><span class="chip-icon">💬</span><span>AI Chat</span></div>
-    <div class="hubChip" data-tool="card"><span class="chip-icon">📸</span><span>Quote Card</span></div>
-    <div class="hubChip" data-tool="email"><span class="chip-icon">✉️</span><span>Cold Email</span></div>
-    <div class="hubChip" data-tool="assistant"><span class="chip-icon">🤖</span><span>Assistant</span></div>
-    <div class="hubChip" data-tool="roast"><span class="chip-icon">🦈</span><span>Roast Idea</span></div>
-    <div class="hubChip" data-tool="autopilot"><span class="chip-icon">🚀</span><span>Auto-Pilot</span></div>
-    <div class="hubChip" data-tool="goalplan"><span class="chip-icon">🎯</span><span>Goal Plan</span></div>
-    <div class="hubChip" data-tool="moneycalc"><span class="chip-icon">💰</span><span>Money Calc</span></div>
-    <div class="hubChip" data-tool="improveidea"><span class="chip-icon">💡</span><span>Improve Idea</span></div>
-    <div class="hubChip" data-tool="poster"><span class="chip-icon">🖼️</span><span>Poster</span></div>
-    <div class="hubChip" data-tool="video"><span class="chip-icon">🎬</span><span>Video Script</span></div>
-    <div class="hubChip" data-tool="workflow"><span class="chip-icon">⚙️</span><span>Workflow</span></div>
-    <div class="hubChip" data-tool="writing"><span class="chip-icon">️</span><span>Writing</span></div>
-    <div class="hubChip" data-tool="translate"><span class="chip-icon">🌐</span><span>Translate</span></div>
-    <div class="hubChip" data-tool="calculator"><span class="chip-icon">🧮</span><span>Calculator</span></div>
-    <div class="hubChip" data-tool="student"><span class="chip-icon">📚</span><span>Student</span></div>
-    <div class="hubChip" data-tool="code"><span class="chip-icon">💻</span><span>Code</span></div>
-    <div class="hubChip" data-tool="logo"><span class="chip-icon">🎨</span><span>Logo</span></div>
-    <div class="hubChip" data-tool="social"><span class="chip-icon"></span><span>Social</span></div>
-    <div class="hubChip" data-tool="socialpack"><span class="chip-icon"></span><span>Social Pack</span></div>
-    <div class="hubChip" data-tool="ai-image"><span class="chip-icon">️</span><span>Real Image</span></div>
-    <div class="hubChip" data-tool="document"><span class="chip-icon"></span><span>Doc AI</span></div>
-    <div class="hubChip" data-tool="image"><span class="chip-icon">📸</span><span>Analyze Img</span></div>
-    <div class="hubChip" data-tool="projects" data-scroll="projectsSection"><span class="chip-icon">📂</span><span>My Projects</span></div>
+
+    <div class="hubChip" data-tool="agent" tabindex="0">
+      <span class="chip-icon">🤖</span>
+      <span>Business Agent</span>
+    </div>
+
+    <div class="hubChip" data-tool="chat" tabindex="0">
+      <span class="chip-icon">💬</span>
+      <span>AI Chat</span>
+    </div>
+
+    <div class="hubChip" data-tool="card" tabindex="0">
+      <span class="chip-icon">📸</span>
+      <span>Quote Card</span>
+    </div>
+
+    <div class="hubChip" data-tool="email" tabindex="0">
+      <span class="chip-icon">✉️</span>
+      <span>Cold Email</span>
+    </div>
+
+    <div class="hubChip" data-tool="assistant" tabindex="0">
+      <span class="chip-icon">🤖</span>
+      <span>Assistant</span>
+    </div>
+
+    <div class="hubChip" data-tool="roast" tabindex="0">
+      <span class="chip-icon">🦈</span>
+      <span>Roast Idea</span>
+    </div>
+
+    <div class="hubChip" data-tool="autopilot" tabindex="0">
+      <span class="chip-icon">🚀</span>
+      <span>Auto-Pilot</span>
+    </div>
+
+    <div class="hubChip" data-tool="goalplan" tabindex="0">
+      <span class="chip-icon">🎯</span>
+      <span>Goal Plan</span>
+    </div>
+
+    <div class="hubChip" data-tool="moneycalc" tabindex="0">
+      <span class="chip-icon">💰</span>
+      <span>Money Calc</span>
+    </div>
+
+    <div class="hubChip" data-tool="improveidea" tabindex="0">
+      <span class="chip-icon">💡</span>
+      <span>Improve Idea</span>
+    </div>
+
+    <div class="hubChip" data-tool="poster" tabindex="0">
+      <span class="chip-icon">🖼️</span>
+      <span>Poster</span>
+    </div>
+
+    <div class="hubChip" data-tool="video" tabindex="0">
+      <span class="chip-icon">🎬</span>
+      <span>Video Script</span>
+    </div>
+
+    <div class="hubChip" data-tool="workflow" tabindex="0">
+      <span class="chip-icon">⚙️</span>
+      <span>Workflow</span>
+    </div>
+
+    <div class="hubChip" data-tool="writing" tabindex="0">
+      <span class="chip-icon">✍️</span>
+      <span>Writing</span>
+    </div>
+
+    <div class="hubChip" data-tool="translate" tabindex="0">
+      <span class="chip-icon">🌐</span>
+      <span>Translate</span>
+    </div>
+
+    <div class="hubChip" data-tool="calculator" tabindex="0">
+      <span class="chip-icon">🧮</span>
+      <span>Calculator</span>
+    </div>
+
+    <div class="hubChip" data-tool="student" tabindex="0">
+      <span class="chip-icon">📚</span>
+      <span>Student</span>
+    </div>
+
+    <div class="hubChip" data-tool="code" tabindex="0">
+      <span class="chip-icon">💻</span>
+      <span>Code</span>
+    </div>
+
+    <div class="hubChip" data-tool="logo" tabindex="0">
+      <span class="chip-icon">🎨</span>
+      <span>Logo</span>
+    </div>
+
+    <div class="hubChip" data-tool="social" tabindex="0">
+      <span class="chip-icon">📱</span>
+      <span>Social</span>
+    </div>
+
+    <div class="hubChip" data-tool="socialpack" tabindex="0">
+      <span class="chip-icon">📦</span>
+      <span>Social Pack</span>
+    </div>
+
+    <div class="hubChip" data-tool="ai-image" tabindex="0">
+      <span class="chip-icon">🖼️</span>
+      <span>Real Image</span>
+    </div>
+
+    <div class="hubChip" data-tool="document" tabindex="0">
+      <span class="chip-icon">📄</span>
+      <span>Doc AI</span>
+    </div>
+
+    <div class="hubChip" data-tool="image" tabindex="0">
+      <span class="chip-icon">🔍</span>
+      <span>Analyze Img</span>
+    </div>
+
+    <div
+      class="hubChip"
+      data-tool="projects"
+      data-scroll="projectsSection"
+      tabindex="0"
+    >
+      <span class="chip-icon">📂</span>
+      <span>My Projects</span>
+    </div>
+
   </div>
 
-  <div id="toolWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 id="toolWorkspaceTitle" style="margin-top:0;">🤖 AI Assistant</h2>
-    
-    <div id="writingOptions" class="tool-options-row" style="display:none;">
-      <select id="writingTypeSelect"><option value="Email">Email</option><option value="Essay">Essay</option><option value="Letter">Letter</option><option value="Blog">Blog Post</option></select>
-      <select id="toneSelect"><option value="Professional">Professional</option><option value="Casual">Casual</option><option value="Friendly">Friendly</option><option value="Formal">Formal</option></select>
-    </div>
-    <div id="translateOptions" class="tool-options-row" style="display:none;">
-      <select id="fromLanguageSelect"><option value="auto">Auto Detect</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Spanish">Spanish</option></select>
-      <select id="toLanguageSelect"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option></select>
-    </div>
-    <div id="codeOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Lang:</label>
-      <select id="codeLangSelect"><option value="Python">Python</option><option value="JavaScript">JavaScript</option><option value="HTML/CSS">HTML/CSS</option><option value="React">React</option><option value="Java">Java</option><option value="C++">C++</option></select>
-    </div>
-    <div id="logoOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Style:</label>
-      <select id="logoStyleSelect"><option value="Minimalist">Minimalist</option><option value="3D Modern">3D Modern</option><option value="Vintage">Vintage</option><option value="Abstract">Abstract</option></select>
-    </div>
-    <div id="socialOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Platform:</label>
-      <select id="platformSelect"><option value="Instagram">Instagram</option><option value="LinkedIn">LinkedIn</option><option value="Twitter/X">Twitter/X</option><option value="Facebook">Facebook</option></select>
-    </div>
-    <div id="aiImageOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Style:</label>
-      <select id="imageStyleSelect"><option value="Photorealistic">Photorealistic</option><option value="Digital Art">Digital Art</option><option value="Anime">Anime</option><option value="Oil Painting">Oil Painting</option><option value="Cinematic">Cinematic</option><option value="None">None (Raw)</option></select>
-    </div>
-    <div id="goalOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Timeframe:</label>
-      <select id="goalTimeframeSelect"><option value="1 Month">1 Month</option><option value="3 Months">3 Months</option><option value="6 Months">6 Months</option><option value="1 Year">1 Year</option></select>
-    </div>
-    <div id="moneyOptions" class="tool-options-row" style="display:none;">
-      <input type="text" id="moneyInvestment" placeholder="Investment Amount (e.g., ₹50,000)" style="flex:1;">
-      <select id="moneyTypeSelect"><option value="Small Business">Small Business</option><option value="Farming">Farming</option><option value="Shop/Retail">Shop/Retail</option><option value="Online Business">Online Business</option></select>
-    </div>
-    <div id="posterOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Theme:</label>
-      <select id="posterThemeSelect">
-        <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">Purple/Blue Modern</option>
-        <option value="linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); color: #333;">Pink/Soft Light</option>
-        <option value="linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #333;">Orange/Warm</option>
-        <option value="linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); color: white;">Dark/Professional</option>
-        <option value="linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;">Green/Nature</option>
+
+  <!-- =========================================
+       TOOL WORKSPACE
+  ========================================== -->
+
+  <div
+    id="toolWorkspace"
+    class="toolWorkspace"
+    style="display:none;"
+  >
+
+    <h2
+      id="toolWorkspaceTitle"
+      style="margin-top:0;"
+    >
+      🤖 AI Assistant
+    </h2>
+
+
+    <!-- Writing -->
+    <div
+      id="writingOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <select id="writingTypeSelect">
+        <option value="Email">Email</option>
+        <option value="Essay">Essay</option>
+        <option value="Letter">Letter</option>
+        <option value="Blog">Blog Post</option>
       </select>
-    </div>
-    <div id="videoOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Platform:</label>
-      <select id="videoPlatformSelect"><option value="YouTube Long">YouTube Long</option><option value="YouTube Shorts">YouTube Shorts</option><option value="Instagram Reel">Instagram Reel</option><option value="TikTok">TikTok</option><option value="Ad Video">Ad Video</option></select>
-    </div>
-    <div id="workflowOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Workflow:</label>
-      <select id="workflowTypeSelect">
-        <option value="startup-launch">Startup Launch Pack</option>
-        <option value="content-creator">Content Creator Pack</option>
-        <option value="product-promo">Product Promotion Pack</option>
-      </select>
-    </div>
-    <div id="emailOptions" class="tool-options-row" style="display:none;">
-      <label style="color:var(--text-muted); align-self:center;">Type:</label>
-      <select id="emailTypeSelect">
-        <option value="Cold Outreach">Cold Outreach</option>
-        <option value="Follow-up">Follow-up</option>
-        <option value="Proposal">Proposal</option>
-        <option value="Networking">Networking</option>
+
+      <select id="toneSelect">
+        <option value="Professional">Professional</option>
+        <option value="Casual">Casual</option>
+        <option value="Friendly">Friendly</option>
+        <option value="Formal">Formal</option>
       </select>
     </div>
 
-    <div class="tool-options-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
-      <label class="checkbox-label">
-        <input type="checkbox" id="bilingualToggle" style="width: auto; margin: 0;">
-        🗣️ Bilingual Output (English + Hindi)
+
+    <!-- Translate -->
+    <div
+      id="translateOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <select id="fromLanguageSelect">
+        <option value="auto">Auto Detect</option>
+        <option value="English">English</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Spanish">Spanish</option>
+      </select>
+
+      <select id="toLanguageSelect">
+        <option value="Hindi">Hindi</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+      </select>
+    </div>
+
+
+    <!-- Code -->
+    <div
+      id="codeOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Lang:
       </label>
+
+      <select id="codeLangSelect">
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="HTML/CSS">HTML/CSS</option>
+        <option value="React">React</option>
+        <option value="Java">Java</option>
+        <option value="C++">C++</option>
+      </select>
     </div>
 
-    <div id="chatInterface" style="display:none;">
-      <div id="chatContainer" class="chat-container"></div>
-      <div class="chat-input-area">
-        <textarea id="chatInput" placeholder="Type your message... (AI remembers context)"></textarea>
-        <button id="sendChatBtn" style="padding: 10px 20px;">Send</button>
-        <button id="clearChatBtn" class="btn-secondary" style="padding: 10px 15px;">Clear</button>
-      </div>
+
+    <!-- Logo -->
+    <div
+      id="logoOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Style:
+      </label>
+
+      <select id="logoStyleSelect">
+        <option value="Minimalist">Minimalist</option>
+        <option value="3D Modern">3D Modern</option>
+        <option value="Vintage">Vintage</option>
+        <option value="Abstract">Abstract</option>
+      </select>
     </div>
+
+
+    <!-- Social -->
+    <div
+      id="socialOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Platform:
+      </label>
+
+      <select id="platformSelect">
+        <option value="Instagram">Instagram</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="Twitter/X">Twitter/X</option>
+        <option value="Facebook">Facebook</option>
+      </select>
+    </div>
+
+
+    <!-- AI Image -->
+    <div
+      id="aiImageOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Style:
+      </label>
+
+      <select id="imageStyleSelect">
+        <option value="Photorealistic">Photorealistic</option>
+        <option value="Digital Art">Digital Art</option>
+        <option value="Anime">Anime</option>
+        <option value="Oil Painting">Oil Painting</option>
+        <option value="Cinematic">Cinematic</option>
+        <option value="None">None (Raw)</option>
+      </select>
+    </div>
+
+
+    <!-- Goal -->
+    <div
+      id="goalOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Timeframe:
+      </label>
+
+      <select id="goalTimeframeSelect">
+        <option value="1 Month">1 Month</option>
+        <option value="3 Months">3 Months</option>
+        <option value="6 Months">6 Months</option>
+        <option value="1 Year">1 Year</option>
+      </select>
+    </div>
+
+
+    <!-- Money -->
+    <div
+      id="moneyOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <input
+        type="text"
+        id="moneyInvestment"
+        placeholder="Investment Amount (e.g., ₹50,000)"
+      >
+
+      <select id="moneyTypeSelect">
+        <option value="Small Business">Small Business</option>
+        <option value="Farming">Farming</option>
+        <option value="Shop/Retail">Shop/Retail</option>
+        <option value="Online Business">Online Business</option>
+      </select>
+    </div>
+
+
+    <!-- Poster -->
+    <div
+      id="posterOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Theme:
+      </label>
+
+      <select id="posterThemeSelect">
+
+        <option value="purple">
+          Purple/Blue Modern
+        </option>
+
+        <option value="pink">
+          Pink/Soft Light
+        </option>
+
+        <option value="orange">
+          Orange/Warm
+        </option>
+
+        <option value="dark">
+          Dark/Professional
+        </option>
+
+        <option value="green">
+          Green/Nature
+        </option>
+
+      </select>
+    </div>
+
+
+    <!-- Video -->
+    <div
+      id="videoOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Platform:
+      </label>
+
+      <select id="videoPlatformSelect">
+        <option value="YouTube Long">YouTube Long</option>
+        <option value="YouTube Shorts">YouTube Shorts</option>
+        <option value="Instagram Reel">Instagram Reel</option>
+        <option value="TikTok">TikTok</option>
+        <option value="Ad Video">Ad Video</option>
+      </select>
+    </div>
+
+
+    <!-- Workflow -->
+    <div
+      id="workflowOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Workflow:
+      </label>
+
+      <select id="workflowTypeSelect">
+
+        <option value="startup-launch">
+          Startup Launch Pack
+        </option>
+
+        <option value="content-creator">
+          Content Creator Pack
+        </option>
+
+        <option value="product-promo">
+          Product Promotion Pack
+        </option>
+
+      </select>
+    </div>
+
+
+    <!-- Email -->
+    <div
+      id="emailOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <label style="color:var(--text-muted);">
+        Type:
+      </label>
+
+      <select id="emailTypeSelect">
+
+        <option value="Cold Outreach">
+          Cold Outreach
+        </option>
+
+        <option value="Follow-up">
+          Follow-up
+        </option>
+
+        <option value="Proposal">
+          Proposal
+        </option>
+
+        <option value="Networking">
+          Networking
+        </option>
+
+      </select>
+    </div>
+
+
+    <!-- Bilingual -->
+    <div
+      class="tool-options-row"
+      style="
+        margin-top:10px;
+        border-top:1px solid var(--border);
+        padding-top:10px;
+      "
+    >
+
+      <label class="checkbox-label">
+
+        <input
+          type="checkbox"
+          id="bilingualToggle"
+          style="width:auto;margin:0;"
+        >
+
+        🗣️ Bilingual Output
+        (English + Hindi)
+
+      </label>
+
+    </div>
+
+
+    <!-- =======================================
+         CHAT
+    ======================================== -->
+
+    <div
+      id="chatInterface"
+      style="display:none;"
+    >
+
+      <div
+        id="chatContainer"
+        class="chat-container"
+      ></div>
+
+      <div class="chat-input-area">
+
+        <textarea
+          id="chatInput"
+          placeholder="Type your message... (AI remembers context)"
+          aria-label="Chat message"
+        ></textarea>
+
+        <button
+          id="sendChatBtn"
+          type="button"
+          style="padding:10px 20px;"
+        >
+          Send
+        </button>
+
+        <button
+          id="clearChatBtn"
+          class="btn-secondary"
+          type="button"
+          style="padding:10px 15px;"
+        >
+          Clear
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =======================================
+         STANDARD INPUT
+    ======================================== -->
 
     <div id="standardInputArea">
-      <textarea id="toolInput" rows="3" placeholder="Enter your prompt here..."></textarea>
-      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <button id="toolMicBtn" style="padding: 10px 15px;">🎤</button>
-        <button id="toolGenerateBtn">✨ Generate</button>
-        <button id="speakResultBtn" class="btn-secondary" style="padding: 10px 15px;">🔊 Speak</button>
+
+      <textarea
+        id="toolInput"
+        rows="3"
+        placeholder="Enter your prompt here..."
+        aria-label="AI tool prompt"
+      ></textarea>
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          align-items:center;
+          flex-wrap:wrap;
+        "
+      >
+
+        <button
+          id="toolMicBtn"
+          type="button"
+          style="padding:10px 15px;"
+          aria-label="Voice input"
+        >
+          🎤
+        </button>
+
+        <button
+          id="toolGenerateBtn"
+          type="button"
+        >
+          ✨ Generate
+        </button>
+
+        <button
+          id="speakResultBtn"
+          class="btn-secondary"
+          type="button"
+          style="padding:10px 15px;"
+        >
+          🔊 Speak
+        </button>
+
       </div>
+
     </div>
 
-    <div id="generatedImageBox" style="display:none; text-align:center; margin-top:20px;"><img id="generatedImage" src="" alt="Generated AI Image"></div>
-    
-    <div id="posterPreviewBox" style="display:none; text-align:center; margin-top:20px;">
-      <div id="posterPreview" class="poster-preview">
-        <div class="poster-headline" id="posterHeadline">Headline</div>
-        <div class="poster-subhead" id="posterSubhead">Subheadline</div>
-        <div class="poster-body" id="posterBody">Body text goes here.</div>
-        <div class="poster-footer" id="posterFooter">Footer / CTA</div>
+
+    <!-- =======================================
+         IMAGE RESULT
+    ======================================== -->
+
+    <div
+      id="generatedImageBox"
+      style="
+        display:none;
+        text-align:center;
+        margin-top:20px;
+      "
+    >
+      <img
+        id="generatedImage"
+        src=""
+        alt="Generated AI Image"
+      >
+    </div>
+
+
+    <!-- =======================================
+         POSTER
+    ======================================== -->
+
+    <div
+      id="posterPreviewBox"
+      style="
+        display:none;
+        text-align:center;
+        margin-top:20px;
+      "
+    >
+
+      <div
+        id="posterPreview"
+        class="poster-preview"
+      >
+
+        <div
+          class="poster-headline"
+          id="posterHeadline"
+        >
+          Headline
+        </div>
+
+        <div
+          class="poster-subhead"
+          id="posterSubhead"
+        >
+          Subheadline
+        </div>
+
+        <div
+          class="poster-body"
+          id="posterBody"
+        >
+          Body text goes here.
+        </div>
+
+        <div
+          class="poster-footer"
+          id="posterFooter"
+        >
+          Footer / CTA
+        </div>
+
       </div>
-      <button id="downloadPosterBtn" style="margin-top: 15px;">📥 Download Poster as Image</button>
+
+      <button
+        id="downloadPosterBtn"
+        type="button"
+        style="margin-top:15px;"
+      >
+        📥 Download Poster as Image
+      </button>
+
     </div>
 
-    <div id="cardPreviewBox" style="display:none; text-align:center; margin-top:20px;">
-      <div id="cardPreview" class="card-preview">
-        <div class="card-headline" id="cardHeadline">Headline</div>
-        <div class="card-body" id="cardBody">Body text goes here.</div>
-        <div class="card-footer" id="cardFooter">Footer / CTA</div>
+
+    <!-- =======================================
+         CARD
+    ======================================== -->
+
+    <div
+      id="cardPreviewBox"
+      style="
+        display:none;
+        text-align:center;
+        margin-top:20px;
+      "
+    >
+
+      <div
+        id="cardPreview"
+        class="card-preview"
+      >
+
+        <div
+          class="card-headline"
+          id="cardHeadline"
+        >
+          Headline
+        </div>
+
+        <div
+          class="card-body"
+          id="cardBody"
+        >
+          Body text goes here.
+        </div>
+
+        <div
+          class="card-footer"
+          id="cardFooter"
+        >
+          Footer / CTA
+        </div>
+
       </div>
-      <button id="downloadCardBtn" style="margin-top: 15px;">📥 Download Card as Image</button>
+
+      <button
+        id="downloadCardBtn"
+        type="button"
+        style="margin-top:15px;"
+      >
+        📥 Download Card as Image
+      </button>
+
     </div>
 
-    <div id="toolResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border); white-space: pre-wrap; font-size: 14px; line-height: 1.6;"></div>
-    <div id="autopilotResult" style="display:none; margin-top: 20px;"></div>
-    <div id="socialPackResult" style="display:none; margin-top: 20px;"></div>
-    <div id="goalResult" style="display:none; margin-top: 20px;"></div>
-    <div id="moneyResult" style="display:none; margin-top: 20px;"></div>
-    <div id="improveResult" style="display:none; margin-top: 20px;"></div>
-    <div id="videoResult" style="display:none; margin-top: 20px;"></div>
-    <div id="workflowResult" style="display:none; margin-top: 20px;"></div>
-    <div id="roastResult" style="display:none; margin-top: 20px;"></div>
-    <div id="emailResult" style="display:none; margin-top: 20px;"></div>
 
-    <div id="toolResultActions" class="result-actions" style="display:none;">
-      <button id="toolCopyBtn"> Copy</button>
-      <button id="toolRegenerateBtn">🔄 Regenerate</button>
-      <button id="remixBtn" class="btn-secondary">✨ Remix</button>
-      <button id="makeBetterBtn" style="background: linear-gradient(135deg, #10b981, #059669);"> Make It Better</button>
-      <button id="toolSaveBtn">⭐ Save</button>
-      <button id="saveToProjectBtn" class="btn-brand" style="padding: 10px 15px;">📂 Save to Projects</button>
-      <button id="toolShareBtn"> Share</button>
+    <!-- =======================================
+         GENERIC RESULT
+    ======================================== -->
+
+    <div
+      id="toolResult"
+      style="
+        display:none;
+        margin-top:20px;
+        padding:15px;
+        background:var(--input-bg);
+        border-radius:10px;
+        border:1px solid var(--border);
+        white-space:pre-wrap;
+        font-size:14px;
+        line-height:1.6;
+        overflow-wrap:anywhere;
+      "
+    ></div>
+
+
+    <div
+      id="autopilotResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="socialPackResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="goalResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="moneyResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="improveResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="videoResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="workflowResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="roastResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+    <div
+      id="emailResult"
+      style="display:none;margin-top:20px;"
+    ></div>
+
+
+    <!-- =======================================
+         RESULT ACTIONS
+    ======================================== -->
+
+    <div
+      id="toolResultActions"
+      class="result-actions"
+      style="display:none;"
+    >
+
+      <button
+        id="toolCopyBtn"
+        type="button"
+      >
+        📋 Copy
+      </button>
+
+      <button
+        id="toolRegenerateBtn"
+        type="button"
+      >
+        🔄 Regenerate
+      </button>
+
+      <button
+        id="remixBtn"
+        class="btn-secondary"
+        type="button"
+      >
+        ✨ Remix
+      </button>
+
+      <button
+        id="makeBetterBtn"
+        type="button"
+        style="
+          background:
+            linear-gradient(
+              135deg,
+              #10b981,
+              #059669
+            );
+        "
+      >
+        🚀 Make It Better
+      </button>
+
+      <button
+        id="toolSaveBtn"
+        type="button"
+      >
+        ⭐ Save
+      </button>
+
+      <button
+        id="saveToProjectBtn"
+        class="btn-brand"
+        type="button"
+        style="padding:10px 15px;"
+      >
+        📂 Save to Projects
+      </button>
+
+      <button
+        id="toolShareBtn"
+        type="button"
+      >
+        📤 Share
+      </button>
+
     </div>
+
   </div>
 
-  <div id="remixModal">
+
+  <!-- =========================================
+       REMIX MODAL
+  ========================================== -->
+
+  <div
+    id="remixModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="remixModalTitle"
+  >
+
     <div class="modal-content">
-      <h2 style="color: var(--primary);">✨ Remix Your Content</h2>
+
+      <h2
+        id="remixModalTitle"
+        style="color:var(--primary);"
+      >
+        ✨ Remix Your Content
+      </h2>
+
       <div class="remix-options">
-        <button class="remix-btn" data-style="shorter"> Shorter</button>
-        <button class="remix-btn" data-style="professional">💼 Professional</button>
-        <button class="remix-btn" data-style="funny">😄 Funny</button>
-        <button class="remix-btn" data-style="viral">🔥 Viral</button>
-        <button class="remix-btn" data-style="hindi">🇮🇳 Hindi</button>
-        <button class="remix-btn" data-style="english">🇬🇧 English</button>
-        <button class="remix-btn" data-style="simple">📖 Simple</button>
-        <button class="remix-btn" data-style="emotional">❤️ Emotional</button>
-        <button class="remix-btn" data-style="seo">🔍 SEO</button>
-        <button class="remix-btn" data-style="instagram">📸 Instagram</button>
-        <button class="remix-btn" data-style="youtube"> YouTube</button>
+
+        <button
+          class="remix-btn"
+          data-style="shorter"
+          type="button"
+        >
+          ✂️ Shorter
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="professional"
+          type="button"
+        >
+          💼 Professional
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="funny"
+          type="button"
+        >
+          😄 Funny
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="viral"
+          type="button"
+        >
+          🔥 Viral
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="hindi"
+          type="button"
+        >
+          🇮🇳 Hindi
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="english"
+          type="button"
+        >
+          🇬🇧 English
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="simple"
+          type="button"
+        >
+          📖 Simple
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="emotional"
+          type="button"
+        >
+          ❤️ Emotional
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="seo"
+          type="button"
+        >
+          🔍 SEO
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="instagram"
+          type="button"
+        >
+          📸 Instagram
+        </button>
+
+        <button
+          class="remix-btn"
+          data-style="youtube"
+          type="button"
+        >
+          ▶️ YouTube
+        </button>
+
       </div>
-      <br><button id="closeRemixModal" class="btn-secondary">Cancel</button>
+
+      <br>
+
+      <button
+        id="closeRemixModal"
+        class="btn-secondary"
+        type="button"
+      >
+        Cancel
+      </button>
+
     </div>
+
   </div>
 
-  <div id="brandModal">
+
+  <!-- =========================================
+       BRAND MODAL
+  ========================================== -->
+
+  <div
+    id="brandModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="brandModalTitle"
+  >
+
     <div class="modal-content">
-      <h2 style="color: var(--primary);">👤 My Brand Profile</h2>
-      <p style="color: var(--text-muted); font-size: 14px;">Set your brand details once. AI will use them for all tools!</p>
-      <input type="text" id="brandNameInput" placeholder="Brand Name (e.g., Sharma Coffee)">
-      <input type="text" id="brandIndustryInput" placeholder="Industry (e.g., Food & Beverage)">
-      <input type="text" id="brandAudienceInput" placeholder="Target Audience (e.g., College students)">
-      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-        <button id="saveBrandBtn">💾 Save Brand</button>
-        <button id="closeBrandBtn" class="btn-secondary">Cancel</button>
+
+      <h2
+        id="brandModalTitle"
+        style="color:var(--primary);"
+      >
+        👤 My Brand Profile
+      </h2>
+
+      <p
+        style="
+          color:var(--text-muted);
+          font-size:14px;
+        "
+      >
+        Set your brand details once.
+        AI will use them for your tools.
+      </p>
+
+      <input
+        type="text"
+        id="brandNameInput"
+        placeholder="Brand Name (e.g., Sharma Coffee)"
+      >
+
+      <input
+        type="text"
+        id="brandIndustryInput"
+        placeholder="Industry (e.g., Food & Beverage)"
+      >
+
+      <input
+        type="text"
+        id="brandAudienceInput"
+        placeholder="Target Audience (e.g., College students)"
+      >
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          justify-content:center;
+          margin-top:15px;
+        "
+      >
+
+        <button
+          id="saveBrandBtn"
+          type="button"
+        >
+          💾 Save Brand
+        </button>
+
+        <button
+          id="closeBrandBtn"
+          class="btn-secondary"
+          type="button"
+        >
+          Cancel
+        </button>
+
       </div>
+
     </div>
+
   </div>
 
-  <div id="newProjectModal">
+
+  <!-- =========================================
+       NEW PROJECT MODAL
+  ========================================== -->
+
+  <div
+    id="newProjectModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="newProjectModalTitle"
+  >
+
     <div class="modal-content">
-      <h2 style="color: var(--primary);"> Create New Project</h2>
-      <input type="text" id="newProjectNameInput" placeholder="Project Name (e.g., My Clothing Brand)">
-      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-        <button id="createProjectBtn">📁 Create Project</button>
-        <button id="closeNewProjectBtn" class="btn-secondary">Cancel</button>
+
+      <h2
+        id="newProjectModalTitle"
+        style="color:var(--primary);"
+      >
+        📁 Create New Project
+      </h2>
+
+      <input
+        type="text"
+        id="newProjectNameInput"
+        placeholder="Project Name (e.g., My Clothing Brand)"
+      >
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          justify-content:center;
+          margin-top:15px;
+        "
+      >
+
+        <button
+          id="createProjectBtn"
+          type="button"
+        >
+          📁 Create Project
+        </button>
+
+        <button
+          id="closeNewProjectBtn"
+          class="btn-secondary"
+          type="button"
+        >
+          Cancel
+        </button>
+
       </div>
+
     </div>
+
   </div>
 
-  <div id="imageToolWorkspace" class="imageToolWorkspace" style="display: none;">
-    <h2 style="margin-top:0;">📸 Image Analysis</h2>
-    <div id="imageUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
-      <input type="file" id="imageFileInput" accept="image/*" style="display: none;"><p id="imageUploadText"> Click to upload an image</p>
-      <img id="imagePreview" style="display:none; max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">
+
+  <!-- =========================================
+       IMAGE AI
+  ========================================== -->
+
+  <div
+    id="imageToolWorkspace"
+    class="imageToolWorkspace"
+    style="display:none;"
+  >
+
+    <h2 style="margin-top:0;">
+      📸 Image Analysis
+    </h2>
+
+    <div
+      id="imageUploadCard"
+      style="
+        border:2px dashed var(--border);
+        padding:20px;
+        text-align:center;
+        border-radius:10px;
+        cursor:pointer;
+        margin-bottom:15px;
+      "
+    >
+
+      <input
+        type="file"
+        id="imageFileInput"
+        accept="image/*"
+        style="display:none;"
+      >
+
+      <p id="imageUploadText">
+        📤 Click to upload an image
+      </p>
+
+      <img
+        id="imagePreview"
+        alt="Selected image preview"
+        style="
+          display:none;
+          max-width:100%;
+          max-height:200px;
+          border-radius:8px;
+          margin-top:10px;
+        "
+      >
+
     </div>
+
     <select id="imageActionSelect">
-      <option value="full-analysis">Full AI Analysis (Recommended)</option>
-      <option value="describe">Describe Image</option>
-      <option value="extract-text">Extract Text (OCR)</option>
-      <option value="ask">Ask Question about Image</option>
+
+      <option value="full-analysis">
+        Full AI Analysis (Recommended)
+      </option>
+
+      <option value="describe">
+        Describe Image
+      </option>
+
+      <option value="extract-text">
+        Extract Text (OCR)
+      </option>
+
+      <option value="ask">
+        Ask Question about Image
+      </option>
+
     </select>
-    <input type="text" id="imageQuestionInput" placeholder="Ask a question about the image..." style="display:none;">
-    <button id="imageGenerateBtn">✨ Analyze Image</button>
-    <div id="imageResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
-    <div id="imageResultActions" style="display:none; margin-top: 15px;">
-      <button id="imageCopyBtn"> Copy</button><button id="imageShareBtn">📤 Share</button>
+
+    <input
+      type="text"
+      id="imageQuestionInput"
+      placeholder="Ask a question about the image..."
+      style="display:none;"
+    >
+
+    <button
+      id="imageGenerateBtn"
+      type="button"
+    >
+      ✨ Analyze Image
+    </button>
+
+    <div
+      id="imageResult"
+      style="
+        display:none;
+        margin-top:20px;
+        padding:15px;
+        background:var(--input-bg);
+        border-radius:10px;
+        border:1px solid var(--border);
+        overflow-wrap:anywhere;
+      "
+    ></div>
+
+    <div
+      id="imageResultActions"
+      style="
+        display:none;
+        margin-top:15px;
+      "
+    >
+
+      <button
+        id="imageCopyBtn"
+        type="button"
+      >
+        📋 Copy
+      </button>
+
+      <button
+        id="imageShareBtn"
+        type="button"
+      >
+        📤 Share
+      </button>
+
     </div>
+
   </div>
 
-  <div id="documentWorkspace" class="toolWorkspace" style="display: none;">
-    <h2 style="margin-top:0;">📄 Document AI</h2>
-    <div id="docUploadCard" style="border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
-      <input type="file" id="docFileInput" accept=".txt,.pdf,.doc,.docx" style="display: none;"><p id="docUploadText">📤 Click to upload document</p>
+
+  <!-- =========================================
+       DOCUMENT AI
+  ========================================== -->
+
+  <div
+    id="documentWorkspace"
+    class="toolWorkspace"
+    style="display:none;"
+  >
+
+    <h2 style="margin-top:0;">
+      📄 Document AI
+    </h2>
+
+    <div
+      id="docUploadCard"
+      style="
+        border:2px dashed var(--border);
+        padding:20px;
+        text-align:center;
+        border-radius:10px;
+        cursor:pointer;
+        margin-bottom:15px;
+      "
+    >
+
+      <input
+        type="file"
+        id="docFileInput"
+        accept=".txt,.pdf,.doc,.docx"
+        style="display:none;"
+      >
+
+      <p id="docUploadText">
+        📤 Click to upload document
+      </p>
+
     </div>
-    <textarea id="docTextInput" rows="4" placeholder="Or paste your text here..."></textarea>
-    <button id="docAnalyzeBtn">🔍 Analyze Document</button>
-    <div id="docResult" style="display:none; margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);"></div>
+
+    <textarea
+      id="docTextInput"
+      rows="4"
+      placeholder="Or paste your text here..."
+    ></textarea>
+
+    <button
+      id="docAnalyzeBtn"
+      type="button"
+    >
+      🔍 Analyze Document
+    </button>
+
+    <div
+      id="docResult"
+      style="
+        display:none;
+        margin-top:20px;
+        padding:15px;
+        background:var(--input-bg);
+        border-radius:10px;
+        border:1px solid var(--border);
+        overflow-wrap:anywhere;
+      "
+    ></div>
+
   </div>
 
-  <div id="projectsSection" class="hubPanel" style="display:none;">
+
+  <!-- =========================================
+       PROJECTS
+  ========================================== -->
+
+  <div
+    id="projectsSection"
+    class="hubPanel"
+    style="display:none;"
+  >
+
     <div id="projectListView">
-      <div class="flex-between" style="margin-bottom: 20px;">
-        <h2 style="margin:0;">📂 My Projects Workspace</h2>
-        <button id="newProjectBtn" class="btn-brand">+ New Project</button>
+
+      <div
+        class="flex-between"
+        style="margin-bottom:20px;"
+      >
+
+        <h2 style="margin:0;">
+          📂 My Projects Workspace
+        </h2>
+
+        <button
+          id="newProjectBtn"
+          class="btn-brand"
+          type="button"
+        >
+          + New Project
+        </button>
+
       </div>
-      <p style="color: var(--text-muted); font-size: 14px;">Your AI-generated business assets, organized by project.</p>
-      <div id="projectsGrid" class="projects-grid"></div>
+
+      <p
+        style="
+          color:var(--text-muted);
+          font-size:14px;
+        "
+      >
+        Your AI-generated business assets,
+        organized by project.
+      </p>
+
+      <div
+        id="projectsGrid"
+        class="projects-grid"
+      ></div>
+
     </div>
 
-    <div id="projectDetailView" style="display:none;">
-      <button id="backToProjectsBtn" class="btn-secondary" style="margin-bottom: 20px;">⬅️ Back to Projects</button>
-      <h2 id="currentProjectTitle" style="margin-top:0; color: var(--primary);">Project Name</h2>
-      
+
+    <div
+      id="projectDetailView"
+      style="display:none;"
+    >
+
+      <button
+        id="backToProjectsBtn"
+        class="btn-secondary"
+        type="button"
+        style="margin-bottom:20px;"
+      >
+        ⬅️ Back to Projects
+      </button>
+
+      <h2
+        id="currentProjectTitle"
+        style="
+          margin-top:0;
+          color:var(--primary);
+        "
+      >
+        Project Name
+      </h2>
+
       <div class="agent-input-box">
-        <h3 style="margin-top:0; color: var(--text-main);">🤖 Business Agent</h3>
-        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 10px;">Describe your business idea. The AI will generate a Name, Logo Prompt, Ad Copy, Social Posts, and a Marketing Plan.</p>
-        <textarea id="agentInput" rows="2" placeholder="e.g., Mujhe ek kapde ka business shuru karna hai..."></textarea>
-        <button id="runAgentBtn" style="width: 100%; margin-top: 10px;">✨ Generate Full Business Pack</button>
+
+        <h3
+          style="
+            margin-top:0;
+            color:var(--text-main);
+          "
+        >
+          🤖 Business Agent
+        </h3>
+
+        <p
+          style="
+            color:var(--text-muted);
+            font-size:13px;
+            margin-bottom:10px;
+          "
+        >
+          Describe your business idea.
+          AI will generate a Name, Logo Prompt,
+          Ad Copy, Social Posts and Marketing Plan.
+        </p>
+
+        <textarea
+          id="agentInput"
+          rows="2"
+          placeholder="e.g., Mujhe ek kapde ka business shuru karna hai..."
+        ></textarea>
+
+        <button
+          id="runAgentBtn"
+          type="button"
+          style="
+            width:100%;
+            margin-top:10px;
+          "
+        >
+          ✨ Generate Full Business Pack
+        </button>
+
       </div>
 
-      <div id="projectAssetsContainer"></div>
+      <div
+        id="projectAssetsContainer"
+      ></div>
+
     </div>
+
   </div>
 
-  <div id="toolFavoritesSection" style="display:none; margin-top: 30px;"><h3>⭐ Saved Favorites</h3><div id="toolFavoritesRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
-  <div id="toolHistorySection" style="display:none; margin-top: 20px;"><h3>🕒 Recent Tool History</h3><div id="toolHistoryRow" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;"></div></div>
 
-  <div class="hubPanel" id="ideaSection">
-    <h2>💡 Startup Idea Analyzer</h2>
-    <textarea id="ideaInput" rows="3" placeholder="Describe your startup idea here..."></textarea>
+  <!-- =========================================
+       FAVORITES / HISTORY
+  ========================================== -->
+
+  <div
+    id="toolFavoritesSection"
+    style="
+      display:none;
+      margin-top:30px;
+    "
+  >
+
+    <h3>
+      ⭐ Saved Favorites
+    </h3>
+
+    <div
+      id="toolFavoritesRow"
+      style="
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        padding-bottom:10px;
+      "
+    ></div>
+
+  </div>
+
+
+  <div
+    id="toolHistorySection"
+    style="
+      display:none;
+      margin-top:20px;
+    "
+  >
+
+    <h3>
+      🕒 Recent Tool History
+    </h3>
+
+    <div
+      id="toolHistoryRow"
+      style="
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        padding-bottom:10px;
+      "
+    ></div>
+
+  </div>
+
+
+  <!-- =========================================
+       STARTUP ANALYZER
+  ========================================== -->
+
+  <div
+    class="hubPanel"
+    id="ideaSection"
+  >
+
+    <h2>
+      💡 Startup Idea Analyzer
+    </h2>
+
+    <textarea
+      id="ideaInput"
+      rows="3"
+      maxlength="20000"
+      placeholder="Describe your startup idea here..."
+    ></textarea>
+
     <div class="flex-between">
-      <select id="languageSelect" style="width: auto;"><option value="auto">Auto Detect</option><option value="English">English</option><option value="Hindi">Hindi</option></select>
-      <div><span id="charCount" style="color: var(--text-muted); margin-right: 10px;">0</span>
-      <button id="generateBtn">✨ Generate Report</button><button id="newIdeaBtn" class="btn-secondary">🔄 New Idea</button></div>
+
+      <select
+        id="languageSelect"
+        style="width:auto;"
+      >
+        <option value="auto">
+          Auto Detect
+        </option>
+
+        <option value="English">
+          English
+        </option>
+
+        <option value="Hindi">
+          Hindi
+        </option>
+      </select>
+
+      <div>
+
+        <span
+          id="charCount"
+          style="
+            color:var(--text-muted);
+            margin-right:10px;
+          "
+        >
+          0
+        </span>
+
+        <button
+          id="generateBtn"
+          type="button"
+        >
+          ✨ Generate Report
+        </button>
+
+        <button
+          id="newIdeaBtn"
+          class="btn-secondary"
+          type="button"
+        >
+          🔄 New Idea
+        </button>
+
+      </div>
+
     </div>
+
   </div>
 
-  <div id="reportSection" style="display:none;">
+
+  <!-- =========================================
+       REPORT
+  ========================================== -->
+
+  <div
+    id="reportSection"
+    style="display:none;"
+  >
+
     <div class="hubPanel">
-      <h2>📊 Analysis Score</h2>
-      <div style="font-size: 24px; font-weight: bold; margin-bottom: 15px;">Overall: <span id="scoreOverall">--</span>/100</div>
-      <div>Market Demand: <span id="valMarket">--</span><div class="scoreBar"><div id="barMarket" class="scoreBarFill" style="width:0%"></div></div></div>
-      <div>Low Competition: <span id="valCompetition">--</span><div class="scoreBar"><div id="barCompetition" class="scoreBarFill" style="width:0%"></div></div></div>
-      <div>Profit Potential: <span id="valProfit">--</span><div class="scoreBar"><div id="barProfit" class="scoreBarFill" style="width:0%"></div></div></div>
-      <div>Ease to Start: <span id="valDifficulty">--</span><div class="scoreBar"><div id="barDifficulty" class="scoreBarFill" style="width:0%"></div></div></div>
+
+      <h2>
+        📊 Analysis Score
+      </h2>
+
+      <div
+        style="
+          font-size:24px;
+          font-weight:bold;
+          margin-bottom:15px;
+        "
+      >
+        Overall:
+        <span id="scoreOverall">--</span>/100
+      </div>
+
+      <div>
+        Market Demand:
+        <span id="valMarket">--</span>
+
+        <div class="scoreBar">
+          <div
+            id="barMarket"
+            class="scoreBarFill"
+            style="width:0%;"
+          ></div>
+        </div>
+      </div>
+
+      <div>
+        Low Competition:
+        <span id="valCompetition">--</span>
+
+        <div class="scoreBar">
+          <div
+            id="barCompetition"
+            class="scoreBarFill"
+            style="width:0%;"
+          ></div>
+        </div>
+      </div>
+
+      <div>
+        Profit Potential:
+        <span id="valProfit">--</span>
+
+        <div class="scoreBar">
+          <div
+            id="barProfit"
+            class="scoreBarFill"
+            style="width:0%;"
+          ></div>
+        </div>
+      </div>
+
+      <div>
+        Ease to Start:
+        <span id="valDifficulty">--</span>
+
+        <div class="scoreBar">
+          <div
+            id="barDifficulty"
+            class="scoreBarFill"
+            style="width:0%;"
+          ></div>
+        </div>
+      </div>
+
     </div>
+
+
     <div id="reportSections"></div>
-    <div class="flex-between" style="margin-top: 20px;">
-      <button id="downloadPdfBtn"> Download PDF</button><button id="copyReportBtn">📋 Copy</button><button id="shareReportBtn">📤 Share</button>
+
+
+    <div
+      class="flex-between"
+      style="margin-top:20px;"
+    >
+
+      <button
+        id="downloadPdfBtn"
+        type="button"
+      >
+        📄 Download PDF
+      </button>
+
+      <button
+        id="copyReportBtn"
+        type="button"
+      >
+        📋 Copy
+      </button>
+
+      <button
+        id="shareReportBtn"
+        type="button"
+      >
+        📤 Share
+      </button>
+
     </div>
-    <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
-      <input type="text" id="budgetInput" placeholder="Optional: Your Budget (e.g., ₹50,000)" style="flex:1; min-width: 200px;">
-      <button id="generateLaunchPlanBtn">🚀 Generate 30-Day Launch Plan</button><button id="generatePitchDeckBtn">🎤 Generate Investor Pitch Deck</button>
+
+
+    <div
+      style="
+        margin-top:30px;
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+      "
+    >
+
+      <input
+        type="text"
+        id="budgetInput"
+        placeholder="Optional: Your Budget (e.g., ₹50,000)"
+        style="
+          flex:1;
+          min-width:200px;
+        "
+      >
+
+      <button
+        id="generateLaunchPlanBtn"
+        type="button"
+      >
+        🚀 Generate 30-Day Launch Plan
+      </button>
+
+      <button
+        id="generatePitchDeckBtn"
+        type="button"
+      >
+        🎤 Generate Investor Pitch Deck
+      </button>
+
     </div>
-    <div id="launchPlanSection" style="display:none; margin-top: 20px;"><div id="launchPlanSections"></div><div class="flex-between"><button id="downloadLaunchPlanPdfBtn">📄 PDF</button><button id="copyLaunchPlanBtn"> Copy</button><button id="shareLaunchPlanBtn">📤 Share</button></div></div>
-    <div id="pitchDeckSection" style="display:none; margin-top: 20px;"><div id="pitchDeckSlides"></div><div class="flex-between"><button id="downloadPitchDeckPdfBtn"> PDF</button><button id="copyPitchDeckBtn">📋 Copy</button><button id="sharePitchDeckBtn">📤 Share</button></div></div>
+
+
+    <div
+      id="launchPlanSection"
+      style="
+        display:none;
+        margin-top:20px;
+      "
+    >
+
+      <div id="launchPlanSections"></div>
+
+      <div class="flex-between">
+
+        <button
+          id="downloadLaunchPlanPdfBtn"
+          type="button"
+        >
+          📄 PDF
+        </button>
+
+        <button
+          id="copyLaunchPlanBtn"
+          type="button"
+        >
+          📋 Copy
+        </button>
+
+        <button
+          id="shareLaunchPlanBtn"
+          type="button"
+        >
+          📤 Share
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="pitchDeckSection"
+      style="
+        display:none;
+        margin-top:20px;
+      "
+    >
+
+      <div id="pitchDeckSlides"></div>
+
+      <div class="flex-between">
+
+        <button
+          id="downloadPitchDeckPdfBtn"
+          type="button"
+        >
+          📄 PDF
+        </button>
+
+        <button
+          id="copyPitchDeckBtn"
+          type="button"
+        >
+          📋 Copy
+        </button>
+
+        <button
+          id="sharePitchDeckBtn"
+          type="button"
+        >
+          📤 Share
+        </button>
+
+      </div>
+
+    </div>
+
   </div>
 
-  <div class="infoGrid" id="infoGrid">
-    <div class="infoCard"><h3> Popular Tools</h3><ul><li>🤖 Business Agent (One-Click)</li><li>💬 AI Chat (Remembers Context)</li><li>📸 Quote Card Maker</li><li>✉️ Cold Email Templates</li></ul></div>
-    <div class="infoCard"><h3>💡 Daily AI Tip</h3><p class="tip-text" id="dailyTip">Use the Business Agent to generate a full startup plan in one click!</p></div>
-    <div class="infoCard"><h3>🎯 Trending Prompts</h3><ul><li>"Agent: Mujhe ek kapde ka business shuru karna hai"</li><li>"Chat: Help me plan my day"</li><li>"Make a card: Success is not final"</li></ul></div>
+
+  <!-- =========================================
+       INFORMATION
+  ========================================== -->
+
+  <div
+    class="infoGrid"
+    id="infoGrid"
+  >
+
+    <div class="infoCard">
+
+      <h3>
+        ⭐ Popular Tools
+      </h3>
+
+      <ul>
+        <li>🤖 Business Agent</li>
+        <li>💬 AI Chat</li>
+        <li>📸 Quote Card Maker</li>
+        <li>✉️ Cold Email Templates</li>
+      </ul>
+
+    </div>
+
+
+    <div class="infoCard">
+
+      <h3>
+        💡 Daily AI Tip
+      </h3>
+
+      <p
+        class="tip-text"
+        id="dailyTip"
+      >
+        Use the Business Agent to generate
+        a full startup plan in one click!
+      </p>
+
+    </div>
+
+
+    <div class="infoCard">
+
+      <h3>
+        🎯 Trending Prompts
+      </h3>
+
+      <ul>
+
+        <li>
+          "Agent: Mujhe ek kapde ka business shuru karna hai"
+        </li>
+
+        <li>
+          "Chat: Help me plan my day"
+        </li>
+
+        <li>
+          "Make a card: Success is not final"
+        </li>
+
+      </ul>
+
+    </div>
+
   </div>
 
-  <div id="proModal">
+
+  <!-- =========================================
+       PRO MODAL
+  ========================================== -->
+
+  <div
+    id="proModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="proModalTitle"
+  >
+
     <div class="modal-content">
-      <h2 style="color: gold;">🚀 Upgrade to Pro</h2><p>Unlimited AI • No Ads • Priority • All Tools</p><h3 style="color: var(--primary);">₹499 / month</h3>
-      <button id="upgradeProBtn" style="width: 100%; margin-top: 10px;">💳 Pay & Activate Pro</button><br><br>
-      <button id="closeProModal" class="btn-secondary">Cancel</button>
-    </div>
-  </div>
-  <div id="toastContainer"></div>
 
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script defer src="app.js"></script>
+      <h2
+        id="proModalTitle"
+        style="color:gold;"
+      >
+        🚀 Upgrade to Pro
+      </h2>
+
+      <p>
+        Higher AI limits • No Ads • Priority • All Tools
+      </p>
+
+      <h3
+        style="color:var(--primary);"
+      >
+        ₹499 / month
+      </h3>
+
+      <button
+        id="upgradeProBtn"
+        type="button"
+        style="
+          width:100%;
+          margin-top:10px;
+        "
+      >
+        💳 Pay & Activate Pro
+      </button>
+
+      <br><br>
+
+      <button
+        id="closeProModal"
+        class="btn-secondary"
+        type="button"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       TOAST
+  ========================================== -->
+
+  <div
+    id="toastContainer"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+  <!-- =========================================
+       LIBRARIES
+  ========================================== -->
+
+  <script
+    defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+  ></script>
+
+  <script
+    defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+  ></script>
+
+  <!-- Main Application -->
+  <script
+    defer
+    src="/app.js"
+  ></script>
+
 </body>
 </html>
+```
