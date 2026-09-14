@@ -1,8 +1,14 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.1
+// IdeaForgeX - Main JavaScript v11.2
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
+// FIXED: FREE_DAILY_LIMIT was hardcoded to 15 here, separate
+// from worker.js's own limit — raising the backend limit alone
+// did nothing because this client-side check blocked requests
+// before they ever reached the API. Synced to 100 to match the
+// current TEMPORARY testing limit in worker.js. Remember to set
+// this back to 15 together with worker.js before going live.
 // ============================================================
 
 "use strict";
@@ -32,7 +38,9 @@ let lastToolPayload = null;
 const HISTORY_KEY = "ideaforgex_history";
 const HISTORY_LIMIT = 10;
 
-const FREE_DAILY_LIMIT = 15;
+// TEMP: raised to 100 for testing to match worker.js — change
+// both back to 15 before going live.
+const FREE_DAILY_LIMIT = 100;
 const USAGE_KEY = "ideaforge_usage";
 
 const PROJECTS_KEY = "ideaforge_projects_v2";
@@ -2751,5 +2759,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.1 initialized successfully.");
+  console.log("🚀 IdeaForgeX v11.2 initialized successfully.");
 });
