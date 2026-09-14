@@ -33,7 +33,8 @@ const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
-const FREE_DAILY_LIMIT = 15;
+// TEMP: raised for testing — change back to 15 before going live
+const FREE_DAILY_LIMIT = 100;
 const PRO_DAILY_LIMIT = 1000;
 
 const SESSION_TTL = 60 * 60 * 24 * 30;
