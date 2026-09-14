@@ -1,11 +1,17 @@
 // ========================================
-// IdeaForgeX Worker v12.3
+// IdeaForgeX Worker v12.4
 // Secure AI Multi-Tool + Agent + Vision
 // Sessions KV + KV-based Quota (Free Plan compatible)
 // FIXED: replaced QuotaDO (Durable Object / SQLite,
 //   requires Workers Paid Plan) with a simple KV-based
 //   daily counter using SESSIONS_KV, so this now runs
 //   on the Workers Free Plan.
+// ADDED: ACCURACY_RULE injected into every fact/business
+//   related prompt, instructing the model not to present
+//   guesses/estimates as verified facts; lowered temperature
+//   on factual tools (report, launch plan, pitch deck, agent,
+//   calculator, money calc, roast, improve idea, goal plan,
+//   student) to reduce fabricated-sounding confident answers.
 // Endpoints:
 //   /api/generate-launch-plan
 //   /api/generate-pitch-deck
@@ -21,7 +27,7 @@
 // ========================================
 
 const APP_NAME = "IdeaForgeX";
-const VERSION = "12.3";
+const VERSION = "12.4";
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
@@ -39,6 +45,18 @@ const QUOTA_TTL = 60 * 60 * 26;
 const MAX_TEXT_LENGTH = 20000;
 const MAX_REQUEST_SIZE = 12 * 1024 * 1024;
 const MAX_IMAGE_LENGTH = 8 * 1024 * 1024;
+
+// Injected into every prompt that could involve facts, numbers, or
+// market/business claims, so the model does not present guesses as
+// verified facts.
+const ACCURACY_RULE = `
+CRITICAL ACCURACY RULE:
+- If you are not certain about a fact, number, or statistic, clearly say so - do not invent numbers.
+- Do not present estimates or guesses as verified, confirmed facts.
+- For market size, competitor names, statistics, or costs you are not fully confident about, use qualifiers like "approximately", "typically", or "based on general trends" - never state a made-up exact figure as certain.
+- It is better to say a figure needs real research/verification than to fabricate a confident-sounding number.
+- Do not claim something is legally required, medically safe, or financially guaranteed unless you are certain - flag these as areas needing professional verification instead.
+`;
 
 // ========================================
 // CORS
@@ -146,6 +164,7 @@ USER REQUEST:
 
 ${getBrandContext({ brand })}
 ${langLine(lang)}
+${ACCURACY_RULE}
 
 Generate a COMPLETE business starter pack.
 Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
@@ -233,6 +252,7 @@ BUSINESS IDEA:
 
 ${getBrandContext({ brand })}
 ${langLine(lang)}
+${ACCURACY_RULE}
 
 Create a COMPLETE startup report.
 
@@ -309,6 +329,7 @@ BUDGET (optional, may be empty):
 
 ${getBrandContext({ brand })}
 ${langLine(lang)}
+${ACCURACY_RULE}
 
 Create a COMPLETE 30-day launch plan.
 
@@ -358,6 +379,7 @@ BUSINESS IDEA:
 
 ${getBrandContext({ brand })}
 ${langLine(lang)}
+${ACCURACY_RULE}
 
 Create a COMPLETE investor pitch deck as slide content.
 
@@ -408,6 +430,7 @@ USER REQUEST / PRODUCT OR BUSINESS DESCRIPTION:
 
 ${getBrandContext({ brand })}
 ${langLine(lang)}
+${ACCURACY_RULE}
 
 Generate a COMPLETE marketing content package.
 Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
@@ -460,6 +483,7 @@ You are an expert document analyst and teacher.
 
 DOCUMENT TEXT:
 "${cleanString(text, MAX_TEXT_LENGTH)}"
+${ACCURACY_RULE}
 
 Analyze this document and return ONLY valid JSON (no markdown, no code fences) using EXACTLY these keys:
 
@@ -487,6 +511,7 @@ function buildChatMessages(messages, brand) {
   const systemPrompt = `
 You are IdeaForgeX, a helpful, friendly AI assistant.
 ${getBrandContext({ brand })}
+${ACCURACY_RULE}
 Detect the user's language/script from their messages and reply naturally in the same language (English, Hindi/Devanagari, or Hinglish).
 Keep replies conversational and practical.
 `;
@@ -559,6 +584,7 @@ ${request}
     return `
 You are a helpful teacher.
 ${language}
+${ACCURACY_RULE}
 Explain the following in simple language. Use examples where helpful.
 
 REQUEST:
@@ -623,6 +649,7 @@ ${request}
 You are IdeaForgeX, a helpful AI assistant.
 ${brandContext}
 ${language}
+${ACCURACY_RULE}
 Answer the user's request accurately and practically.
 
 REQUEST:
@@ -991,7 +1018,7 @@ async function generateReport(request, env, session, body) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      lastRaw = await runTextAI(env, prompt, 2500, 0.6);
+      lastRaw = await runTextAI(env, prompt, 2500, 0.3);
       parsed = parseSections(lastRaw, sectionKeys);
 
       if (parsed && (parsed.anyMarkerFound || lastRaw.length > 20)) break;
@@ -1071,7 +1098,7 @@ async function generateLaunchPlanHandler(request, env, session, body) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const raw = await runTextAI(env, prompt, 2500, 0.6);
+      const raw = await runTextAI(env, prompt, 2500, 0.3);
       parsed = parseSections(raw, sectionKeys);
 
       if (parsed && (parsed.anyMarkerFound || raw.length > 20)) break;
@@ -1151,7 +1178,7 @@ async function generatePitchDeckHandler(request, env, session, body) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const raw = await runTextAI(env, prompt, 2200, 0.6);
+      const raw = await runTextAI(env, prompt, 2200, 0.3);
       parsed = parseSections(raw, sectionKeys);
 
       if (parsed && (parsed.anyMarkerFound || raw.length > 20)) break;
@@ -1293,7 +1320,8 @@ async function aiTool(request, env, session, body) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      resultText = await runTextAI(env, prompt, 1800, tool === "calculator" ? 0.2 : 0.7);
+      const factualTools = ["calculator", "moneycalc", "roast", "improveidea", "goalplan", "student"];
+      resultText = await runTextAI(env, prompt, 1800, factualTools.includes(tool) ? 0.3 : 0.7);
       if (resultText.length > 3) break;
     } catch (error) {
       console.error("AI tool attempt failed:", error);
@@ -1553,7 +1581,7 @@ async function agentGenerate(request, env, session, body) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const rawText = await runTextAI(env, prompt, 4000, 0.7);
+      const rawText = await runTextAI(env, prompt, 4000, 0.5);
       const parsed = parseAgentResponse(rawText);
 
       if (parsed) {
