@@ -7,9 +7,7 @@
   "assets": {
     "directory": "public",
     "binding": "ASSETS",
-    "run_worker_first": [
-      "/api/*"
-    ]
+    "run_worker_first": ["/api/*"]
   },
 
   "ai": {
@@ -19,25 +17,7 @@
   "kv_namespaces": [
     {
       "binding": "SESSIONS_KV",
-      "id": "ee7baa2753f43e0ac1f80be4560d7be"
-    }
-  ],
-
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "QUOTA_DO",
-        "class_name": "QuotaDO"
-      }
-    ]
-  },
-
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_classes": [
-        "QuotaDO"
-      ]
+      "id": "ee7b4aa2753f43e0ac1f80be4560d7be"
     }
   ],
 
