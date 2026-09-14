@@ -1,9 +1,12 @@
 // ========================================
-// IdeaForgeX Worker v12.2
+// IdeaForgeX Worker v12.3
 // Secure AI Multi-Tool + Agent + Vision
-// Sessions KV + SQLite Durable Object Quota
-// FIXED: added missing endpoints that the
-// frontend (app.js) was already calling:
+// Sessions KV + KV-based Quota (Free Plan compatible)
+// FIXED: replaced QuotaDO (Durable Object / SQLite,
+//   requires Workers Paid Plan) with a simple KV-based
+//   daily counter using SESSIONS_KV, so this now runs
+//   on the Workers Free Plan.
+// Endpoints:
 //   /api/generate-launch-plan
 //   /api/generate-pitch-deck
 //   /api/chat
@@ -13,14 +16,12 @@
 //   /api/image-tool  (alias of /api/vision)
 // ========================================
 
-import { DurableObject } from "cloudflare:workers";
-
 // ========================================
 // CONFIG
 // ========================================
 
 const APP_NAME = "IdeaForgeX";
-const VERSION = "12.2";
+const VERSION = "12.3";
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
@@ -30,6 +31,10 @@ const FREE_DAILY_LIMIT = 15;
 const PRO_DAILY_LIMIT = 1000;
 
 const SESSION_TTL = 60 * 60 * 24 * 30;
+
+// Quota keys are stored per session per day and expire a little
+// after 24 hours so they auto-reset without any cleanup job.
+const QUOTA_TTL = 60 * 60 * 26;
 
 const MAX_TEXT_LENGTH = 20000;
 const MAX_REQUEST_SIZE = 12 * 1024 * 1024;
@@ -289,7 +294,7 @@ Do not add unnecessary sections.
 }
 
 // ========================================
-// LAUNCH PLAN PROMPT  (NEW)
+// LAUNCH PLAN PROMPT
 // ========================================
 
 function buildLaunchPlanPrompt(idea, budget, lang, brand) {
@@ -341,7 +346,7 @@ Do not add unnecessary sections. Do not make unrealistic guarantees.
 }
 
 // ========================================
-// PITCH DECK PROMPT  (NEW)
+// PITCH DECK PROMPT
 // ========================================
 
 function buildPitchDeckPrompt(idea, lang, brand) {
@@ -391,7 +396,7 @@ Do not add unnecessary sections.
 }
 
 // ========================================
-// AUTOPILOT PROMPT  (NEW)
+// AUTOPILOT PROMPT
 // ========================================
 
 function buildAutopilotPrompt(input, lang, brand) {
@@ -424,7 +429,7 @@ Each value must be a plain string (not nested objects/arrays).
 }
 
 // ========================================
-// REMIX PROMPT  (NEW)
+// REMIX PROMPT
 // ========================================
 
 function buildRemixPrompt(text, style, brand) {
@@ -446,7 +451,7 @@ ORIGINAL TEXT:
 }
 
 // ========================================
-// DOCUMENT AI PROMPT  (NEW)
+// DOCUMENT AI PROMPT
 // ========================================
 
 function buildDocumentPrompt(text) {
@@ -475,7 +480,7 @@ MCQS: 3 multiple choice questions (with options and the correct answer marked) a
 }
 
 // ========================================
-// CHAT PROMPT  (NEW)
+// CHAT PROMPT
 // ========================================
 
 function buildChatMessages(messages, brand) {
@@ -724,7 +729,7 @@ async function runTextAI(env, prompt, maxTokens = 2048, temperature = 0.6) {
   return cleanString(response, MAX_TEXT_LENGTH);
 }
 
-// AI runner for raw chat-style messages array -> string  (NEW, used by /api/chat)
+// AI runner for raw chat-style messages array -> string (used by /api/chat)
 async function runChatAI(env, messages, maxTokens = 1200, temperature = 0.7) {
   if (!env.AI) {
     throw new Error("Workers AI binding 'AI' missing.");
@@ -873,11 +878,17 @@ function attachSessionCookie(response, session) {
 
 // ========================================
 // QUOTA CHECK / ROLLBACK
+// KV-based daily counter (Free Plan compatible).
+// Key: quota:<sessionId>:<YYYY-MM-DD>, value: usage count.
+// Note: KV is eventually consistent, so under heavy concurrent
+// use from the same session there is a small chance of the
+// limit being off by one or two. Acceptable at current traffic;
+// revisit with Durable Objects if you move to the Paid Plan.
 // ========================================
 
 async function checkQuota(env, session) {
-  if (!env.QUOTA_DO) {
-    throw new Error("QUOTA_DO binding missing. Add the QuotaDO Durable Object binding in Cloudflare.");
+  if (!env.SESSIONS_KV) {
+    throw new Error("SESSIONS_KV binding missing. Add the SESSIONS_KV binding in Cloudflare.");
   }
 
   if (!session || !session.id) {
@@ -887,18 +898,37 @@ async function checkQuota(env, session) {
   const plan = session.plan === "pro" ? "pro" : "free";
   const limit = plan === "pro" ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
 
-  const stub = env.QUOTA_DO.getByName(session.id);
-  const result = await stub.consume(today(), limit);
+  const key = `quota:${session.id}:${today()}`;
 
-  return { ...result, plan };
+  const raw = await env.SESSIONS_KV.get(key);
+  const currentUsage = safeInteger(raw, 0, 0, PRO_DAILY_LIMIT);
+
+  if (currentUsage >= limit) {
+    return { allowed: false, usage: currentUsage, limit, remaining: 0, plan };
+  }
+
+  const usage = currentUsage + 1;
+
+  await env.SESSIONS_KV.put(key, String(usage), { expirationTtl: QUOTA_TTL });
+
+  return { allowed: true, usage, limit, remaining: Math.max(0, limit - usage), plan };
 }
 
 async function rollbackQuota(env, session) {
-  if (!env.QUOTA_DO || !session?.id) return;
+  if (!env.SESSIONS_KV || !session?.id) return;
 
   try {
-    const stub = env.QUOTA_DO.getByName(session.id);
-    await stub.rollback(today());
+    const key = `quota:${session.id}:${today()}`;
+
+    const raw = await env.SESSIONS_KV.get(key);
+    const currentUsage = safeInteger(raw, 0, 0, PRO_DAILY_LIMIT);
+    const usage = Math.max(0, currentUsage - 1);
+
+    if (usage === 0) {
+      await env.SESSIONS_KV.delete(key);
+    } else {
+      await env.SESSIONS_KV.put(key, String(usage), { expirationTtl: QUOTA_TTL });
+    }
   } catch (error) {
     console.error("Quota rollback error:", error);
   }
@@ -992,7 +1022,7 @@ async function generateReport(request, env, session, body) {
 }
 
 // ========================================
-// LAUNCH PLAN  (NEW)
+// LAUNCH PLAN
 // ========================================
 
 async function generateLaunchPlanHandler(request, env, session, body) {
@@ -1072,7 +1102,7 @@ async function generateLaunchPlanHandler(request, env, session, body) {
 }
 
 // ========================================
-// PITCH DECK  (NEW)
+// PITCH DECK
 // ========================================
 
 async function generatePitchDeckHandler(request, env, session, body) {
@@ -1152,7 +1182,7 @@ async function generatePitchDeckHandler(request, env, session, body) {
 }
 
 // ========================================
-// CHAT  (NEW)
+// CHAT
 // ========================================
 
 async function chatHandler(request, env, session, body) {
@@ -1304,7 +1334,7 @@ async function aiTool(request, env, session, body) {
 }
 
 // ========================================
-// AI AUTOPILOT  (NEW)
+// AI AUTOPILOT
 // ========================================
 
 async function autopilotHandler(request, env, session, body) {
@@ -1367,7 +1397,7 @@ async function autopilotHandler(request, env, session, body) {
 }
 
 // ========================================
-// REMIX / MAKE-IT-BETTER  (NEW)
+// REMIX / MAKE-IT-BETTER
 // ========================================
 
 async function remixHandler(request, env, session, body) {
@@ -1429,7 +1459,7 @@ async function remixHandler(request, env, session, body) {
 }
 
 // ========================================
-// DOCUMENT AI  (NEW)
+// DOCUMENT AI
 // ========================================
 
 async function documentAiHandler(request, env, session, body) {
@@ -1767,8 +1797,7 @@ function health(request, env) {
       bindings: {
         AI: Boolean(env.AI),
         ASSETS: Boolean(env.ASSETS),
-        SESSIONS_KV: Boolean(env.SESSIONS_KV),
-        QUOTA_DO: Boolean(env.QUOTA_DO)
+        SESSIONS_KV: Boolean(env.SESSIONS_KV)
       }
     },
     200,
@@ -1974,101 +2003,3 @@ export default {
     }
   }
 };
-
-// ========================================
-// DURABLE OBJECT - SQLite-backed QuotaDO
-// ========================================
-
-export class QuotaDO extends DurableObject {
-  constructor(ctx, env) {
-    super(ctx, env);
-
-    this.ctx = ctx;
-    this.env = env;
-
-    this.ctx.storage.sql.exec(`
-      CREATE TABLE IF NOT EXISTS daily_usage (
-        date TEXT PRIMARY KEY,
-        usage INTEGER NOT NULL DEFAULT 0
-      )
-    `);
-  }
-
-  async consume(date, limit) {
-    const safeDate = cleanString(date, 20);
-
-    if (!safeDate) {
-      throw new Error("Invalid quota date.");
-    }
-
-    const safeLimit = Math.max(1, safeInteger(limit, FREE_DAILY_LIMIT, 1, PRO_DAILY_LIMIT));
-
-    const rows = this.ctx.storage.sql
-      .exec(`SELECT usage FROM daily_usage WHERE date = ?`, safeDate)
-      .toArray();
-
-    let usage = rows.length ? Number(rows[0].usage) : 0;
-    usage = Math.max(0, usage);
-
-    if (usage >= safeLimit) {
-      return { allowed: false, usage, limit: safeLimit, remaining: 0 };
-    }
-
-    usage += 1;
-
-    this.ctx.storage.sql.exec(
-      `
-      INSERT INTO daily_usage (date, usage)
-      VALUES (?, ?)
-      ON CONFLICT(date) DO UPDATE SET usage = excluded.usage
-      `,
-      safeDate,
-      usage
-    );
-
-    this.ctx.storage.sql.exec(`DELETE FROM daily_usage WHERE date < ?`, safeDate);
-
-    return { allowed: true, usage, limit: safeLimit, remaining: Math.max(0, safeLimit - usage) };
-  }
-
-  async rollback(date) {
-    const safeDate = cleanString(date, 20);
-
-    if (!safeDate) {
-      return { success: false, usage: 0 };
-    }
-
-    const rows = this.ctx.storage.sql
-      .exec(`SELECT usage FROM daily_usage WHERE date = ?`, safeDate)
-      .toArray();
-
-    if (!rows.length) {
-      return { success: true, usage: 0 };
-    }
-
-    let usage = Number(rows[0].usage) || 0;
-    usage = Math.max(0, usage - 1);
-
-    if (usage === 0) {
-      this.ctx.storage.sql.exec(`DELETE FROM daily_usage WHERE date = ?`, safeDate);
-    } else {
-      this.ctx.storage.sql.exec(`UPDATE daily_usage SET usage = ? WHERE date = ?`, usage, safeDate);
-    }
-
-    return { success: true, usage };
-  }
-
-  async getUsage(date) {
-    const safeDate = cleanString(date, 20);
-
-    if (!safeDate) return 0;
-
-    const rows = this.ctx.storage.sql
-      .exec(`SELECT usage FROM daily_usage WHERE date = ?`, safeDate)
-      .toArray();
-
-    if (!rows.length) return 0;
-
-    return Math.max(0, Number(rows[0].usage) || 0);
-  }
-}
