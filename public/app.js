@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.2
+// IdeaForgeX - Main JavaScript v11.3
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -9,6 +9,10 @@
 // before they ever reached the API. Synced to 100 to match the
 // current TEMPORARY testing limit in worker.js. Remember to set
 // this back to 15 together with worker.js before going live.
+// ADDED: cloud backup for projects, idea history, brand profile
+// and tool history via /api/data-save and /api/data-load, so a
+// cleared browser cache or a new device doesn't lose everything.
+// localStorage remains the primary, fast copy.
 // ============================================================
 
 "use strict";
@@ -156,6 +160,94 @@ function getApiHeaders() {
 }
 
 // ============================================================
+// CLOUD DATA BACKUP
+// localStorage stays the fast, primary copy of projects,
+// idea history, brand profile and tool history. These helpers
+// silently mirror that data to the server (SESSIONS_KV) as a
+// backup, and can restore it if localStorage is ever empty
+// (new browser, cleared cache, new device). Sync failures are
+// non-fatal - the app keeps working from localStorage either way.
+// ============================================================
+
+async function syncToServer(type, data) {
+  try {
+    await fetch("/api/data-save", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ type, data })
+    });
+  } catch (error) {
+    console.warn("Cloud backup failed (non-fatal):", type, error);
+  }
+}
+
+async function loadFromServer() {
+  try {
+    const response = await fetch("/api/data-load", {
+      method: "GET",
+      headers: getApiHeaders()
+    });
+
+    const result = await parseApiResponse(response);
+
+    if (!result.success) return null;
+
+    return result.data || null;
+  } catch (error) {
+    console.warn("Cloud restore failed (non-fatal):", error);
+    return null;
+  }
+}
+
+// On startup: for each data type, if localStorage is empty but the
+// server has a backup, restore it. If localStorage already has data,
+// leave it as-is (it's the source of truth) and just push a fresh
+// backup copy up to the server so the backup stays current.
+async function restoreOrBackupUserData() {
+  const serverData = await loadFromServer();
+  if (!serverData) return;
+
+  const localHistory = getHistory();
+  if (!localHistory.length && Array.isArray(serverData.history) && serverData.history.length) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(serverData.history));
+  } else if (localHistory.length) {
+    syncToServer("history", localHistory);
+  }
+
+  const localProjects = getProjects();
+  if (!localProjects.length && Array.isArray(serverData.projects) && serverData.projects.length) {
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(serverData.projects));
+  } else if (localProjects.length) {
+    syncToServer("projects", localProjects);
+  }
+
+  const localToolHistory = getToolHistory();
+  if (!localToolHistory.length && Array.isArray(serverData.toolhistory) && serverData.toolhistory.length) {
+    localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(serverData.toolhistory));
+  } else if (localToolHistory.length) {
+    syncToServer("toolhistory", localToolHistory);
+  }
+
+  const hasLocalBrand = Boolean(userBrand.name || userBrand.industry || userBrand.audience);
+
+  if (!hasLocalBrand && serverData.brand && typeof serverData.brand === "object") {
+    userBrand = {
+      name: serverData.brand.name || "",
+      industry: serverData.brand.industry || "",
+      audience: serverData.brand.audience || ""
+    };
+
+    localStorage.setItem("ideaforge_brand", JSON.stringify(userBrand));
+  } else if (hasLocalBrand) {
+    syncToServer("brand", userBrand);
+  }
+
+  renderHistory();
+  renderToolHistory();
+  renderProjects();
+}
+
+// ============================================================
 // HISTORY
 // ============================================================
 
@@ -181,6 +273,7 @@ function saveToHistory(idea, report) {
   }
 
   localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  syncToServer("history", list);
   renderHistory();
 }
 
@@ -2089,6 +2182,7 @@ function getProjects() {
 
 function saveProjects(projects) {
   localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+  syncToServer("projects", projects);
 }
 
 function createProject() {
@@ -2257,6 +2351,7 @@ function saveToToolHistory(tool, input, result) {
   history = history.slice(0, 15);
 
   localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(history));
+  syncToServer("toolhistory", history);
   renderToolHistory();
 }
 
@@ -2331,6 +2426,7 @@ function saveBrand() {
   };
 
   localStorage.setItem("ideaforge_brand", JSON.stringify(userBrand));
+  syncToServer("brand", userBrand);
 
   const modal = document.getElementById("brandModal");
   if (modal) modal.style.display = "none";
@@ -2443,6 +2539,12 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHistory();
   renderToolHistory();
   renderUsageBanner();
+
+  // Restore from server backup if localStorage is empty (new
+  // browser/device/cache-clear), or back up current local data
+  // to the server if it isn't. Runs in the background; UI is
+  // already usable from localStorage while this completes.
+  restoreOrBackupUserData();
 
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
   document.getElementById("generateLaunchPlanBtn")?.addEventListener("click", generateLaunchPlan);
