@@ -1,3 +1,4 @@
+
 // ========================================
 // IdeaForgeX Worker v12.4
 // Secure AI Multi-Tool + Agent + Vision
@@ -866,6 +867,100 @@ async function saveSession(env, session) {
   await env.SESSIONS_KV.put(`session:${session.id}`, JSON.stringify(session), {
     expirationTtl: SESSION_TTL
   });
+}
+
+// ========================================
+// USER DATA BACKUP (projects, idea history,
+// brand profile, tool history)
+// Server-side copy of what the frontend keeps in
+// localStorage, so a cleared browser or a new device
+// does not lose everything. localStorage stays the
+// fast, primary copy; this is a backup/restore layer.
+// ========================================
+
+const USER_DATA_TYPES = ["projects", "history", "brand", "toolhistory"];
+const MAX_USER_DATA_BYTES = 150 * 1024; // 150KB per data type, generous for JSON blobs
+
+function safeJsonParseServer(value, fallback = null) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+async function loadUserDataHandler(request, env) {
+  const sessionResult = await getOrCreateSession(request, env);
+  const session = sessionResult.session;
+
+  if (!env.SESSIONS_KV) {
+    return jsonResponse(
+      { success: false, error: "SESSIONS_KV binding missing." },
+      500,
+      request
+    );
+  }
+
+  const data = {};
+
+  for (const type of USER_DATA_TYPES) {
+    const raw = await env.SESSIONS_KV.get(`udata:${session.id}:${type}`);
+    data[type] = raw ? safeJsonParseServer(raw, null) : null;
+  }
+
+  let response = jsonResponse({ success: true, data }, 200, request);
+
+  if (sessionResult.isNew) {
+    response = attachSessionCookie(response, session);
+  }
+
+  return response;
+}
+
+async function saveUserDataHandler(request, env, session, body) {
+  const type = cleanString(body.type, 50);
+
+  if (!USER_DATA_TYPES.includes(type)) {
+    return jsonResponse(
+      { success: false, error: "INVALID_TYPE", message: "Unknown data type." },
+      400,
+      request
+    );
+  }
+
+  if (!env.SESSIONS_KV) {
+    return jsonResponse(
+      { success: false, error: "SESSIONS_KV binding missing." },
+      500,
+      request
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = JSON.stringify(body.data ?? null);
+  } catch {
+    return jsonResponse(
+      { success: false, error: "INVALID_DATA", message: "Data could not be serialized." },
+      400,
+      request
+    );
+  }
+
+  if (payload.length > MAX_USER_DATA_BYTES) {
+    return jsonResponse(
+      { success: false, error: "DATA_TOO_LARGE", message: "Data too large to back up." },
+      413,
+      request
+    );
+  }
+
+  await env.SESSIONS_KV.put(`udata:${session.id}:${type}`, payload, {
+    expirationTtl: SESSION_TTL
+  });
+
+  return jsonResponse({ success: true }, 200, request);
 }
 
 async function getOrCreateSession(request, env) {
@@ -1900,6 +1995,14 @@ async function handleAPI(request, env) {
   }
 
   // --------------------------------------
+  // USER DATA LOAD (backup restore, GET)
+  // --------------------------------------
+
+  if (path === "/api/data-load" && request.method === "GET") {
+    return loadUserDataHandler(request, env);
+  }
+
+  // --------------------------------------
   // API REQUESTS (all POST, JSON body)
   // --------------------------------------
 
@@ -1958,7 +2061,8 @@ async function handleAPI(request, env) {
       "/api/agent-generate": agentGenerate,
       "/api/vision": vision,
       "/api/image-tool": vision, // app.js calls this path name; same handler as /api/vision
-      "/api/generate-image": generateImage
+      "/api/generate-image": generateImage,
+      "/api/data-save": saveUserDataHandler
     };
 
     const handler = routes[path];
