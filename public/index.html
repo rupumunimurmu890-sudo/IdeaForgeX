@@ -648,7 +648,8 @@
     #proModal,
     #remixModal,
     #brandModal,
-    #newProjectModal {
+    #newProjectModal,
+    #backupModal {
       position: fixed;
 
       inset: 0;
@@ -1405,6 +1406,16 @@
         style="padding:8px 15px;font-size:12px;"
       >
         👤 My Brand
+      </button>
+
+      <button
+        id="openBackupBtn"
+        class="btn-secondary"
+        type="button"
+        style="padding:8px 15px;font-size:12px;"
+        title="Backup code for restoring your data on another device"
+      >
+        🔑 Backup
       </button>
 
       <select
@@ -2561,6 +2572,107 @@
           type="button"
         >
           Cancel
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       BACKUP CODE MODAL
+  ========================================== -->
+
+  <div
+    id="backupModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="backupModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2
+        id="backupModalTitle"
+        style="color:var(--primary);"
+      >
+        🔑 Backup Code
+      </h2>
+
+      <p
+        style="
+          color:var(--text-muted);
+          font-size:14px;
+          text-align:left;
+        "
+      >
+        Your Projects, Idea History, Brand Profile and Tool History
+        are backed up on our server under this code. It is
+        <strong>not</strong> saved anywhere permanent by us on your
+        behalf — copy it somewhere safe now. If you clear your
+        browser or switch devices, paste this code below to get
+        your data back.
+      </p>
+
+      <input
+        type="text"
+        id="backupCodeDisplay"
+        readonly
+        style="font-size:12px;"
+        onclick="this.select()"
+      >
+
+      <button
+        id="copyBackupCodeBtn"
+        type="button"
+        style="width:100%;margin-bottom:15px;"
+      >
+        📋 Copy My Backup Code
+      </button>
+
+      <p
+        style="
+          color:var(--text-muted);
+          font-size:13px;
+          text-align:left;
+          border-top:1px solid var(--border);
+          padding-top:15px;
+        "
+      >
+        Have a code from another device? Restoring will
+        <strong>replace</strong> the data currently on this device.
+      </p>
+
+      <input
+        type="text"
+        id="restoreCodeInput"
+        placeholder="Paste a backup code to restore"
+      >
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          justify-content:center;
+          margin-top:15px;
+        "
+      >
+
+        <button
+          id="restoreBackupCodeBtn"
+          type="button"
+        >
+          ♻️ Restore This Code
+        </button>
+
+        <button
+          id="closeBackupBtn"
+          class="btn-secondary"
+          type="button"
+        >
+          Close
         </button>
 
       </div>
