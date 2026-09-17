@@ -27,7 +27,7 @@
 // ========================================
 
 const APP_NAME = "IdeaForgeX";
-const VERSION = "12.6";
+const VERSION = "12.7";
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
@@ -227,6 +227,57 @@ function extractJsonObject(rawText, requiredKey = null) {
     console.error("JSON parse error:", error);
     return null;
   }
+}
+
+// Shared runner for the "single JSON-structured tool" pattern used
+// by goalplan/moneycalc/video/workflow/email and similar: build a
+// prompt, retry up to 3 times until valid JSON with requiredKey
+// comes back, roll back quota and return an error on failure, or
+// return {structured, result} on success (result is a readable
+// plain-text join of the structured fields, for any consumer still
+// reading `result` directly instead of `structured`).
+async function runStructuredToolFlow(request, env, session, quota, opts) {
+  const {
+    prompt,
+    requiredKey,
+    temperature = 0.5,
+    maxTokens = 1800,
+    errorCode,
+    errorMessage,
+    textFields,
+    logLabel
+  } = opts;
+
+  let structured = null;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const raw = await runTextAI(env, prompt, maxTokens, temperature);
+      structured = extractJsonObject(raw, requiredKey);
+      if (structured) break;
+    } catch (error) {
+      console.error(`${logLabel || errorCode} attempt failed:`, error);
+    }
+  }
+
+  if (!structured) {
+    await rollbackQuota(env, session);
+
+    return jsonResponse({ success: false, error: errorCode, message: errorMessage }, 500, request);
+  }
+
+  const readableText = textFields(structured).filter(Boolean).join("\n\n");
+
+  return jsonResponse(
+    {
+      success: true,
+      result: readableText,
+      structured,
+      usage: { current: quota.usage, limit: quota.limit, remaining: quota.remaining }
+    },
+    200,
+    request
+  );
 }
 
 function parseAgentResponse(rawText) {
@@ -500,6 +551,333 @@ WHAT_IS_MISSING: 2-3 real gaps or risks, stated plainly (not softened).
 PRICING_STRATEGY: One concrete, practical pricing suggestion.
 TARGET_AUDIENCE: Who this should focus on first, and why.
 IMMEDIATE_NEXT_STEPS: 2-3 concrete actions to take this week.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// GOAL PLAN PROMPT
+// ========================================
+
+function buildGoalPlanPrompt(goal, timeframe, lang, brand) {
+  return `
+You are IdeaForgeX, an expert goal-setting and execution strategist.
+
+GOAL / OBJECTIVE:
+"${cleanString(goal)}"
+
+TIMEFRAME: ${cleanString(timeframe || "3 Months", 50)}
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Create a practical, achievable plan for this goal within the given timeframe.
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "OVERVIEW": "",
+  "MILESTONES": "",
+  "ACTION_PLAN": "",
+  "RESOURCES_NEEDED": "",
+  "POTENTIAL_OBSTACLES": ""
+}
+
+OVERVIEW: 2-3 sentence strategy overview for reaching this goal.
+MILESTONES: 3-4 key checkpoints across the timeframe, each with a rough date/week.
+ACTION_PLAN: A concrete, step-by-step breakdown of what to actually do.
+RESOURCES_NEEDED: Tools, skills, people, or budget needed.
+POTENTIAL_OBSTACLES: 2-3 realistic obstacles and how to handle each.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// MONEY CALC PROMPT
+// ========================================
+
+function buildMoneyCalcPrompt(description, investment, businessType, lang, brand) {
+  return `
+You are IdeaForgeX, a practical small-business financial advisor.
+
+BUSINESS / SCENARIO:
+"${cleanString(description)}"
+
+INVESTMENT AMOUNT (may be empty): "${cleanString(investment, 100)}"
+BUSINESS TYPE: ${cleanString(businessType || "Small Business", 100)}
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Give a practical, grounded financial breakdown. Use ₹ (INR) unless the
+input clearly implies another currency. If no investment amount was
+given, assume a realistic low-budget starting point for this business type.
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "INVESTMENT_BREAKDOWN": "",
+  "MONTHLY_EXPENSES": "",
+  "REVENUE_MODEL": "",
+  "PROFIT_PROJECTION": "",
+  "BREAK_EVEN": "",
+  "RISKS": ""
+}
+
+INVESTMENT_BREAKDOWN: Where the starting investment would practically go.
+MONTHLY_EXPENSES: Realistic recurring monthly costs.
+REVENUE_MODEL: How this makes money.
+PROFIT_PROJECTION: A cautious, clearly-labeled-as-estimated monthly/yearly projection.
+BREAK_EVEN: Rough estimate of when investment is recovered, with the
+assumptions stated.
+RISKS: 2-3 financial risks specific to this scenario.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// VIDEO SCRIPT PROMPT
+// ========================================
+
+function buildVideoScriptPrompt(topic, platform, lang, brand) {
+  return `
+You are IdeaForgeX, an expert short-form and long-form video scriptwriter.
+
+TOPIC / PRODUCT / IDEA:
+"${cleanString(topic)}"
+
+TARGET PLATFORM: ${cleanString(platform || "YouTube Long", 100)}
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+
+Write a video script suited to the target platform's format and typical length.
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "TITLE": "",
+  "HOOK": "",
+  "INTRO": "",
+  "BODY": "",
+  "CTA": "",
+  "HASHTAGS": ""
+}
+
+TITLE: A catchy, platform-appropriate title.
+HOOK: The first 1-2 lines meant to stop someone from scrolling.
+INTRO: A short intro setting up what the video covers.
+BODY: The main script/scene breakdown (this is the bulk of the content).
+CTA: A clear call to action for the end of the video.
+HASHTAGS: 5-8 relevant hashtags, space or comma separated.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// WORKFLOW PACK PROMPT
+// ========================================
+
+function buildWorkflowPrompt(input, workflowType, lang, brand) {
+  const workflowLabels = {
+    "startup-launch": "a Startup Launch Pack (idea validation, branding basics, and a launch checklist)",
+    "content-creator": "a Content Creator Pack (content ideas, captions, and a posting plan)",
+    "product-promo": "a Product Promotion Pack (ad angles, promo copy, and a short campaign plan)"
+  };
+
+  const workflowDescription = workflowLabels[workflowType] || workflowLabels["startup-launch"];
+
+  return `
+You are IdeaForgeX, generating a complete multi-part content pack.
+
+USER REQUEST:
+"${cleanString(input)}"
+
+PACK TYPE: Generate ${workflowDescription}.
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "PART_1": "",
+  "PART_2": "",
+  "PART_3": ""
+}
+
+Divide the pack into three clear, substantial parts appropriate to the
+pack type above (e.g. for a Startup Launch Pack: Part 1 = idea/branding
+basics, Part 2 = content/marketing starter set, Part 3 = launch
+checklist). Each part should be genuinely useful on its own.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// COLD EMAIL PROMPT
+// ========================================
+
+function buildEmailPrompt(input, emailType, lang, brand) {
+  return `
+You are IdeaForgeX, an expert at writing effective, non-spammy business emails.
+
+CONTEXT / WHAT THE EMAIL IS FOR:
+"${cleanString(input)}"
+
+EMAIL TYPE: ${cleanString(emailType || "Cold Outreach", 100)}
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+
+Write a complete, professional email of the given type. Keep it concise -
+real people skim emails; do not pad it out.
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "SUBJECT": "",
+  "BODY": "",
+  "SIGN_OFF": ""
+}
+
+SUBJECT: A short, specific subject line (not clickbait-y).
+BODY: The full email body, concise and to the point.
+SIGN_OFF: A brief closing line plus sign-off (e.g. "Best regards,").
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// POSTER / QUOTE CARD PROMPT
+// (shared structure - "poster" adds SUBHEADLINE and a
+// background "theme" gradient; "card" is a simpler quote card
+// with a "BG_GRADIENT")
+// ========================================
+
+const THEME_GRADIENTS = {
+  purple: "linear-gradient(135deg,#667eea,#764ba2)",
+  pink: "linear-gradient(135deg,#ff9a9e,#fecfef)",
+  orange: "linear-gradient(135deg,#f6a04d,#e0533d)",
+  dark: "linear-gradient(135deg,#0f172a,#334155)",
+  green: "linear-gradient(135deg,#134e5e,#71b280)"
+};
+
+function resolveThemeGradient(themeKey) {
+  return THEME_GRADIENTS[cleanString(themeKey, 20)] || THEME_GRADIENTS.purple;
+}
+
+function buildPosterPrompt(input, lang, brand) {
+  return `
+You are IdeaForgeX, a graphic-design copywriter creating poster text.
+
+TOPIC / PRODUCT / MESSAGE:
+"${cleanString(input)}"
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+
+Write punchy, poster-ready text. Keep every field short - this is
+going on a visual poster, not a document.
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "HEADLINE": "",
+  "SUBHEADLINE": "",
+  "BODY": "",
+  "FOOTER": ""
+}
+
+HEADLINE: Maximum 6 words, bold and attention-grabbing.
+SUBHEADLINE: Maximum 10 words, supporting the headline.
+BODY: 1-2 short sentences, maximum ~25 words total.
+FOOTER: A short CTA or tagline, maximum 8 words.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+function buildQuoteCardPrompt(input, lang, brand) {
+  return `
+You are IdeaForgeX, creating a shareable quote/status card.
+
+TOPIC OR TEXT TO BASE THE CARD ON:
+"${cleanString(input)}"
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+
+Write short, shareable card text. Keep every field short - this is
+going on a small social-media card, not a document.
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "HEADLINE": "",
+  "BODY": "",
+  "FOOTER": ""
+}
+
+HEADLINE: Maximum 8 words - the main quote or hook, bold and memorable.
+BODY: 1 short supporting sentence, maximum ~20 words.
+FOOTER: A short attribution, tagline, or CTA, maximum 8 words.
+
+Each value must be a plain string (not nested objects/arrays).
+`;
+}
+
+// ========================================
+// SOCIAL PACK PROMPT
+// ========================================
+
+function buildSocialPackPrompt(input, lang, brand) {
+  return `
+You are IdeaForgeX, an expert social media content creator.
+
+TOPIC / PRODUCT / BUSINESS:
+"${cleanString(input)}"
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+
+Generate a complete cross-platform social media content package.
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "INSTAGRAM": "",
+  "FACEBOOK": "",
+  "WHATSAPP": "",
+  "YOUTUBE_TITLE": "",
+  "YOUTUBE_DESCRIPTION": "",
+  "SHORTS_CAPTION": "",
+  "HASHTAGS": "",
+  "THUMBNAIL_PROMPT": ""
+}
+
+INSTAGRAM: A complete Instagram caption with a hook and CTA.
+FACEBOOK: A complete Facebook post, slightly more descriptive than Instagram.
+WHATSAPP: A short, forwardable WhatsApp message/status.
+YOUTUBE_TITLE: A clickable but honest YouTube video title.
+YOUTUBE_DESCRIPTION: A 2-3 sentence YouTube description.
+SHORTS_CAPTION: A short caption suited to Shorts/Reels.
+HASHTAGS: 8-10 relevant hashtags, space or comma separated.
+THUMBNAIL_PROMPT: A detailed AI image-generation prompt for a thumbnail.
 
 Each value must be a plain string (not nested objects/arrays).
 `;
@@ -1591,6 +1969,233 @@ async function aiTool(request, env, session, body) {
       200,
       request
     );
+  }
+
+  if (tool === "goalplan") {
+    const prompt = buildGoalPlanPrompt(input, body.timeframe, body.language || "auto", body.brand);
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "OVERVIEW",
+      temperature: 0.3,
+      maxTokens: 1800,
+      errorCode: "GOAL_PLAN_FAILED",
+      errorMessage: "Goal plan generate nahi hua. Please try again.",
+      textFields: (s) => [
+        s.OVERVIEW && `Overview: ${s.OVERVIEW}`,
+        s.MILESTONES && `Milestones: ${s.MILESTONES}`,
+        s.ACTION_PLAN && `Action Plan: ${s.ACTION_PLAN}`,
+        s.RESOURCES_NEEDED && `Resources Needed: ${s.RESOURCES_NEEDED}`,
+        s.POTENTIAL_OBSTACLES && `Potential Obstacles: ${s.POTENTIAL_OBSTACLES}`
+      ]
+    });
+  }
+
+  if (tool === "moneycalc") {
+    const prompt = buildMoneyCalcPrompt(
+      input,
+      body.investment,
+      body.businessType,
+      body.language || "auto",
+      body.brand
+    );
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "REVENUE_MODEL",
+      temperature: 0.3,
+      maxTokens: 1800,
+      errorCode: "MONEY_CALC_FAILED",
+      errorMessage: "Calculation generate nahi hui. Please try again.",
+      textFields: (s) => [
+        s.INVESTMENT_BREAKDOWN && `Investment Breakdown: ${s.INVESTMENT_BREAKDOWN}`,
+        s.MONTHLY_EXPENSES && `Monthly Expenses: ${s.MONTHLY_EXPENSES}`,
+        s.REVENUE_MODEL && `Revenue Model: ${s.REVENUE_MODEL}`,
+        s.PROFIT_PROJECTION && `Profit Projection: ${s.PROFIT_PROJECTION}`,
+        s.BREAK_EVEN && `Break-Even: ${s.BREAK_EVEN}`,
+        s.RISKS && `Risks: ${s.RISKS}`
+      ]
+    });
+  }
+
+  if (tool === "video") {
+    const prompt = buildVideoScriptPrompt(input, body.platform, body.language || "auto", body.brand);
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "TITLE",
+      temperature: 0.7,
+      maxTokens: 1800,
+      errorCode: "VIDEO_SCRIPT_FAILED",
+      errorMessage: "Video script generate nahi hua. Please try again.",
+      textFields: (s) => [
+        s.TITLE && `Title: ${s.TITLE}`,
+        s.HOOK && `Hook: ${s.HOOK}`,
+        s.INTRO && `Intro: ${s.INTRO}`,
+        s.BODY && `Body: ${s.BODY}`,
+        s.CTA && `CTA: ${s.CTA}`,
+        s.HASHTAGS && `Hashtags: ${s.HASHTAGS}`
+      ]
+    });
+  }
+
+  if (tool === "workflow") {
+    const prompt = buildWorkflowPrompt(input, body.workflowType, body.language || "auto", body.brand);
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "PART_1",
+      temperature: 0.6,
+      maxTokens: 2500,
+      errorCode: "WORKFLOW_FAILED",
+      errorMessage: "Workflow pack generate nahi hua. Please try again.",
+      textFields: (s) => [
+        s.PART_1 && `Part 1: ${s.PART_1}`,
+        s.PART_2 && `Part 2: ${s.PART_2}`,
+        s.PART_3 && `Part 3: ${s.PART_3}`
+      ]
+    });
+  }
+
+  if (tool === "email") {
+    const prompt = buildEmailPrompt(input, body.emailType, body.language || "auto", body.brand);
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "BODY",
+      temperature: 0.6,
+      maxTokens: 1200,
+      errorCode: "EMAIL_FAILED",
+      errorMessage: "Email generate nahi hua. Please try again.",
+      textFields: (s) => [
+        s.SUBJECT && `Subject: ${s.SUBJECT}`,
+        s.BODY && `Body: ${s.BODY}`,
+        s.SIGN_OFF && `Sign Off: ${s.SIGN_OFF}`
+      ]
+    });
+  }
+
+  if (tool === "poster") {
+    const prompt = buildPosterPrompt(input, body.language || "auto", body.brand);
+
+    let structured = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const raw = await runTextAI(env, prompt, 800, 0.7);
+        structured = extractJsonObject(raw, "HEADLINE");
+        if (structured) break;
+      } catch (error) {
+        console.error("Poster attempt failed:", error);
+      }
+    }
+
+    if (!structured) {
+      await rollbackQuota(env, session);
+
+      return jsonResponse(
+        { success: false, error: "POSTER_FAILED", message: "Poster generate nahi hua. Please try again." },
+        500,
+        request
+      );
+    }
+
+    // The frontend picks a theme gradient from the poster's
+    // "theme" field (see renderPosterResult); the user's selected
+    // theme (body.theme) decides which gradient, not the model.
+    structured.theme = resolveThemeGradient(body.theme);
+
+    const readableText = [
+      structured.HEADLINE && `Headline: ${structured.HEADLINE}`,
+      structured.SUBHEADLINE && `Subheadline: ${structured.SUBHEADLINE}`,
+      structured.BODY && `Body: ${structured.BODY}`,
+      structured.FOOTER && `Footer: ${structured.FOOTER}`
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    return jsonResponse(
+      {
+        success: true,
+        result: readableText,
+        structured,
+        usage: { current: quota.usage, limit: quota.limit, remaining: quota.remaining }
+      },
+      200,
+      request
+    );
+  }
+
+  if (tool === "card") {
+    const prompt = buildQuoteCardPrompt(input, body.language || "auto", body.brand);
+
+    let structured = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const raw = await runTextAI(env, prompt, 600, 0.7);
+        structured = extractJsonObject(raw, "HEADLINE");
+        if (structured) break;
+      } catch (error) {
+        console.error("Quote card attempt failed:", error);
+      }
+    }
+
+    if (!structured) {
+      await rollbackQuota(env, session);
+
+      return jsonResponse(
+        { success: false, error: "CARD_FAILED", message: "Card generate nahi hua. Please try again." },
+        500,
+        request
+      );
+    }
+
+    // renderCardResult reads BG_GRADIENT directly off the
+    // structured object (unlike poster's separate "theme" arg).
+    structured.BG_GRADIENT = resolveThemeGradient(body.theme);
+
+    const readableText = [
+      structured.HEADLINE && `Headline: ${structured.HEADLINE}`,
+      structured.BODY && `Body: ${structured.BODY}`,
+      structured.FOOTER && `Footer: ${structured.FOOTER}`
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    return jsonResponse(
+      {
+        success: true,
+        result: readableText,
+        structured,
+        usage: { current: quota.usage, limit: quota.limit, remaining: quota.remaining }
+      },
+      200,
+      request
+    );
+  }
+
+  if (tool === "socialpack") {
+    const prompt = buildSocialPackPrompt(input, body.language || "auto", body.brand);
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "INSTAGRAM",
+      temperature: 0.6,
+      maxTokens: 2200,
+      errorCode: "SOCIAL_PACK_FAILED",
+      errorMessage: "Social pack generate nahi hua. Please try again.",
+      textFields: (s) => [
+        s.INSTAGRAM && `Instagram: ${s.INSTAGRAM}`,
+        s.FACEBOOK && `Facebook: ${s.FACEBOOK}`,
+        s.WHATSAPP && `WhatsApp: ${s.WHATSAPP}`,
+        s.YOUTUBE_TITLE && `YouTube Title: ${s.YOUTUBE_TITLE}`,
+        s.YOUTUBE_DESCRIPTION && `YouTube Description: ${s.YOUTUBE_DESCRIPTION}`,
+        s.SHORTS_CAPTION && `Shorts Caption: ${s.SHORTS_CAPTION}`,
+        s.HASHTAGS && `Hashtags: ${s.HASHTAGS}`,
+        s.THUMBNAIL_PROMPT && `Thumbnail Prompt: ${s.THUMBNAIL_PROMPT}`
+      ]
+    });
   }
 
   const prompt = buildToolPrompt(tool, input, {
