@@ -1963,6 +1963,31 @@ async function runAiTool(input, tool) {
     payload.style = document.getElementById("imageStyleSelect")?.value || "realistic";
   }
 
+  if (tool === "goalplan") {
+    payload.timeframe = document.getElementById("goalTimeframeSelect")?.value || "3 Months";
+  }
+
+  if (tool === "moneycalc") {
+    payload.investment = document.getElementById("moneyInvestment")?.value || "";
+    payload.businessType = document.getElementById("moneyTypeSelect")?.value || "Small Business";
+  }
+
+  if (tool === "poster" || tool === "card") {
+    payload.theme = document.getElementById("posterThemeSelect")?.value || "purple";
+  }
+
+  if (tool === "video") {
+    payload.platform = document.getElementById("videoPlatformSelect")?.value || "YouTube Long";
+  }
+
+  if (tool === "workflow") {
+    payload.workflowType = document.getElementById("workflowTypeSelect")?.value || "startup-launch";
+  }
+
+  if (tool === "email") {
+    payload.emailType = document.getElementById("emailTypeSelect")?.value || "Cold Outreach";
+  }
+
   lastToolPayload = { ...payload, tool, input: input.trim() };
 
   try {
