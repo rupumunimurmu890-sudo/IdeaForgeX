@@ -27,7 +27,7 @@
 // ========================================
 
 const APP_NAME = "IdeaForgeX";
-const VERSION = "12.5";
+const VERSION = "12.6";
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
@@ -415,6 +415,50 @@ How much funding is needed and what it will be used for.
 
 Keep each slide concise (investor-deck style, not essays).
 Do not add unnecessary sections.
+`;
+}
+
+// ========================================
+// ROAST IDEA PROMPT
+// (structured JSON so the frontend's dedicated
+// renderRoastResult() shark-score card can actually
+// populate — previously this tool only produced plain text)
+// ========================================
+
+function buildRoastPrompt(idea, lang, brand) {
+  return `
+You are a brutally honest "Shark Tank" style startup critic - blunt,
+funny, but ultimately trying to help, not just tearing things down.
+
+BUSINESS IDEA:
+"${cleanString(idea)}"
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Roast this idea like a shark investor would, then give real advice.
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "SHARK_SCORE": 0,
+  "THE_GOOD": "",
+  "THE_ROAST": "",
+  "THE_FIX": "",
+  "FINAL_VERDICT": ""
+}
+
+SHARK_SCORE: An integer from 0 to 10 (not a string) rating the idea's
+current investability.
+THE_GOOD: 1-2 sentences on what's genuinely working, if anything.
+THE_ROAST: 2-3 blunt, witty sentences on the idea's real weaknesses -
+be direct, not cruel.
+THE_FIX: 2-3 concrete changes that would meaningfully improve it.
+FINAL_VERDICT: One punchy closing sentence, shark-tank style.
+
+Each string value must be plain text (not nested objects/arrays).
+SHARK_SCORE must be a plain number, not a string.
 `;
 }
 
@@ -1478,6 +1522,61 @@ async function aiTool(request, env, session, body) {
       structured.PRICING_STRATEGY && `Pricing Strategy: ${structured.PRICING_STRATEGY}`,
       structured.TARGET_AUDIENCE && `Target Audience: ${structured.TARGET_AUDIENCE}`,
       structured.IMMEDIATE_NEXT_STEPS && `Next Steps: ${structured.IMMEDIATE_NEXT_STEPS}`
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    return jsonResponse(
+      {
+        success: true,
+        result: readableText,
+        structured,
+        usage: { current: quota.usage, limit: quota.limit, remaining: quota.remaining }
+      },
+      200,
+      request
+    );
+  }
+
+  // "roast" gets the same dedicated JSON-structured treatment so
+  // renderRoastResult()'s shark-score card actually populates.
+  if (tool === "roast") {
+    const prompt = buildRoastPrompt(input, body.language || "auto", body.brand);
+
+    let structured = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const raw = await runTextAI(env, prompt, 1500, 0.6);
+        structured = extractJsonObject(raw, "FINAL_VERDICT");
+        if (structured) break;
+      } catch (error) {
+        console.error("Roast attempt failed:", error);
+      }
+    }
+
+    if (!structured) {
+      await rollbackQuota(env, session);
+
+      return jsonResponse(
+        { success: false, error: "ROAST_FAILED", message: "Roast generate nahi hui. Please try again." },
+        500,
+        request
+      );
+    }
+
+    // Normalize SHARK_SCORE to a number the frontend can render
+    // directly (e.g. "🦈 7/10"), even if the model returned it as
+    // a numeric-looking string.
+    const scoreNumber = Number(structured.SHARK_SCORE);
+    structured.SHARK_SCORE = Number.isFinite(scoreNumber) ? Math.max(0, Math.min(10, Math.round(scoreNumber))) : "?";
+
+    const readableText = [
+      `Shark Score: ${structured.SHARK_SCORE}/10`,
+      structured.THE_GOOD && `The Good: ${structured.THE_GOOD}`,
+      structured.THE_ROAST && `The Brutal Truth: ${structured.THE_ROAST}`,
+      structured.THE_FIX && `The Fix: ${structured.THE_FIX}`,
+      structured.FINAL_VERDICT && `Final Verdict: ${structured.FINAL_VERDICT}`
     ]
       .filter(Boolean)
       .join("\n\n");
