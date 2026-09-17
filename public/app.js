@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.4
+// IdeaForgeX - Main JavaScript v11.5
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -2700,6 +2700,20 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("generateLaunchPlanBtn")?.addEventListener("click", generateLaunchPlan);
   document.getElementById("generatePitchDeckBtn")?.addEventListener("click", generatePitchDeck);
 
+  document.getElementById("improveIdeaFromScoreBtn")?.addEventListener("click", () => {
+    if (!currentIdeaText) {
+      showToast("Pehle report generate karein.", "error");
+      return;
+    }
+
+    openToolWorkspace("improveidea");
+
+    const toolInput = document.getElementById("toolInput");
+    if (toolInput) toolInput.value = currentIdeaText;
+
+    runAiTool(currentIdeaText, "improveidea");
+  });
+
   document.getElementById("hubAskBtn")?.addEventListener("click", () => {
     const input = document.getElementById("hubInput");
     if (!input) return;
@@ -3039,5 +3053,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.4 initialized successfully.");
+  console.log("🚀 IdeaForgeX v11.5 initialized successfully.");
 });
