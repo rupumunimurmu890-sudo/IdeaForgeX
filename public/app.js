@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.5
+// IdeaForgeX - Main JavaScript v11.6
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -38,6 +38,11 @@ let userBrand = {
 };
 
 let chatHistory = [];
+
+// Separate, per-idea conversation thread for the report's
+// "Ask a follow-up question" panel — kept apart from the main
+// AI Chat tool's chatHistory so the two don't mix context.
+let reportFollowupHistory = [];
 let currentProjectId = null;
 
 let currentToolResult = "";
@@ -448,6 +453,7 @@ function renderHistory() {
     button.addEventListener("click", () => {
       currentIdeaText = item.fullIdea || "";
       currentReport = item.report || null;
+      resetFollowupChat();
 
       const input = document.getElementById("ideaInput");
       if (input) input.value = currentIdeaText;
@@ -633,6 +639,7 @@ async function generateReport() {
 
     currentReport = data.report;
     currentIdeaText = idea;
+    resetFollowupChat();
 
     renderReport(data.report);
     saveToHistory(idea, data.report);
@@ -1611,6 +1618,102 @@ function appendChatMessage(role, text) {
 
   container.appendChild(message);
   container.scrollTop = container.scrollHeight;
+}
+
+// ============================================================
+// REPORT FOLLOW-UP CHAT
+// Lets the user keep asking questions about the same idea
+// without retyping it or clearing anything — each question
+// (and the AI's answers) accumulate in reportFollowupHistory
+// and get sent together for context, same as the main Chat tool.
+// ============================================================
+
+function appendFollowupMessage(role, text) {
+  const container = document.getElementById("followupContainer");
+  if (!container) return;
+
+  const message = document.createElement("div");
+  message.className = `chat-message chat-${role}`;
+  message.textContent = String(text);
+
+  container.appendChild(message);
+  container.scrollTop = container.scrollHeight;
+}
+
+function resetFollowupChat() {
+  reportFollowupHistory = [];
+
+  const container = document.getElementById("followupContainer");
+  if (container) container.innerHTML = "";
+}
+
+async function askIdeaFollowup() {
+  const input = document.getElementById("followupInput");
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (!hasUsageRemaining()) {
+    showToast("Free Plan limit khatam! Pro lein.", "error");
+    return;
+  }
+
+  // On the first question, fold the idea itself into the message
+  // so the AI has context without the user having to repeat it.
+  // Later questions go through as-is — the running history already
+  // carries the idea and every prior Q&A.
+  const isFirstQuestion = reportFollowupHistory.length === 0;
+
+  const messageForApi = isFirstQuestion
+    ? `Business idea: "${currentIdeaText}"\n\nSawaal: ${text}`
+    : text;
+
+  appendFollowupMessage("user", text);
+  input.value = "";
+
+  reportFollowupHistory.push({ role: "user", content: messageForApi });
+
+  if (reportFollowupHistory.length > 10) {
+    reportFollowupHistory = reportFollowupHistory.slice(-10);
+  }
+
+  const btn = document.getElementById("askFollowupBtn");
+  const originalText = btn?.innerHTML || "Ask";
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "⏳...";
+  }
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ messages: reportFollowupHistory, brand: userBrand })
+    });
+
+    const data = await parseApiResponse(response);
+
+    if (!data.success || !data.reply) {
+      throw new Error(data.error || "Jawab nahi aaya.");
+    }
+
+    if (!isProUser) incrementUsage();
+
+    appendFollowupMessage("ai", data.reply);
+    reportFollowupHistory.push({ role: "assistant", content: data.reply });
+
+    trackEvent("report_followup_question", { success: true });
+  } catch (error) {
+    showToast(error.message, "error");
+    trackEvent("report_followup_question", { success: false });
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
 }
 
 async function sendChatMessage() {
@@ -2760,6 +2863,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  document.getElementById("askFollowupBtn")?.addEventListener("click", askIdeaFollowup);
+
+  document.getElementById("followupInput")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      askIdeaFollowup();
+    }
+  });
+
   document.getElementById("clearChatBtn")?.addEventListener("click", () => {
     chatHistory = [];
 
@@ -3053,5 +3165,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.5 initialized successfully.");
+  console.log("🚀 IdeaForgeX v11.6 initialized successfully.");
 });
