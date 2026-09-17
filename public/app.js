@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.3
+// IdeaForgeX - Main JavaScript v11.4
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -13,6 +13,12 @@
 // and tool history via /api/data-save and /api/data-load, so a
 // cleared browser cache or a new device doesn't lose everything.
 // localStorage remains the primary, fast copy.
+// ADDED: Backup Code system — the session ID is now shown to the
+// user as a copyable code and sent as a Bearer token (not just a
+// cookie), because a session ID that lives only in a cookie is
+// wiped by the same cache-clear it's meant to protect against.
+// Users can copy their code and paste it on a new device/browser
+// to restore their data.
 // ============================================================
 
 "use strict";
@@ -49,6 +55,18 @@ const USAGE_KEY = "ideaforge_usage";
 
 const PROJECTS_KEY = "ideaforge_projects_v2";
 const TOOL_HISTORY_KEY = "ideaforge_tool_history";
+
+// The session ID doubles as a "Backup Code": the only way to
+// reconnect to server-backed-up data (Projects, History, Brand,
+// Tool History) from a new browser/device after a cache clear,
+// since it is never itself stored anywhere durable unless the
+// user manually saves/copies it. Sent as a Bearer token so it
+// works even if cookies are cleared independently.
+const BACKUP_CODE_KEY = "ifx_backup_code";
+
+// Must match MAX_USER_DATA_BYTES in worker.js. Checked here too
+// so oversized payloads never leave the browser.
+const MAX_USER_DATA_BYTES = 150 * 1024;
 
 // ============================================================
 // ANALYTICS
@@ -151,12 +169,125 @@ function getUserId() {
   return uid;
 }
 
+function getBackupCode() {
+  return localStorage.getItem(BACKUP_CODE_KEY) || "";
+}
+
+function setBackupCode(code) {
+  if (code) {
+    localStorage.setItem(BACKUP_CODE_KEY, code);
+  } else {
+    localStorage.removeItem(BACKUP_CODE_KEY);
+  }
+}
+
 function getApiHeaders() {
-  return {
+  const headers = {
     "Content-Type": "application/json",
     "X-User-ID": getUserId(),
     "X-User-Plan": isProUser ? "pro" : "free"
   };
+
+  // Sending the backup code as a Bearer token (rather than relying
+  // only on the session cookie) means the same server-side session
+  // is reachable even if cookies get cleared independently of
+  // localStorage, as long as the user still has this code saved.
+  const backupCode = getBackupCode();
+  if (backupCode) {
+    headers["Authorization"] = `Bearer ${backupCode}`;
+  }
+
+  return headers;
+}
+
+// Calls /api/auth/init (which reuses an existing session if the
+// current Backup Code / cookie already matches one, or creates a
+// new one otherwise) and saves the resulting session ID locally as
+// the Backup Code. Must run before any data-save/data-load calls
+// so those calls carry a stable identity.
+async function initSessionAndBackupCode() {
+  try {
+    const response = await fetch("/api/auth/init", {
+      method: "POST",
+      headers: getApiHeaders()
+    });
+
+    const data = await parseApiResponse(response);
+
+    if (data.success && data.sessionId) {
+      setBackupCode(data.sessionId);
+    }
+  } catch (error) {
+    console.warn("Session init failed (non-fatal):", error);
+  }
+}
+
+function renderBackupCodeDisplay() {
+  const input = document.getElementById("backupCodeDisplay");
+  if (input) input.value = getBackupCode() || "Not available yet";
+}
+
+// Explicit, user-initiated restore: unlike the passive startup
+// restore (which only fills in empty data types), this overwrites
+// local data for every type the server has, because the person is
+// deliberately switching to a different Backup Code (e.g. on a new
+// device) and expects that code's data to take over.
+async function restoreFromBackupCode(code) {
+  const trimmed = String(code || "").trim();
+
+  if (!trimmed) {
+    showToast("Backup code likhein.", "error");
+    return;
+  }
+
+  if (
+    !confirm(
+      "Yeh is device/browser ka current data (Projects, History, Brand, Tool History) us code ke server data se replace kar dega. Continue karein?"
+    )
+  ) {
+    return;
+  }
+
+  setBackupCode(trimmed);
+
+  const serverData = await loadFromServer();
+
+  if (!serverData) {
+    showToast("Is code se koi backup nahi mila.", "error");
+    return;
+  }
+
+  if (Array.isArray(serverData.history)) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(serverData.history));
+  }
+
+  if (Array.isArray(serverData.projects)) {
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(serverData.projects));
+  }
+
+  if (Array.isArray(serverData.toolhistory)) {
+    localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(serverData.toolhistory));
+  }
+
+  if (serverData.brand && typeof serverData.brand === "object") {
+    userBrand = {
+      name: serverData.brand.name || "",
+      industry: serverData.brand.industry || "",
+      audience: serverData.brand.audience || ""
+    };
+
+    localStorage.setItem("ideaforge_brand", JSON.stringify(userBrand));
+  }
+
+  renderHistory();
+  renderToolHistory();
+  renderProjects();
+  renderBackupCodeDisplay();
+
+  const modal = document.getElementById("backupModal");
+  if (modal) modal.style.display = "none";
+
+  showToast("✅ Data restored from backup code!", "success");
 }
 
 // ============================================================
@@ -171,6 +302,18 @@ function getApiHeaders() {
 
 async function syncToServer(type, data) {
   try {
+    // Check size on this side too, so an oversized payload never
+    // leaves the browser at all (worker.js enforces the same cap
+    // server-side as a backstop, in case this check is bypassed).
+    const serialized = JSON.stringify(data ?? null);
+
+    if (serialized.length > MAX_USER_DATA_BYTES) {
+      console.warn(
+        `Cloud backup skipped: ${type} payload (${serialized.length} bytes) exceeds the ${MAX_USER_DATA_BYTES} byte limit.`
+      );
+      return;
+    }
+
     await fetch("/api/data-save", {
       method: "POST",
       headers: getApiHeaders(),
@@ -245,6 +388,7 @@ async function restoreOrBackupUserData() {
   renderHistory();
   renderToolHistory();
   renderProjects();
+  renderBackupCodeDisplay();
 }
 
 // ============================================================
@@ -2544,7 +2688,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // browser/device/cache-clear), or back up current local data
   // to the server if it isn't. Runs in the background; UI is
   // already usable from localStorage while this completes.
-  restoreOrBackupUserData();
+  // initSessionAndBackupCode() must resolve first so the Backup
+  // Code (used as the Bearer token) is set before any data
+  // save/load calls go out.
+  (async () => {
+    await initSessionAndBackupCode();
+    await restoreOrBackupUserData();
+  })();
 
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
   document.getElementById("generateLaunchPlanBtn")?.addEventListener("click", generateLaunchPlan);
@@ -2700,6 +2850,34 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("closeBrandBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("brandModal");
     if (modal) modal.style.display = "none";
+  });
+
+  // --------------------------------------------------------
+  // BACKUP CODE MODAL
+  // --------------------------------------------------------
+
+  document.getElementById("openBackupBtn")?.addEventListener("click", () => {
+    renderBackupCodeDisplay();
+
+    const restoreInput = document.getElementById("restoreCodeInput");
+    if (restoreInput) restoreInput.value = "";
+
+    const modal = document.getElementById("backupModal");
+    if (modal) modal.style.display = "flex";
+  });
+
+  document.getElementById("closeBackupBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("backupModal");
+    if (modal) modal.style.display = "none";
+  });
+
+  document.getElementById("copyBackupCodeBtn")?.addEventListener("click", () => {
+    copyText(getBackupCode());
+  });
+
+  document.getElementById("restoreBackupCodeBtn")?.addEventListener("click", () => {
+    const input = document.getElementById("restoreCodeInput");
+    restoreFromBackupCode(input?.value || "");
   });
 
   // --------------------------------------------------------
@@ -2861,5 +3039,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.2 initialized successfully.");
+  console.log("🚀 IdeaForgeX v11.4 initialized successfully.");
 });
