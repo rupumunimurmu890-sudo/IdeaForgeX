@@ -1,4 +1,3 @@
-
 // ========================================
 // IdeaForgeX Worker v12.4
 // Secure AI Multi-Tool + Agent + Vision
@@ -28,7 +27,7 @@
 // ========================================
 
 const APP_NAME = "IdeaForgeX";
-const VERSION = "12.4";
+const VERSION = "12.5";
 
 const AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
@@ -416,6 +415,49 @@ How much funding is needed and what it will be used for.
 
 Keep each slide concise (investor-deck style, not essays).
 Do not add unnecessary sections.
+`;
+}
+
+// ========================================
+// IMPROVE IDEA PROMPT
+// (structured JSON so the frontend's dedicated
+// renderImproveResult() cards can actually populate —
+// previously this tool only ever produced plain text)
+// ========================================
+
+function buildImproveIdeaPrompt(idea, lang, brand) {
+  return `
+You are IdeaForgeX, an experienced startup mentor giving honest,
+constructive feedback - not generic praise.
+
+BUSINESS IDEA:
+"${cleanString(idea)}"
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Give honest, specific, constructive feedback to help improve this idea.
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "VERDICT": "",
+  "WHAT_WORKS": "",
+  "WHAT_IS_MISSING": "",
+  "PRICING_STRATEGY": "",
+  "TARGET_AUDIENCE": "",
+  "IMMEDIATE_NEXT_STEPS": ""
+}
+
+VERDICT: One or two honest sentences on the idea's overall potential.
+WHAT_WORKS: 2-3 genuine strengths, specific to this idea.
+WHAT_IS_MISSING: 2-3 real gaps or risks, stated plainly (not softened).
+PRICING_STRATEGY: One concrete, practical pricing suggestion.
+TARGET_AUDIENCE: Who this should focus on first, and why.
+IMMEDIATE_NEXT_STEPS: 2-3 concrete actions to take this week.
+
+Each value must be a plain string (not nested objects/arrays).
 `;
 }
 
@@ -1399,6 +1441,58 @@ async function aiTool(request, env, session, body) {
   }
 
   const tool = cleanString(body.tool || "assistant", 50).toLowerCase();
+
+  // "improveidea" gets a dedicated JSON-structured flow so the
+  // frontend's renderImproveResult() cards (Verdict, What Works,
+  // What's Missing, etc.) actually populate, instead of falling
+  // back to a plain-text blob like the generic tools below.
+  if (tool === "improveidea") {
+    const prompt = buildImproveIdeaPrompt(input, body.language || "auto", body.brand);
+
+    let structured = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const raw = await runTextAI(env, prompt, 1800, 0.3);
+        structured = extractJsonObject(raw, "VERDICT");
+        if (structured) break;
+      } catch (error) {
+        console.error("Improve idea attempt failed:", error);
+      }
+    }
+
+    if (!structured) {
+      await rollbackQuota(env, session);
+
+      return jsonResponse(
+        { success: false, error: "IMPROVE_IDEA_FAILED", message: "Idea improve nahi ho paayi. Please try again." },
+        500,
+        request
+      );
+    }
+
+    const readableText = [
+      structured.VERDICT && `Verdict: ${structured.VERDICT}`,
+      structured.WHAT_WORKS && `What Works: ${structured.WHAT_WORKS}`,
+      structured.WHAT_IS_MISSING && `What's Missing: ${structured.WHAT_IS_MISSING}`,
+      structured.PRICING_STRATEGY && `Pricing Strategy: ${structured.PRICING_STRATEGY}`,
+      structured.TARGET_AUDIENCE && `Target Audience: ${structured.TARGET_AUDIENCE}`,
+      structured.IMMEDIATE_NEXT_STEPS && `Next Steps: ${structured.IMMEDIATE_NEXT_STEPS}`
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    return jsonResponse(
+      {
+        success: true,
+        result: readableText,
+        structured,
+        usage: { current: quota.usage, limit: quota.limit, remaining: quota.remaining }
+      },
+      200,
+      request
+    );
+  }
 
   const prompt = buildToolPrompt(tool, input, {
     language: body.language,
