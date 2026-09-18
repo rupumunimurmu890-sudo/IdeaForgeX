@@ -1377,14 +1377,14 @@
     ============================== */
 
     body {
-      font-size: 16px;
+      font-size: 17px;
     }
 
     input,
     select,
     textarea,
     button {
-      font-size: 16px !important;
+      font-size: 17px !important;
     }
 
     /* What the user types */
@@ -1401,12 +1401,21 @@
     #brandAudienceInput,
     #budgetInput,
     #imageQuestionInput,
-    #moneyInvestment {
-      font-size: 17px !important;
-      line-height: 1.5;
+    #moneyInvestment,
+    #restoreCodeInput,
+    #backupCodeDisplay {
+      font-size: 18px !important;
+      line-height: 1.55;
     }
 
-    /* What the AI sends back */
+    /* What the AI sends back, plus general body text everywhere -
+       broad tag selectors (p, li, span, div, label) catch anything
+       the more specific rules below miss. */
+    body,
+    p,
+    li,
+    label,
+    span,
     #toolResult,
     #imageResult,
     #docResult,
@@ -1422,9 +1431,22 @@
     .reportCard p,
     .chat-message,
     .historyItemText,
-    p {
-      font-size: 16px !important;
-      line-height: 1.65;
+    .historyItemScore,
+    .tagline,
+    .modal-content p,
+    .project-card p,
+    .infoCard li,
+    .checkbox-label {
+      font-size: 17px !important;
+      line-height: 1.7;
+    }
+
+    h1 {
+      font-size: 30px !important;
+    }
+
+    h2 {
+      font-size: 22px !important;
     }
 
     h3,
@@ -1437,30 +1459,32 @@
     .roast-section h4,
     .email-section h4,
     .asset-card h4,
-    .reportCard h3 {
-      font-size: 17px !important;
+    .reportCard h3,
+    .project-card h4,
+    #toolWorkspaceTitle,
+    #currentProjectTitle {
+      font-size: 19px !important;
     }
 
     .tip-text,
-    .aiDisclaimer,
-    .infoCard li {
-      font-size: 15px !important;
-      line-height: 1.6;
+    .aiDisclaimer {
+      font-size: 16px !important;
+      line-height: 1.65;
     }
 
     .toast {
-      font-size: 15px !important;
+      font-size: 16px !important;
     }
 
     .historyItem {
-      min-width: 220px;
+      min-width: 230px;
     }
 
     /* Tool grid icons kept compact so 24+ tools still fit on a
        phone screen, but bumped slightly from their original size
        so labels stay legible without zooming. */
     .hubChip {
-      font-size: 12px !important;
+      font-size: 13px !important;
     }
 
     .hubChip .chip-icon {
