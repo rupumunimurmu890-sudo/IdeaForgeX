@@ -1364,6 +1364,108 @@
         animation-duration: 0.01ms !important;
       }
     }
+
+    /* ==============================
+       READABILITY OVERRIDE
+       Every input, button, and result
+       area bumped to a comfortable
+       reading size so nothing needs
+       pinch-zooming on mobile. Placed
+       last and with !important so it
+       wins over the smaller sizes set
+       earlier for these same elements.
+    ============================== */
+
+    body {
+      font-size: 16px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font-size: 16px !important;
+    }
+
+    /* What the user types */
+    #hubInput,
+    #toolInput,
+    #ideaInput,
+    #chatInput,
+    #followupInput,
+    #agentInput,
+    #docTextInput,
+    #newProjectNameInput,
+    #brandNameInput,
+    #brandIndustryInput,
+    #brandAudienceInput,
+    #budgetInput,
+    #imageQuestionInput,
+    #moneyInvestment {
+      font-size: 17px !important;
+      line-height: 1.5;
+    }
+
+    /* What the AI sends back */
+    #toolResult,
+    #imageResult,
+    #docResult,
+    .autopilot-section p,
+    .goal-section p,
+    .money-section p,
+    .improve-section p,
+    .video-section p,
+    .workflow-section p,
+    .roast-section p,
+    .email-section p,
+    .asset-card p,
+    .reportCard p,
+    .chat-message,
+    .historyItemText,
+    p {
+      font-size: 16px !important;
+      line-height: 1.65;
+    }
+
+    h3,
+    .autopilot-section h4,
+    .goal-section h4,
+    .money-section h4,
+    .improve-section h4,
+    .video-section h4,
+    .workflow-section h4,
+    .roast-section h4,
+    .email-section h4,
+    .asset-card h4,
+    .reportCard h3 {
+      font-size: 17px !important;
+    }
+
+    .tip-text,
+    .aiDisclaimer,
+    .infoCard li {
+      font-size: 15px !important;
+      line-height: 1.6;
+    }
+
+    .toast {
+      font-size: 15px !important;
+    }
+
+    .historyItem {
+      min-width: 220px;
+    }
+
+    /* Tool grid icons kept compact so 24+ tools still fit on a
+       phone screen, but bumped slightly from their original size
+       so labels stay legible without zooming. */
+    .hubChip {
+      font-size: 12px !important;
+    }
+
+    .hubChip .chip-icon {
+      font-size: 22px !important;
+    }
   </style>
 </head>
 
