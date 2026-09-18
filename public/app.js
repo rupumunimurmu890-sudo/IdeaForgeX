@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.8
+// IdeaForgeX - Main JavaScript v11.9
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -2564,6 +2564,85 @@ function renderProjects() {
 
     grid.appendChild(card);
   });
+
+  renderHomeProjectsPreview();
+}
+
+// ============================================================
+// HOME PROJECTS PREVIEW
+// A compact, always-visible preview of recent projects on the
+// home screen (separate from the full #projectsSection list,
+// which stays hidden until "View All" or the My Projects chip
+// is used). Kept in sync automatically since it's called from
+// inside renderProjects().
+// ============================================================
+
+const HOME_PROJECTS_PREVIEW_LIMIT = 3;
+
+function renderHomeProjectsPreview() {
+  const grid = document.getElementById("homeProjectsPreviewGrid");
+  if (!grid) return;
+
+  const projects = getProjects();
+  grid.innerHTML = "";
+
+  if (!projects.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        Create a Project to organize all your AI assets.
+      </div>
+    `;
+
+    const newBtn = document.createElement("button");
+    newBtn.type = "button";
+    newBtn.id = "homeNewProjectBtn";
+    newBtn.className = "btn-brand";
+    newBtn.style.width = "100%";
+    newBtn.style.marginTop = "10px";
+    newBtn.textContent = "+ New Project";
+
+    newBtn.addEventListener("click", () => {
+      const modal = document.getElementById("newProjectModal");
+      if (modal) modal.style.display = "flex";
+    });
+
+    grid.appendChild(newBtn);
+    return;
+  }
+
+  projects.slice(0, HOME_PROJECTS_PREVIEW_LIMIT).forEach((project) => {
+    const card = document.createElement("div");
+    card.className = "project-card";
+
+    const assetCount = Array.isArray(project.assets) ? project.assets.length : 0;
+
+    card.innerHTML = `
+      <h4>${escapeHtml(project.name)}</h4>
+      <p>${assetCount} assets generated</p>
+      <p class="project-date">${escapeHtml(project.createdAt || "")}</p>
+    `;
+
+    const continueBtn = document.createElement("button");
+    continueBtn.type = "button";
+    continueBtn.style.width = "100%";
+    continueBtn.style.marginTop = "10px";
+    continueBtn.textContent = "Continue →";
+
+    continueBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      goToProjectFromHome(project.id);
+    });
+
+    card.appendChild(continueBtn);
+    card.addEventListener("click", () => goToProjectFromHome(project.id));
+
+    grid.appendChild(card);
+  });
+}
+
+function goToProjectFromHome(id) {
+  openToolWorkspace("projects");
+  openProject(id);
 }
 
 function openProject(id) {
@@ -3057,6 +3136,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modal) modal.style.display = "flex";
   });
 
+  document.getElementById("homeProjectsViewAllBtn")?.addEventListener("click", () => {
+    openToolWorkspace("projects");
+  });
+
   document.getElementById("createProjectBtn")?.addEventListener("click", createProject);
 
   document.getElementById("closeNewProjectBtn")?.addEventListener("click", () => {
@@ -3222,5 +3305,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.8 initialized successfully.");
+  console.log("🚀 IdeaForgeX v11.9 initialized successfully.");
 });
