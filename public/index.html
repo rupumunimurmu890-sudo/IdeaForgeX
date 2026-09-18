@@ -1673,7 +1673,7 @@
        TOOL CATEGORIES
   ========================================== -->
 
-  <div class="hubCategories">
+  <div class="hubCategories" id="quickActionsGrid">
 
     <div class="hubChip" data-tool="agent" tabindex="0">
       <span class="chip-icon">🤖</span>
@@ -1685,10 +1685,44 @@
       <span>AI Chat</span>
     </div>
 
+    <div class="hubChip" data-tool="writing" tabindex="0">
+      <span class="chip-icon">✍️</span>
+      <span>Writing</span>
+    </div>
+
     <div class="hubChip" data-tool="card" tabindex="0">
       <span class="chip-icon">📸</span>
       <span>Quote Card</span>
     </div>
+
+    <div class="hubChip" data-tool="translate" tabindex="0">
+      <span class="chip-icon">🌐</span>
+      <span>Translate</span>
+    </div>
+
+    <div class="hubChip" data-tool="image" tabindex="0">
+      <span class="chip-icon">🔍</span>
+      <span>Analyze Img</span>
+    </div>
+
+  </div>
+
+  <button
+    id="viewAllToolsBtn"
+    class="btn-secondary"
+    type="button"
+    style="width:100%;margin:10px 0 20px;"
+    aria-expanded="false"
+    aria-controls="allToolsGrid"
+  >
+    🧰 View All Tools ▾
+  </button>
+
+  <div
+    class="hubCategories"
+    id="allToolsGrid"
+    style="display:none;"
+  >
 
     <div class="hubChip" data-tool="email" tabindex="0">
       <span class="chip-icon">✉️</span>
@@ -1740,16 +1774,6 @@
       <span>Workflow</span>
     </div>
 
-    <div class="hubChip" data-tool="writing" tabindex="0">
-      <span class="chip-icon">✍️</span>
-      <span>Writing</span>
-    </div>
-
-    <div class="hubChip" data-tool="translate" tabindex="0">
-      <span class="chip-icon">🌐</span>
-      <span>Translate</span>
-    </div>
-
     <div class="hubChip" data-tool="calculator" tabindex="0">
       <span class="chip-icon">🧮</span>
       <span>Calculator</span>
@@ -1788,11 +1812,6 @@
     <div class="hubChip" data-tool="document" tabindex="0">
       <span class="chip-icon">📄</span>
       <span>Doc AI</span>
-    </div>
-
-    <div class="hubChip" data-tool="image" tabindex="0">
-      <span class="chip-icon">🔍</span>
-      <span>Analyze Img</span>
     </div>
 
     <div
