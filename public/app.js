@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.6
+// IdeaForgeX - Main JavaScript v11.8
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -1047,6 +1047,23 @@ function openToolWorkspace(tool) {
 
   const selectedChip = document.querySelector(`.hubChip[data-tool="${tool}"]`);
   if (selectedChip) selectedChip.classList.add("active");
+
+  // If the selected chip lives inside the collapsed "All Tools"
+  // grid, expand it so the highlighted chip is actually visible
+  // (e.g. when a tool is opened via the Hub's smart router rather
+  // than a direct click).
+  const allToolsGrid = document.getElementById("allToolsGrid");
+
+  if (selectedChip && allToolsGrid && allToolsGrid.contains(selectedChip) && allToolsGrid.style.display === "none") {
+    allToolsGrid.style.display = "grid";
+
+    const viewAllBtn = document.getElementById("viewAllToolsBtn");
+
+    if (viewAllBtn) {
+      viewAllBtn.setAttribute("aria-expanded", "true");
+      viewAllBtn.innerHTML = "🧰 Hide Tools ▴";
+    }
+  }
 
   const projectsSection = document.getElementById("projectsSection");
   const toolWorkspace = document.getElementById("toolWorkspace");
@@ -3175,6 +3192,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  document.getElementById("viewAllToolsBtn")?.addEventListener("click", function () {
+    const allToolsGrid = document.getElementById("allToolsGrid");
+    if (!allToolsGrid) return;
+
+    const isHidden = allToolsGrid.style.display === "none";
+
+    allToolsGrid.style.display = isHidden ? "grid" : "none";
+    this.setAttribute("aria-expanded", isHidden ? "true" : "false");
+    this.innerHTML = isHidden ? "🧰 Hide Tools ▴" : "🧰 View All Tools ▾";
+
+    if (isHidden) {
+      allToolsGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
+
   const tips = [
     "Try the Business Agent! One click generates a full startup pack.",
     "Create a Project to organize all your AI assets.",
@@ -3190,5 +3222,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.6 initialized successfully.");
+  console.log("🚀 IdeaForgeX v11.8 initialized successfully.");
 });
