@@ -3558,8 +3558,83 @@
     </div>
 
   </div>
+  
 
+  <!-- =========================================
+       JPG → PDF MODAL
+  ========================================== -->
 
+  <div
+    id="jpgToPdfModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="jpgToPdfModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="jpgToPdfModalTitle" style="color:var(--primary);">
+        📄 JPG → PDF
+      </h2>
+
+      <p
+        style="
+          color:var(--text-muted);
+          font-size:13px;
+          text-align:left;
+        "
+      >
+        Ek ya zyada images chunein — har image PDF ke ek page par
+        aayegi, jis order me chunenge usi order me.
+      </p>
+      <div
+        id="jpgToPdfUploadCard"
+        style="
+          border:2px dashed var(--border);
+          padding:20px;
+          text-align:center;
+          border-radius:10px;
+          cursor:pointer;
+          margin-bottom:15px;
+        "
+      >
+        <input
+          type="file"
+          id="jpgToPdfInput"
+          accept="image/*"
+          multiple
+          style="display:none;"
+        >
+        <p id="jpgToPdfUploadText">
+          📤 Images chunne ke liye tap karein
+        </p>
+        <p
+          id="jpgToPdfFileCount"
+          style="
+            color:var(--primary);
+            font-weight:600;
+            margin-top:5px;
+          "
+        ></p>
+      </div>
+      <button
+        id="convertJpgToPdfBtn"
+        type="button"
+        style="width:100%;"
+      >
+        📄 Convert to PDF
+      </button>
+      <button
+        id="closeJpgToPdfBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:10px;"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+  
   <!-- =========================================
        NEW PROJECT MODAL
   ========================================== -->
