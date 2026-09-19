@@ -3456,4 +3456,150 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("copyPasswordBtn")?.addEventListener("click", () => {
     const output = document.getElementById("passwordOutput");
-    cop
+    if (label) label.textContent = event.target.value;
+  });
+  document.getElementById("openUnitConverterBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("unitConverterModal");
+    if (modal) modal.style.display = "flex";
+    populateUnitSelects();
+  });
+  document.getElementById("closeUnitConverterBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("unitConverterModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.getElementById("unitCategorySelect")?.addEventListener("change", populateUnitSelects);
+  document.getElementById("unitFromSelect")?.addEventListener("change", runUnitConversion);
+  document.getElementById("unitToSelect")?.addEventListener("change", runUnitConversion);
+  document.getElementById("unitFromValue")?.addEventListener("input", runUnitConversion);
+  document.getElementById("createProjectBtn")?.addEventListener("click", createProject);
+  document.getElementById("closeNewProjectBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("newProjectModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.getElementById("backToProjectsBtn")?.addEventListener("click", () => {
+    const detail = document.getElementById("projectDetailView");
+    if (detail) detail.style.display = "none";
+    const list = document.getElementById("projectListView");
+    if (list) list.style.display = "block";
+    renderProjects();
+  });
+  document.getElementById("runAgentBtn")?.addEventListener("click", runBusinessAgent);
+  document.getElementById("docAnalyzeBtn")?.addEventListener("click", analyzeDocument);
+  const docFileInput = document.getElementById("docFileInput");
+  const docUploadCard = document.getElementById("docUploadCard");
+  if (docUploadCard && docFileInput) {
+    docUploadCard.addEventListener("click", () => docFileInput.click());
+    docFileInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt")) {
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+          const input = document.getElementById("docTextInput");
+          if (input) input.value = loadEvent.target.result || "";
+          showToast("📄 Document loaded!", "success");
+        };
+        reader.readAsText(file);
+      } else {
+        showToast(
+          "PDF/DOCX ko browser me directly text me read nahi kiya ja sakta. Text paste karein ya backend parser use karein.",
+          "error"
+        );
+      }
+    });
+  }
+  const imageUploadCard = document.getElementById("imageUploadCard");
+  const imageFileInput = document.getElementById("imageFileInput");
+  if (imageUploadCard && imageFileInput) {
+    imageUploadCard.addEventListener("click", () => imageFileInput.click());
+    imageFileInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        showToast("Sirf image file upload karein.", "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => {
+        window.currentImageBase64 = loadEvent.target.result;
+        const preview = document.getElementById("imagePreview");
+        if (preview) {
+          preview.src = window.currentImageBase64;
+          preview.style.display = "block";
+        }
+        const text = document.getElementById("imageUploadText");
+        if (text) text.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  document.getElementById("imageGenerateBtn")?.addEventListener("click", runImageTool);
+  document.getElementById("imageActionSelect")?.addEventListener("change", (event) => {
+    const question = document.getElementById("imageQuestionInput");
+    if (!question) return;
+    question.style.display = event.target.value === "ask" ? "block" : "none";
+  });
+  document.getElementById("imageCopyBtn")?.addEventListener("click", () => {
+    const result = document.getElementById("imageResult");
+    copyText(result?.innerText || "");
+  });
+  document.getElementById("imageShareBtn")?.addEventListener("click", async () => {
+    const result = document.getElementById("imageResult");
+    const text = result?.innerText || "";
+    if (!text) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Image Analysis", text });
+      } else {
+        await copyText(text);
+      }
+    } catch {
+      // User cancelled.
+    }
+  });
+  document.getElementById("upgradeProBtn")?.addEventListener("click", () => {
+    showToast("Payment integration coming soon!", "info");
+  });
+  document.getElementById("closeProModal")?.addEventListener("click", () => {
+    const modal = document.getElementById("proModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.querySelectorAll(".hubChip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const tool = chip.getAttribute("data-tool");
+      if (!tool) return;
+      trackEvent("select_tool", { tool_name: tool });
+      openToolWorkspace(tool);
+    });
+  });
+  document.getElementById("viewAllToolsBtn")?.addEventListener("click", function () {
+    const allToolsGrid = document.getElementById("allToolsGrid");
+    if (!allToolsGrid) return;
+
+    const isHidden = allToolsGrid.style.display === "none";
+
+    allToolsGrid.style.display = isHidden ? "grid" : "none";
+    this.setAttribute("aria-expanded", isHidden ? "true" : "false");
+    this.innerHTML = isHidden ? "🧰 Hide Tools ▴" : "🧰 View All Tools ▾";
+
+    if (isHidden) {
+      allToolsGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
+
+  const tips = [
+    "Try the Business Agent! One click generates a full startup pack.",
+    "Create a Project to organize all your AI assets.",
+    "Use Quote Card Maker to turn text into a beautiful social image.",
+    "Write professional Cold Emails in seconds.",
+    "Set your Brand Profile so AI can use your brand automatically.",
+    "Use Auto-Pilot to create multiple marketing assets together.",
+    "Use AI Chat when you want a normal conversation with AI."
+  ];
+
+  const dailyTip = document.getElementById("dailyTip");
+  if (dailyTip) dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
+
+  renderProjects();
+  console.log("🚀 IdeaForgeX v11.10 initialized successfully.");
+});
