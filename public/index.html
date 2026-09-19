@@ -653,7 +653,11 @@
     #calculatorModal,
     #qrModal,
     #passwordModal,
-    #unitConverterModal {
+    #unitConverterModal,
+    #wordCounterModal,
+    #gstModal,
+    #emiModal,
+    #ageModal {
       position: fixed;
 
       inset: 0;
@@ -1755,6 +1759,26 @@
     <div id="openUnitConverterBtn" class="hubChip" tabindex="0">
       <span class="chip-icon">📐</span>
       <span>Unit Convert</span>
+    </div>
+
+    <div id="openWordCounterBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">📝</span>
+      <span>Word Count</span>
+    </div>
+
+    <div id="openGstBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🧾</span>
+      <span>GST Calc</span>
+    </div>
+
+    <div id="openEmiBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🏦</span>
+      <span>EMI Calc</span>
+    </div>
+
+    <div id="openAgeBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🎂</span>
+      <span>Age Calc</span>
     </div>
 
   </div>
@@ -3204,6 +3228,326 @@
 
       <button
         id="closeUnitConverterBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       WORD / CHARACTER COUNTER MODAL
+  ========================================== -->
+
+  <div
+    id="wordCounterModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="wordCounterModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="wordCounterModalTitle" style="color:var(--primary);">
+        📝 Word / Character Counter
+      </h2>
+
+      <textarea
+        id="wordCounterInput"
+        rows="6"
+        placeholder="Yahan text paste ya type karein..."
+      ></textarea>
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap:10px;
+          text-align:left;
+          margin-top:10px;
+        "
+      >
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Words</h4>
+          <p id="wcWords">0</p>
+        </div>
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Characters</h4>
+          <p id="wcChars">0</p>
+        </div>
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Characters (no space)</h4>
+          <p id="wcCharsNoSpace">0</p>
+        </div>
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Sentences</h4>
+          <p id="wcSentences">0</p>
+        </div>
+
+      </div>
+
+      <button
+        id="closeWordCounterBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       GST CALCULATOR MODAL
+  ========================================== -->
+
+  <div
+    id="gstModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="gstModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="gstModalTitle" style="color:var(--primary);">
+        🧾 GST Calculator
+      </h2>
+
+      <input
+        type="number"
+        id="gstAmount"
+        placeholder="Amount (₹)"
+        value="1000"
+      >
+
+      <select id="gstRate">
+        <option value="5">5%</option>
+        <option value="12">12%</option>
+        <option value="18" selected>18%</option>
+        <option value="28">28%</option>
+      </select>
+
+      <div
+        style="
+          display:flex;
+          gap:15px;
+          justify-content:center;
+          margin:10px 0 15px;
+        "
+      >
+
+        <label class="checkbox-label">
+          <input type="radio" name="gstMode" id="gstAdd" value="add" checked style="width:auto;margin:0;">
+          Add GST (amount is before tax)
+        </label>
+
+      </div>
+
+      <div
+        style="
+          display:flex;
+          gap:15px;
+          justify-content:center;
+          margin-bottom:15px;
+        "
+      >
+
+        <label class="checkbox-label">
+          <input type="radio" name="gstMode" id="gstRemove" value="remove" style="width:auto;margin:0;">
+          Remove GST (amount already includes tax)
+        </label>
+
+      </div>
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap:10px;
+          text-align:left;
+        "
+      >
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>GST Amount</h4>
+          <p id="gstAmountResult">₹0</p>
+        </div>
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Total Amount</h4>
+          <p id="gstTotalResult">₹0</p>
+        </div>
+
+      </div>
+
+      <button
+        id="closeGstBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       EMI CALCULATOR MODAL
+  ========================================== -->
+
+  <div
+    id="emiModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="emiModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="emiModalTitle" style="color:var(--primary);">
+        🏦 EMI Calculator
+      </h2>
+
+      <input
+        type="number"
+        id="emiPrincipal"
+        placeholder="Loan Amount (₹)"
+        value="100000"
+      >
+
+      <input
+        type="number"
+        id="emiRate"
+        placeholder="Annual Interest Rate (%)"
+        value="10"
+        step="0.1"
+      >
+
+      <input
+        type="number"
+        id="emiTenure"
+        placeholder="Tenure (months)"
+        value="12"
+      >
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap:10px;
+          text-align:left;
+          margin-top:10px;
+        "
+      >
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Monthly EMI</h4>
+          <p id="emiMonthly">₹0</p>
+        </div>
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Total Interest</h4>
+          <p id="emiInterest">₹0</p>
+        </div>
+
+        <div class="asset-card" style="margin-bottom:0;">
+          <h4>Total Payment</h4>
+          <p id="emiTotal">₹0</p>
+        </div>
+
+      </div>
+
+      <button
+        id="closeEmiBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       AGE CALCULATOR MODAL
+  ========================================== -->
+
+  <div
+    id="ageModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ageModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="ageModalTitle" style="color:var(--primary);">
+        🎂 Age Calculator
+      </h2>
+
+      <label style="color:var(--text-muted);display:block;text-align:left;margin-bottom:5px;">
+        Date of Birth
+      </label>
+
+      <input
+        type="date"
+        id="ageDobInput"
+      >
+
+      <div
+        id="ageResultBox"
+        style="display:none;margin-top:15px;"
+      >
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap:10px;
+            text-align:left;
+          "
+        >
+
+          <div class="asset-card" style="margin-bottom:0;">
+            <h4>Years</h4>
+            <p id="ageYears">0</p>
+          </div>
+
+          <div class="asset-card" style="margin-bottom:0;">
+            <h4>Months</h4>
+            <p id="ageMonths">0</p>
+          </div>
+
+          <div class="asset-card" style="margin-bottom:0;">
+            <h4>Days</h4>
+            <p id="ageDays">0</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <button
+        id="closeAgeBtn"
         class="btn-secondary"
         type="button"
         style="width:100%;margin-top:15px;"
