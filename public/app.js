@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.9
+// IdeaForgeX - Main JavaScript v11.10
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -2645,6 +2645,264 @@ function goToProjectFromHome(id) {
   openProject(id);
 }
 
+// ============================================================
+// FREE QUICK TOOLS
+// Calculator, QR Code, Password Generator, Unit Converter —
+// all client-side, no AI call, no quota used. Each is its own
+// small modal rather than going through the AI toolWorkspace
+// machinery (Generate button, brand context, bilingual toggle,
+// etc.) which doesn't apply to any of these.
+// ============================================================
+
+// ---------- Calculator ----------
+
+let calcExpression = "";
+
+function calcUpdateDisplay() {
+  const display = document.getElementById("calcDisplay");
+  if (display) display.value = calcExpression || "0";
+}
+
+function calcHandleInput(key) {
+  if (key === "C") {
+    calcExpression = "";
+    calcUpdateDisplay();
+    return;
+  }
+
+  if (key === "back") {
+    calcExpression = calcExpression.slice(0, -1);
+    calcUpdateDisplay();
+    return;
+  }
+
+  if (key === "=") {
+    // calcExpression is built entirely from a fixed set of
+    // button presses (digits, . , + - * / %), never free-typed
+    // text, so evaluating it as an arithmetic expression is safe.
+    try {
+      const sanitized = calcExpression.replace(/[^0-9+\-*/%.()]/g, "");
+      if (!sanitized) return;
+
+      // eslint-disable-next-line no-new-func
+      const result = Function(`"use strict"; return (${sanitized})`)();
+
+      if (!Number.isFinite(result)) {
+        calcExpression = "Error";
+      } else {
+        calcExpression = String(Math.round(result * 1e10) / 1e10);
+      }
+    } catch {
+      calcExpression = "Error";
+    }
+
+    calcUpdateDisplay();
+    return;
+  }
+
+  if (calcExpression === "Error") {
+    calcExpression = "";
+  }
+
+  calcExpression += key;
+  calcUpdateDisplay();
+}
+
+// ---------- QR Code ----------
+
+let qrInstance = null;
+
+function generateQrCode() {
+  const input = document.getElementById("qrTextInput");
+  const output = document.getElementById("qrCodeOutput");
+  const downloadBtn = document.getElementById("downloadQrBtn");
+
+  if (!input || !output) return;
+
+  const text = input.value.trim();
+
+  if (!text) {
+    showToast("QR ke liye kuch text/link likhein.", "error");
+    return;
+  }
+
+  if (typeof QRCode === "undefined") {
+    showToast("QR library load nahi hui. Internet check karein.", "error");
+    return;
+  }
+
+  output.innerHTML = "";
+
+  qrInstance = new QRCode(output, {
+    text,
+    width: 220,
+    height: 220,
+    colorDark: "#000000",
+    colorLight: "#ffffff"
+  });
+
+  output.style.display = "block";
+  if (downloadBtn) downloadBtn.style.display = "block";
+}
+
+function downloadQrCode() {
+  const output = document.getElementById("qrCodeOutput");
+  if (!output) return;
+
+  // qrcodejs renders either a <canvas> or an <img> depending on
+  // browser support - handle both.
+  const canvas = output.querySelector("canvas");
+  const img = output.querySelector("img");
+
+  const dataUrl = canvas ? canvas.toDataURL("image/png") : img?.src;
+
+  if (!dataUrl) {
+    showToast("QR download nahi ho paaya.", "error");
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.download = `qr-code-${Date.now()}.png`;
+  link.href = dataUrl;
+  link.click();
+}
+
+// ---------- Password Generator ----------
+
+function generatePassword() {
+  const length = Number(document.getElementById("passwordLength")?.value || 14);
+
+  const useUpper = document.getElementById("pwUppercase")?.checked;
+  const useLower = document.getElementById("pwLowercase")?.checked;
+  const useNumbers = document.getElementById("pwNumbers")?.checked;
+  const useSymbols = document.getElementById("pwSymbols")?.checked;
+
+  const charSets = {
+    upper: "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    lower: "abcdefghijkmnpqrstuvwxyz",
+    numbers: "23456789",
+    symbols: "!@#$%^&*()_+-="
+  };
+
+  let pool = "";
+  if (useUpper) pool += charSets.upper;
+  if (useLower) pool += charSets.lower;
+  if (useNumbers) pool += charSets.numbers;
+  if (useSymbols) pool += charSets.symbols;
+
+  if (!pool) {
+    showToast("Kam se kam ek character type chunein.", "error");
+    return;
+  }
+
+  const randomValues = new Uint32Array(length);
+  crypto.getRandomValues(randomValues);
+
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    password += pool[randomValues[i] % pool.length];
+  }
+
+  const output = document.getElementById("passwordOutput");
+  if (output) output.value = password;
+}
+
+// ---------- Unit Converter ----------
+
+const UNIT_DEFINITIONS = {
+  length: {
+    label: "Length",
+    units: {
+      mm: { label: "Millimeters", toBase: 0.001 },
+      cm: { label: "Centimeters", toBase: 0.01 },
+      m: { label: "Meters", toBase: 1 },
+      km: { label: "Kilometers", toBase: 1000 },
+      inch: { label: "Inches", toBase: 0.0254 },
+      foot: { label: "Feet", toBase: 0.3048 },
+      mile: { label: "Miles", toBase: 1609.34 }
+    }
+  },
+  weight: {
+    label: "Weight",
+    units: {
+      mg: { label: "Milligrams", toBase: 0.001 },
+      g: { label: "Grams", toBase: 1 },
+      kg: { label: "Kilograms", toBase: 1000 },
+      oz: { label: "Ounces", toBase: 28.3495 },
+      lb: { label: "Pounds", toBase: 453.592 }
+    }
+  },
+  temperature: {
+    label: "Temperature",
+    units: {
+      celsius: { label: "Celsius" },
+      fahrenheit: { label: "Fahrenheit" },
+      kelvin: { label: "Kelvin" }
+    }
+  }
+};
+
+function populateUnitSelects() {
+  const category = document.getElementById("unitCategorySelect")?.value || "length";
+  const fromSelect = document.getElementById("unitFromSelect");
+  const toSelect = document.getElementById("unitToSelect");
+
+  if (!fromSelect || !toSelect) return;
+
+  const units = UNIT_DEFINITIONS[category]?.units || {};
+  const optionsHtml = Object.entries(units)
+    .map(([key, unit]) => `<option value="${key}">${escapeHtml(unit.label)}</option>`)
+    .join("");
+
+  fromSelect.innerHTML = optionsHtml;
+  toSelect.innerHTML = optionsHtml;
+
+  // Default to two different units so the conversion isn't trivially 1:1
+  const keys = Object.keys(units);
+  if (keys.length > 1) toSelect.value = keys[1];
+
+  runUnitConversion();
+}
+
+function convertTemperature(value, fromUnit, toUnit) {
+  let celsius;
+
+  if (fromUnit === "celsius") celsius = value;
+  else if (fromUnit === "fahrenheit") celsius = ((value - 32) * 5) / 9;
+  else celsius = value - 273.15;
+
+  if (toUnit === "celsius") return celsius;
+  if (toUnit === "fahrenheit") return (celsius * 9) / 5 + 32;
+  return celsius + 273.15;
+}
+
+function runUnitConversion() {
+  const category = document.getElementById("unitCategorySelect")?.value || "length";
+  const fromUnit = document.getElementById("unitFromSelect")?.value;
+  const toUnit = document.getElementById("unitToSelect")?.value;
+  const fromValue = Number(document.getElementById("unitFromValue")?.value);
+  const outputField = document.getElementById("unitToValue");
+
+  if (!outputField || !fromUnit || !toUnit) return;
+
+  if (!Number.isFinite(fromValue)) {
+    outputField.value = "";
+    return;
+  }
+
+  let result;
+
+  if (category === "temperature") {
+    result = convertTemperature(fromValue, fromUnit, toUnit);
+  } else {
+    const units = UNIT_DEFINITIONS[category]?.units || {};
+    const baseValue = fromValue * (units[fromUnit]?.toBase || 1);
+    result = baseValue / (units[toUnit]?.toBase || 1);
+  }
+
+  outputField.value = Number.isFinite(result) ? String(Math.round(result * 1e6) / 1e6) : "";
+}
+
 function openProject(id) {
   currentProjectId = id;
 
@@ -3140,170 +3398,62 @@ document.addEventListener("DOMContentLoaded", () => {
     openToolWorkspace("projects");
   });
 
-  document.getElementById("createProjectBtn")?.addEventListener("click", createProject);
+  // --------------------------------------------------------
+  // FREE QUICK TOOLS
+  // --------------------------------------------------------
 
-  document.getElementById("closeNewProjectBtn")?.addEventListener("click", () => {
-    const modal = document.getElementById("newProjectModal");
+  document.getElementById("openCalculatorBtn")?.addEventListener("click", () => {
+    calcExpression = "";
+    calcUpdateDisplay();
+    const modal = document.getElementById("calculatorModal");
+    if (modal) modal.style.display = "flex";
+  });
+
+  document.getElementById("closeCalculatorBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("calculatorModal");
     if (modal) modal.style.display = "none";
   });
 
-  document.getElementById("backToProjectsBtn")?.addEventListener("click", () => {
-    const detail = document.getElementById("projectDetailView");
-    if (detail) detail.style.display = "none";
-
-    const list = document.getElementById("projectListView");
-    if (list) list.style.display = "block";
-
-    renderProjects();
-  });
-
-  document.getElementById("runAgentBtn")?.addEventListener("click", runBusinessAgent);
-  document.getElementById("docAnalyzeBtn")?.addEventListener("click", analyzeDocument);
-
-  const docFileInput = document.getElementById("docFileInput");
-  const docUploadCard = document.getElementById("docUploadCard");
-
-  if (docUploadCard && docFileInput) {
-    docUploadCard.addEventListener("click", () => docFileInput.click());
-
-    docFileInput.addEventListener("change", (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt")) {
-        const reader = new FileReader();
-
-        reader.onload = (loadEvent) => {
-          const input = document.getElementById("docTextInput");
-          if (input) input.value = loadEvent.target.result || "";
-
-          showToast("📄 Document loaded!", "success");
-        };
-
-        reader.readAsText(file);
-      } else {
-        showToast(
-          "PDF/DOCX ko browser me directly text me read nahi kiya ja sakta. Text paste karein ya backend parser use karein.",
-          "error"
-        );
-      }
+  document.querySelectorAll(".calcBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      calcHandleInput(btn.getAttribute("data-calc"));
     });
-  }
-
-  const imageUploadCard = document.getElementById("imageUploadCard");
-  const imageFileInput = document.getElementById("imageFileInput");
-
-  if (imageUploadCard && imageFileInput) {
-    imageUploadCard.addEventListener("click", () => imageFileInput.click());
-
-    imageFileInput.addEventListener("change", (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith("image/")) {
-        showToast("Sirf image file upload karein.", "error");
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = (loadEvent) => {
-        window.currentImageBase64 = loadEvent.target.result;
-
-        const preview = document.getElementById("imagePreview");
-
-        if (preview) {
-          preview.src = window.currentImageBase64;
-          preview.style.display = "block";
-        }
-
-        const text = document.getElementById("imageUploadText");
-        if (text) text.style.display = "none";
-      };
-
-      reader.readAsDataURL(file);
-    });
-  }
-
-  document.getElementById("imageGenerateBtn")?.addEventListener("click", runImageTool);
-
-  document.getElementById("imageActionSelect")?.addEventListener("change", (event) => {
-    const question = document.getElementById("imageQuestionInput");
-    if (!question) return;
-
-    question.style.display = event.target.value === "ask" ? "block" : "none";
   });
 
-  document.getElementById("imageCopyBtn")?.addEventListener("click", () => {
-    const result = document.getElementById("imageResult");
-    copyText(result?.innerText || "");
+  document.getElementById("openQrBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("qrModal");
+    if (modal) modal.style.display = "flex";
+
+    const output = document.getElementById("qrCodeOutput");
+    const downloadBtn = document.getElementById("downloadQrBtn");
+    if (output) output.style.display = "none";
+    if (downloadBtn) downloadBtn.style.display = "none";
+
+    const input = document.getElementById("qrTextInput");
+    if (input) input.value = "";
   });
 
-  document.getElementById("imageShareBtn")?.addEventListener("click", async () => {
-    const result = document.getElementById("imageResult");
-    const text = result?.innerText || "";
-
-    if (!text) return;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Image Analysis", text });
-      } else {
-        await copyText(text);
-      }
-    } catch {
-      // User cancelled.
-    }
-  });
-
-  document.getElementById("upgradeProBtn")?.addEventListener("click", () => {
-    showToast("Payment integration coming soon!", "info");
-  });
-
-  document.getElementById("closeProModal")?.addEventListener("click", () => {
-    const modal = document.getElementById("proModal");
+  document.getElementById("closeQrBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("qrModal");
     if (modal) modal.style.display = "none";
   });
 
-  document.querySelectorAll(".hubChip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const tool = chip.getAttribute("data-tool");
-      if (!tool) return;
+  document.getElementById("generateQrBtn")?.addEventListener("click", generateQrCode);
+  document.getElementById("downloadQrBtn")?.addEventListener("click", downloadQrCode);
 
-      trackEvent("select_tool", { tool_name: tool });
-      openToolWorkspace(tool);
-    });
+  document.getElementById("openPasswordBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("passwordModal");
+    if (modal) modal.style.display = "flex";
+    generatePassword();
   });
 
-  document.getElementById("viewAllToolsBtn")?.addEventListener("click", function () {
-    const allToolsGrid = document.getElementById("allToolsGrid");
-    if (!allToolsGrid) return;
-
-    const isHidden = allToolsGrid.style.display === "none";
-
-    allToolsGrid.style.display = isHidden ? "grid" : "none";
-    this.setAttribute("aria-expanded", isHidden ? "true" : "false");
-    this.innerHTML = isHidden ? "🧰 Hide Tools ▴" : "🧰 View All Tools ▾";
-
-    if (isHidden) {
-      allToolsGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
+  document.getElementById("closePasswordBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("passwordModal");
+    if (modal) modal.style.display = "none";
   });
 
-  const tips = [
-    "Try the Business Agent! One click generates a full startup pack.",
-    "Create a Project to organize all your AI assets.",
-    "Use Quote Card Maker to turn text into a beautiful social image.",
-    "Write professional Cold Emails in seconds.",
-    "Set your Brand Profile so AI can use your brand automatically.",
-    "Use Auto-Pilot to create multiple marketing assets together.",
-    "Use AI Chat when you want a normal conversation with AI."
-  ];
+  document.getElementById("generatePasswordBtn")?.addEventListener("click", generatePassword);
 
-  const dailyTip = document.getElementById("dailyTip");
-  if (dailyTip) dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
-
-  renderProjects();
-
-  console.log("🚀 IdeaForgeX v11.9 initialized successfully.");
-});
+  document.getElementById("copyPasswordBtn")?.addEventListener("click", () => {
+    const output = document.getElementById("passwordOutput");
+    cop
