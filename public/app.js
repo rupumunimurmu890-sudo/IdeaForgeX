@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.10
+// IdeaForgeX - Main JavaScript v11.11
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -661,40 +661,31 @@ async function generateReport() {
 // ============================================================
 // PDF
 // ============================================================
-
 async function downloadElementAsPdf(elementId, prefix, button) {
   if (!window.html2canvas || !window.jspdf) {
     showToast("PDF library load nahi hui.", "error");
     return;
   }
-
   const element = document.getElementById(elementId);
-
   if (!element) {
     showToast("PDF content nahi mila.", "error");
     return;
   }
-
   const originalText = button?.innerHTML || "PDF";
-
   if (button) {
     button.disabled = true;
     button.innerHTML = "⏳ PDF...";
   }
-
   try {
     const canvas = await window.html2canvas(element, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
-
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const imageHeight = (canvas.height * pageWidth) / canvas.width;
     const image = canvas.toDataURL("image/jpeg", 0.92);
-
     let heightLeft = imageHeight;
     let position = 0;
-
     pdf.addImage(image, "JPEG", 0, position, pageWidth, imageHeight);
     heightLeft -= pageHeight;
 
@@ -717,7 +708,6 @@ async function downloadElementAsPdf(elementId, prefix, button) {
     }
   }
 }
-
 // ============================================================
 // COPY
 // ============================================================
@@ -735,30 +725,24 @@ async function copyText(text) {
     showToast("Copy failed.", "error");
   }
 }
-
 // ============================================================
 // LAUNCH PLAN
 // ============================================================
-
 async function generateLaunchPlan() {
   if (!currentIdeaText) {
     showToast("Pehle report generate karein.", "error");
     return;
   }
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam!", "error");
     return;
   }
-
   const btn = document.getElementById("generateLaunchPlanBtn");
   const originalText = btn?.innerHTML || "Generate";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Planning...";
   }
-
   try {
     const response = await fetch("/api/generate-launch-plan", {
       method: "POST",
@@ -770,15 +754,11 @@ async function generateLaunchPlan() {
         brand: userBrand
       })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.plan) {
       throw new Error(data.error || "Launch plan generate nahi hua.");
     }
-
     if (!isProUser) incrementUsage();
-
     renderSectionsInto(
       "launchPlanSections",
       [
@@ -808,30 +788,24 @@ async function generateLaunchPlan() {
     }
   }
 }
-
 // ============================================================
 // PITCH DECK
 // ============================================================
-
 async function generatePitchDeck() {
   if (!currentIdeaText) {
     showToast("Pehle report generate karein.", "error");
     return;
   }
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam!", "error");
     return;
   }
-
   const btn = document.getElementById("generatePitchDeckBtn");
   const originalText = btn?.innerHTML || "Generate";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Building...";
   }
-
   try {
     const response = await fetch("/api/generate-pitch-deck", {
       method: "POST",
@@ -842,15 +816,11 @@ async function generatePitchDeck() {
         brand: userBrand
       })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.deck) {
       throw new Error(data.error || "Pitch deck generate nahi hua.");
     }
-
     if (!isProUser) incrementUsage();
-
     renderSectionsInto(
       "pitchDeckSlides",
       [
@@ -880,134 +850,101 @@ async function generatePitchDeck() {
     }
   }
 }
-
 // ============================================================
 // GENERIC SECTION RENDERER
 // ============================================================
-
 function renderSectionsInto(containerId, specification, data) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
   container.innerHTML = "";
   if (!data) return;
-
   specification.forEach((item) => {
     if (!data[item.key]) return;
-
     const card = document.createElement("div");
     card.className = "reportCard";
-
     card.innerHTML = `
       <h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(data[item.key])}</p>
     `;
-
     container.appendChild(card);
   });
 }
-
 // ============================================================
 // SMART ROUTER
 // ============================================================
-
 function smartRouteInput(input) {
   const text = String(input || "").toLowerCase().trim();
-
   if (
     /^[\d\s()+\-*/%.^]+$/.test(text) ||
     /\b(calculate|calculator|math|kitna|jod|jama|guna|multiply|divide|percent)\b/.test(text)
   ) {
     return "calculator";
   }
-
   if (/\b(translate|translation|anuvad|meaning|in hindi|in english|hindi me|english me)\b/.test(text)) {
     return "translate";
   }
-
   if (/\b(write|draft|email|letter|essay|application|likho|likhna|message)\b/.test(text)) {
     return "writing";
   }
-
   if (/\b(explain|define|what is|kya hai|history|science|study|padhai|question|answer)\b/.test(text)) {
     return "student";
   }
-
   if (/\b(code|coding|program|script|function|python|javascript|html|css|react|api|worker|cloudflare|github)\b/.test(text)) {
     return "code";
   }
-
   if (/\b(logo|brand logo|icon|symbol|emblem)\b/.test(text)) {
     return "logo";
   }
-
   if (/\b(post|tweet|instagram|linkedin|facebook|social media|caption|reel)\b/.test(text)) {
     return "social";
   }
-
   if (/\b(image|picture|photo|draw|generate image|banaiye|tasveer|chitra|painting)\b/.test(text)) {
     return "ai-image";
   }
-
   if (/\b(promote|marketing|advertisement|advertising|ad campaign|campaign|business promote)\b/.test(text)) {
     return "autopilot";
   }
-
   if (/\b(document|pdf|analyze document|summary|notes|report)\b/.test(text)) {
     return "document";
   }
-
   if (/\b(goal|plan|roadmap|kaise karein|how to achieve|target|strategy)\b/.test(text)) {
     return "goalplan";
   }
-
   if (/\b(profit|loss|money|investment|roi|kamaai|income|expense|business calculation)\b/.test(text)) {
     return "moneycalc";
   }
-
   if (/\b(improve|feedback|suggestion|better idea|idea improve)\b/.test(text)) {
     return "improveidea";
   }
-
   if (/\b(roast|shark tank|critique|brutal|idea check)\b/.test(text)) {
     return "roast";
   }
-
   if (/\b(poster|banner|flyer|graphic design)\b/.test(text)) {
     return "poster";
   }
-
   if (/\b(video|video script|youtube|shorts|tiktok)\b/.test(text)) {
     return "video";
   }
-
   if (/\b(workflow|batch|all in one|complete pack)\b/.test(text)) {
     return "workflow";
   }
-
   if (/\b(cold email|outreach|follow up|proposal|networking email)\b/.test(text)) {
     return "email";
   }
-
   if (/\b(card|quote card|quote|instagram story|status|shareable)\b/.test(text)) {
     return "card";
   }
-
   if (/\b(agent|startup|business idea|business start|shuru karna|start business)\b/.test(text)) {
     return "agent";
   }
-
   if (/\b(chat|talk|conversation|baat karo|help me)\b/.test(text)) {
     return "chat";
   }
-
   return "assistant";
 }
-
 // ============================================================
 // TOOL TITLES
 // ============================================================
-
 const TOOL_TITLES = {
   assistant: "🤖 AI Assistant",
   autopilot: "🚀 Auto-Pilot",
@@ -1035,62 +972,46 @@ const TOOL_TITLES = {
   projects: "📂 My Projects",
   agent: "🤖 Business Agent"
 };
-
 // ============================================================
 // OPEN TOOL
 // ============================================================
-
 function openToolWorkspace(tool) {
   activeTool = tool;
-
   document.querySelectorAll(".hubChip").forEach((chip) => chip.classList.remove("active"));
-
   const selectedChip = document.querySelector(`.hubChip[data-tool="${tool}"]`);
   if (selectedChip) selectedChip.classList.add("active");
-
   // If the selected chip lives inside the collapsed "All Tools"
   // grid, expand it so the highlighted chip is actually visible
   // (e.g. when a tool is opened via the Hub's smart router rather
   // than a direct click).
   const allToolsGrid = document.getElementById("allToolsGrid");
-
   if (selectedChip && allToolsGrid && allToolsGrid.contains(selectedChip) && allToolsGrid.style.display === "none") {
     allToolsGrid.style.display = "grid";
-
     const viewAllBtn = document.getElementById("viewAllToolsBtn");
-
     if (viewAllBtn) {
       viewAllBtn.setAttribute("aria-expanded", "true");
       viewAllBtn.innerHTML = "🧰 Hide Tools ▴";
     }
   }
-
   const projectsSection = document.getElementById("projectsSection");
   const toolWorkspace = document.getElementById("toolWorkspace");
   const imageWorkspace = document.getElementById("imageToolWorkspace");
   const documentWorkspace = document.getElementById("documentWorkspace");
-
   if (tool === "projects") {
     if (projectsSection) projectsSection.style.display = "block";
     if (toolWorkspace) toolWorkspace.style.display = "none";
-
     const list = document.getElementById("projectListView");
     const detail = document.getElementById("projectDetailView");
-
     if (list) list.style.display = "block";
     if (detail) detail.style.display = "none";
-
     renderProjects();
     projectsSection?.scrollIntoView({ behavior: "smooth" });
-
     return;
   }
-
   if (projectsSection) projectsSection.style.display = "none";
   if (toolWorkspace) toolWorkspace.style.display = "none";
   if (imageWorkspace) imageWorkspace.style.display = "none";
   if (documentWorkspace) documentWorkspace.style.display = "none";
-
   if (tool === "image") {
     if (imageWorkspace) {
       imageWorkspace.style.display = "block";
@@ -1098,7 +1019,6 @@ function openToolWorkspace(tool) {
     }
     return;
   }
-
   if (tool === "document") {
     if (documentWorkspace) {
       documentWorkspace.style.display = "block";
@@ -1106,10 +1026,8 @@ function openToolWorkspace(tool) {
     }
     return;
   }
-
   const title = document.getElementById("toolWorkspaceTitle");
   if (title) title.textContent = TOOL_TITLES[tool] || TOOL_TITLES.assistant;
-
   const optionIds = [
     "writingOptions",
     "translateOptions",
@@ -1124,12 +1042,10 @@ function openToolWorkspace(tool) {
     "workflowOptions",
     "emailOptions"
   ];
-
   optionIds.forEach((id) => {
     const element = document.getElementById(id);
     if (element) element.style.display = "none";
   });
-
   const optionMap = {
     writing: "writingOptions",
     translate: "translateOptions",
@@ -1144,19 +1060,15 @@ function openToolWorkspace(tool) {
     workflow: "workflowOptions",
     email: "emailOptions"
   };
-
   const optionId = optionMap[tool];
-
   if (optionId) {
     const option = document.getElementById(optionId);
     if (option) option.style.display = "flex";
   }
-
   const chatInterface = document.getElementById("chatInterface");
   const standardInput = document.getElementById("standardInputArea");
   const resultActions = document.getElementById("toolResultActions");
   const bilingual = document.getElementById("bilingualToggle");
-
   if (tool === "chat") {
     if (chatInterface) chatInterface.style.display = "block";
     if (standardInput) standardInput.style.display = "none";
@@ -1177,41 +1089,31 @@ function openToolWorkspace(tool) {
     document.getElementById("toolInput")?.focus();
   }
 }
-
 // ============================================================
 // USAGE
 // ============================================================
-
 function getTodayUsage() {
   const todayStr = new Date().toISOString().slice(0, 10);
   const stored = safeJsonParse(localStorage.getItem(USAGE_KEY), null);
-
   if (!stored || stored.date !== todayStr) {
     return { date: todayStr, count: 0 };
   }
-
   return { date: todayStr, count: Number(stored.count) || 0 };
 }
-
 function incrementUsage() {
   if (isProUser) return;
-
   const usage = getTodayUsage();
   usage.count++;
-
   localStorage.setItem(USAGE_KEY, JSON.stringify(usage));
   renderUsageBanner();
 }
-
 function hasUsageRemaining() {
   if (isProUser) return true;
   return getTodayUsage().count < FREE_DAILY_LIMIT;
 }
-
 function renderUsageBanner() {
   const banner = document.getElementById("usageBanner");
   const text = document.getElementById("usageText");
-
   if (!banner || !text) return;
 
   if (isProUser) {
@@ -1234,33 +1136,24 @@ function renderUsageBanner() {
 
   banner.style.display = "block";
 }
-
 // ============================================================
 // FORMAT RESULT
 // ============================================================
-
 function formatToolResult(text, tool) {
   if (text == null) return "";
-
   const value = String(text);
-
   if (tool === "code") {
     return `<pre class="code-result"><code>${escapeHtml(value)}</code></pre>`;
   }
-
   return escapeHtml(value).replace(/\n{3,}/g, "\n\n").replace(/\n/g, "<br>");
 }
-
 // ============================================================
 // AUTOPILOT RESULT
 // ============================================================
-
 function renderAutopilotResult(pkg) {
   const container = document.getElementById("autopilotResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   const sections = [
     { key: "AD_COPY", title: "📢 Ad Copy" },
     { key: "INSTAGRAM_CAPTION", title: "📸 Instagram Caption" },
@@ -1292,13 +1185,10 @@ function renderAutopilotResult(pkg) {
 // ============================================================
 // SOCIAL PACK
 // ============================================================
-
 function renderSocialPackResult(pack) {
   const container = document.getElementById("socialPackResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   const sections = [
     { key: "INSTAGRAM", title: "📸 Instagram" },
     { key: "FACEBOOK", title: "📘 Facebook" },
@@ -1326,17 +1216,13 @@ function renderSocialPackResult(pack) {
 
   container.style.display = "block";
 }
-
 // ============================================================
 // GOAL RESULT
 // ============================================================
-
 function renderGoalResult(plan) {
   const container = document.getElementById("goalResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   const sections = [
     { key: "OVERVIEW", title: "🎯 Strategy Overview" },
     { key: "MILESTONES", title: "🏆 Key Milestones" },
@@ -1344,34 +1230,25 @@ function renderGoalResult(plan) {
     { key: "RESOURCES_NEEDED", title: "🛠️ Resources Needed" },
     { key: "POTENTIAL_OBSTACLES", title: "⚠️ Potential Obstacles" }
   ];
-
   sections.forEach((section) => {
     if (!plan?.[section.key]) return;
-
     const div = document.createElement("div");
     div.className = "goal-section";
-
     div.innerHTML = `
       <h4>${escapeHtml(section.title)}</h4>
       <p>${escapeHtml(plan[section.key])}</p>
     `;
-
     container.appendChild(div);
   });
-
   container.style.display = "block";
 }
-
 // ============================================================
 // MONEY RESULT
 // ============================================================
-
 function renderMoneyResult(calc) {
   const container = document.getElementById("moneyResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   const sections = [
     { key: "INVESTMENT_BREAKDOWN", title: "💰 Investment Breakdown" },
     { key: "MONTHLY_EXPENSES", title: "📉 Monthly Expenses" },
@@ -1380,32 +1257,24 @@ function renderMoneyResult(calc) {
     { key: "BREAK_EVEN", title: "⚖️ Break-Even Point" },
     { key: "RISKS", title: "⚠️ Financial Risks" }
   ];
-
   sections.forEach((section) => {
     if (!calc?.[section.key]) return;
-
     const div = document.createElement("div");
     div.className = "money-section";
-
     div.innerHTML = `
       <h4>${escapeHtml(section.title)}</h4>
       <p>${escapeHtml(calc[section.key])}</p>
     `;
-
     container.appendChild(div);
   });
-
   container.style.display = "block";
 }
-
 // ============================================================
 // IMPROVE RESULT
 // ============================================================
-
 function renderImproveResult(feedback) {
   const container = document.getElementById("improveResult");
   if (!container) return;
-
   container.innerHTML = "";
 
   const sections = [
@@ -1432,20 +1301,16 @@ function renderImproveResult(feedback) {
   });
 
   container.style.display = "block";
-}
+     }
 
 // ============================================================
 // ROAST
 // ============================================================
-
 function renderRoastResult(roast) {
   const container = document.getElementById("roastResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   const score = roast?.SHARK_SCORE ?? "?";
-
   container.innerHTML = `<div class="shark-score">🦈 ${escapeHtml(score)}/10</div>`;
 
   const sections = [
@@ -1472,71 +1337,32 @@ function renderRoastResult(roast) {
   container.style.display = "block";
 }
 
-// ============================================================
-// POSTER
-// ============================================================
-
-function renderPosterResult(poster, theme) {
-  document
-    .getElementById("posterHeadline")
-    ?.replaceChildren(document.createTextNode(poster?.HEADLINE || "Headline"));
-
-  document
-    .getElementById("posterSubhead")
-    ?.replaceChildren(document.createTextNode(poster?.SUBHEADLINE || "Subheadline"));
-
-  document
-    .getElementById("posterBody")
-    ?.replaceChildren(document.createTextNode(poster?.BODY || "Body text goes here."));
-
-  document
-    .getElementById("posterFooter")
-    ?.replaceChildren(document.createTextNode(poster?.FOOTER || "Footer / CTA"));
-
-  const preview = document.getElementById("posterPreview");
-
-  if (preview) {
-    preview.style.background = theme || "linear-gradient(135deg,#667eea,#764ba2)";
-  }
-
-  const box = document.getElementById("posterPreviewBox");
-  if (box) box.style.display = "block";
-}
 
 // ============================================================
 // CARD
 // ============================================================
-
 function renderCardResult(card) {
   const headline = document.getElementById("cardHeadline");
   const body = document.getElementById("cardBody");
   const footer = document.getElementById("cardFooter");
-
   if (headline) headline.textContent = card?.HEADLINE || "Headline";
   if (body) body.textContent = card?.BODY || "Body text goes here.";
   if (footer) footer.textContent = card?.FOOTER || "Footer / CTA";
-
   const preview = document.getElementById("cardPreview");
-
   if (preview) {
     preview.style.background = card?.BG_GRADIENT || "linear-gradient(135deg,#667eea,#764ba2)";
     preview.style.color = "white";
   }
-
   const box = document.getElementById("cardPreviewBox");
   if (box) box.style.display = "block";
 }
-
 // ============================================================
 // VIDEO
 // ============================================================
-
 function renderVideoResult(video) {
   const container = document.getElementById("videoResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   const sections = [
     { key: "TITLE", title: "🎬 Video Title" },
     { key: "HOOK", title: "🪝 Hook" },
@@ -1545,24 +1371,18 @@ function renderVideoResult(video) {
     { key: "CTA", title: "📢 Call to Action" },
     { key: "HASHTAGS", title: "#️⃣ Hashtags" }
   ];
-
   sections.forEach((section) => {
     if (!video?.[section.key]) return;
-
     const div = document.createElement("div");
     div.className = "video-section";
-
     div.innerHTML = `
       <h4>${escapeHtml(section.title)}</h4>
       <p>${escapeHtml(video[section.key])}</p>
     `;
-
     container.appendChild(div);
   });
-
   container.style.display = "block";
 }
-
 // ============================================================
 // WORKFLOW
 // ============================================================
@@ -1593,50 +1413,38 @@ function renderWorkflowResult(workflow) {
 // ============================================================
 // EMAIL
 // ============================================================
-
 function renderEmailResult(email) {
   const container = document.getElementById("emailResult");
   if (!container) return;
-
   container.innerHTML = "";
-
   [
     { key: "SUBJECT", title: "📧 Subject Line" },
     { key: "BODY", title: "📝 Email Body" },
     { key: "SIGN_OFF", title: "✍️ Sign Off" }
   ].forEach((section) => {
     if (!email?.[section.key]) return;
-
     const div = document.createElement("div");
     div.className = "email-section";
-
     div.innerHTML = `
       <h4>${escapeHtml(section.title)}</h4>
       <p>${escapeHtml(email[section.key])}</p>
     `;
-
     container.appendChild(div);
   });
-
   container.style.display = "block";
 }
-
 // ============================================================
 // CHAT
 // ============================================================
-
 function appendChatMessage(role, text) {
   const container = document.getElementById("chatContainer");
   if (!container) return;
-
   const message = document.createElement("div");
   message.className = `chat-message chat-${role}`;
   message.textContent = String(text);
-
   container.appendChild(message);
   container.scrollTop = container.scrollHeight;
 }
-
 // ============================================================
 // REPORT FOLLOW-UP CHAT
 // Lets the user keep asking questions about the same idea
@@ -1644,83 +1452,62 @@ function appendChatMessage(role, text) {
 // (and the AI's answers) accumulate in reportFollowupHistory
 // and get sent together for context, same as the main Chat tool.
 // ============================================================
-
 function appendFollowupMessage(role, text) {
   const container = document.getElementById("followupContainer");
   if (!container) return;
-
   const message = document.createElement("div");
   message.className = `chat-message chat-${role}`;
   message.textContent = String(text);
-
   container.appendChild(message);
   container.scrollTop = container.scrollHeight;
 }
-
 function resetFollowupChat() {
   reportFollowupHistory = [];
-
   const container = document.getElementById("followupContainer");
   if (container) container.innerHTML = "";
 }
-
 async function askIdeaFollowup() {
   const input = document.getElementById("followupInput");
   if (!input) return;
-
   const text = input.value.trim();
   if (!text) return;
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam! Pro lein.", "error");
     return;
   }
-
   // On the first question, fold the idea itself into the message
   // so the AI has context without the user having to repeat it.
   // Later questions go through as-is — the running history already
   // carries the idea and every prior Q&A.
   const isFirstQuestion = reportFollowupHistory.length === 0;
-
   const messageForApi = isFirstQuestion
     ? `Business idea: "${currentIdeaText}"\n\nSawaal: ${text}`
     : text;
-
   appendFollowupMessage("user", text);
   input.value = "";
-
   reportFollowupHistory.push({ role: "user", content: messageForApi });
-
   if (reportFollowupHistory.length > 10) {
     reportFollowupHistory = reportFollowupHistory.slice(-10);
   }
-
   const btn = document.getElementById("askFollowupBtn");
   const originalText = btn?.innerHTML || "Ask";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳...";
   }
-
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: getApiHeaders(),
       body: JSON.stringify({ messages: reportFollowupHistory, brand: userBrand })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.reply) {
       throw new Error(data.error || "Jawab nahi aaya.");
     }
-
     if (!isProUser) incrementUsage();
-
     appendFollowupMessage("ai", data.reply);
     reportFollowupHistory.push({ role: "assistant", content: data.reply });
-
     trackEvent("report_followup_question", { success: true });
   } catch (error) {
     showToast(error.message, "error");
@@ -1732,51 +1519,38 @@ async function askIdeaFollowup() {
     }
   }
 }
-
 async function sendChatMessage() {
   const input = document.getElementById("chatInput");
   if (!input) return;
-
   const text = input.value.trim();
   if (!text) return;
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam! Pro lein.", "error");
     return;
   }
-
   appendChatMessage("user", text);
   input.value = "";
-
   chatHistory.push({ role: "user", content: text });
-
   if (chatHistory.length > 10) {
     chatHistory = chatHistory.slice(-10);
   }
-
   const btn = document.getElementById("sendChatBtn");
   const originalText = btn?.innerHTML || "Send";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Thinking...";
   }
-
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: getApiHeaders(),
       body: JSON.stringify({ messages: chatHistory, brand: userBrand })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.reply) {
       throw new Error(data.error || "Chat reply nahi aaya.");
     }
-
     if (!isProUser) incrementUsage();
-
     appendChatMessage("ai", data.reply);
     chatHistory.push({ role: "assistant", content: data.reply });
 
@@ -1797,39 +1571,30 @@ async function sendChatMessage() {
 // ============================================================
 // BUSINESS AGENT
 // ============================================================
-
 async function runBusinessAgent() {
   const input = document.getElementById("agentInput");
   if (!input) return;
-
   const text = input.value.trim();
-
   if (!text) {
     showToast("Apna business idea likhein!", "error");
     return;
   }
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam!", "error");
     return;
   }
-
   if (!currentProjectId) {
     showToast("Pehle ek Project create karein!", "error");
     return;
   }
-
   const btn = document.getElementById("runAgentBtn");
   const originalText = btn?.innerHTML || "Run";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Agent is working...";
   }
-
   try {
     trackEvent("run_business_agent", { project_id: String(currentProjectId) });
-
     const response = await fetch("/api/agent-generate", {
       method: "POST",
       headers: getApiHeaders(),
@@ -1841,25 +1606,18 @@ async function runBusinessAgent() {
           "en"
       })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.data) {
       throw new Error(data.error || "Agent failed.");
     }
-
     if (!isProUser) incrementUsage();
-
     const projects = getProjects();
     const index = projects.findIndex((project) => project.id === currentProjectId);
-
     if (index === -1) {
       throw new Error("Project nahi mila.");
     }
-
     const assets = data.data || {};
     const socialPosts = Array.isArray(assets.social_posts) ? assets.social_posts : [];
-
     const newAssets = [
       { type: "Brand Name", title: "Brand Name", content: assets.brand_name || "" },
       { type: "Tagline", title: "Tagline", content: assets.tagline || "" },
@@ -1889,12 +1647,11 @@ async function runBusinessAgent() {
       btn.innerHTML = originalText;
     }
   }
-}
+      }
 
 // ============================================================
 // HIDE TOOL RESULTS
 // ============================================================
-
 function hideAllToolResults() {
   const ids = [
     "toolResult",
@@ -1911,41 +1668,31 @@ function hideAllToolResults() {
     "emailResult",
     "generatedImageBox"
   ];
-
   ids.forEach((id) => {
     const element = document.getElementById(id);
     if (element) element.style.display = "none";
   });
 }
-
 // ============================================================
 // AI TOOL
 // ============================================================
-
 async function runAiTool(input, tool) {
   if (!input?.trim()) return;
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam! Pro lein.", "error");
     return;
   }
-
   const btn = document.getElementById("toolGenerateBtn");
   const resultBox = document.getElementById("toolResult");
   const resultActions = document.getElementById("toolResultActions");
   const originalText = btn?.innerHTML || "Generate";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Thinking...";
   }
-
   hideAllToolResults();
-
   if (resultActions) resultActions.style.display = "none";
-
   const bilingual = document.getElementById("bilingualToggle")?.checked || false;
-
   const payload = {
     tool,
     input: input.trim(),
@@ -1953,60 +1700,46 @@ async function runAiTool(input, tool) {
     brand: userBrand,
     bilingual
   };
-
   if (tool === "writing") {
     payload.writingType = document.getElementById("writingTypeSelect")?.value || "";
     payload.tone = document.getElementById("toneSelect")?.value || "";
   }
-
   if (tool === "translate") {
     payload.fromLanguage = document.getElementById("fromLanguageSelect")?.value || "auto";
     payload.toLanguage = document.getElementById("toLanguageSelect")?.value || "en";
   }
-
   if (tool === "code") {
     payload.codeLang = document.getElementById("codeLangSelect")?.value || "javascript";
   }
-
   if (tool === "logo") {
     payload.logoStyle = document.getElementById("logoStyleSelect")?.value || "modern";
   }
-
   if (tool === "social") {
     payload.platform = document.getElementById("platformSelect")?.value || "instagram";
   }
-
   if (tool === "ai-image") {
     payload.style = document.getElementById("imageStyleSelect")?.value || "realistic";
   }
-
   if (tool === "goalplan") {
     payload.timeframe = document.getElementById("goalTimeframeSelect")?.value || "3 Months";
   }
-
   if (tool === "moneycalc") {
     payload.investment = document.getElementById("moneyInvestment")?.value || "";
     payload.businessType = document.getElementById("moneyTypeSelect")?.value || "Small Business";
   }
-
   if (tool === "poster" || tool === "card") {
     payload.theme = document.getElementById("posterThemeSelect")?.value || "purple";
   }
-
   if (tool === "video") {
     payload.platform = document.getElementById("videoPlatformSelect")?.value || "YouTube Long";
   }
-
   if (tool === "workflow") {
     payload.workflowType = document.getElementById("workflowTypeSelect")?.value || "startup-launch";
   }
-
   if (tool === "email") {
     payload.emailType = document.getElementById("emailTypeSelect")?.value || "Cold Outreach";
   }
-
   lastToolPayload = { ...payload, tool, input: input.trim() };
-
   try {
     if (tool === "autopilot") {
       const response = await fetch("/api/ai-autopilot", {
@@ -2014,66 +1747,44 @@ async function runAiTool(input, tool) {
         headers: getApiHeaders(),
         body: JSON.stringify({ input: input.trim(), brand: userBrand })
       });
-
       const data = await parseApiResponse(response);
-
       if (!data.success || !data.package) {
         throw new Error(data.error || "Autopilot package generate nahi hua.");
       }
-
       if (!isProUser) incrementUsage();
-
       renderAutopilotResult(data.package);
-
       currentToolResult = JSON.stringify(data.package, null, 2);
       currentToolInput = input.trim();
-
       if (resultActions) resultActions.style.display = "flex";
-
       saveToToolHistory(tool, input, currentToolResult);
-
       return;
     }
-
     const response = await fetch("/api/ai-tool", {
       method: "POST",
       headers: getApiHeaders(),
       body: JSON.stringify(payload)
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.result) {
       throw new Error(data.error || "AI result nahi mila.");
     }
-
     if (!isProUser) incrementUsage();
-
     let effectiveTool = tool;
-
     if (tool === "auto" && data.route && data.route !== "auto") {
       effectiveTool = data.route;
-
       openToolWorkspace(effectiveTool);
-
       const toolInput = document.getElementById("toolInput");
       if (toolInput) toolInput.value = input;
-
       showToast(`✨ ${TOOL_TITLES[effectiveTool] || "Tool"} detected`, "info");
     }
-
     currentToolResult = String(data.result);
     currentToolInput = input.trim();
-
     if (resultBox) {
       resultBox.innerHTML = formatToolResult(data.result, effectiveTool);
       resultBox.style.display = "block";
     }
-
     if (resultActions) resultActions.style.display = "flex";
-
     saveToToolHistory(effectiveTool, input, currentToolResult);
-
     if (data.structured) {
       switch (effectiveTool) {
         case "goalplan":
@@ -2122,28 +1833,23 @@ async function runAiTool(input, tool) {
 // ============================================================
 // REMIX
 // ============================================================
-
 async function remixContent(style) {
   if (!currentToolResult || currentToolResult === "Image Generated Successfully") {
     showToast("Text content par hi Remix kaam karta hai.", "error");
     return;
   }
-
   const btn = document.getElementById("remixBtn");
   const originalText = btn?.innerHTML || "Remix";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Remixing...";
   }
-
   try {
     const response = await fetch("/api/remix", {
       method: "POST",
       headers: getApiHeaders(),
       body: JSON.stringify({ text: currentToolResult, style, brand: userBrand })
     });
-
     const data = await parseApiResponse(response);
 
     if (!data.success || !data.result) {
@@ -2175,21 +1881,17 @@ async function remixContent(style) {
 // ============================================================
 // MAKE BETTER
 // ============================================================
-
 async function makeItBetter() {
   if (!currentToolResult || currentToolResult === "Image Generated Successfully") {
     showToast("Text content par hi Make Better kaam karta hai.", "error");
     return;
   }
-
   const btn = document.getElementById("makeBetterBtn");
   const originalText = btn?.innerHTML || "Improve";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Improving...";
   }
-
   try {
     const response = await fetch("/api/remix", {
       method: "POST",
@@ -2200,17 +1902,12 @@ async function makeItBetter() {
         brand: userBrand
       })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.result) {
       throw new Error(data.error || "Improvement failed.");
     }
-
     if (!isProUser) incrementUsage();
-
     currentToolResult = String(data.result);
-
     const result = document.getElementById("toolResult");
 
     if (result) {
@@ -2232,51 +1929,38 @@ async function makeItBetter() {
 // ============================================================
 // DOCUMENT AI
 // ============================================================
-
 async function analyzeDocument() {
   const input = document.getElementById("docTextInput");
   if (!input) return;
-
   const text = input.value.trim();
-
   if (!text) {
     showToast("Document upload karein ya text paste karein.", "error");
     return;
   }
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam!", "error");
     return;
   }
-
   const btn = document.getElementById("docAnalyzeBtn");
   const originalText = btn?.innerHTML || "Analyze";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Analyzing...";
   }
-
   try {
     const response = await fetch("/api/document-ai", {
       method: "POST",
       headers: getApiHeaders(),
       body: JSON.stringify({ text })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.analysis) {
       throw new Error(data.error || "Document analysis failed.");
     }
-
     if (!isProUser) incrementUsage();
-
     const result = document.getElementById("docResult");
     if (!result) return;
-
     result.innerHTML = "";
-
     const sections = [
       { key: "SUMMARY", title: "📋 Summary" },
       { key: "KEY_POINTS", title: "🎯 Key Points" },
@@ -2284,21 +1968,16 @@ async function analyzeDocument() {
       { key: "SIMPLE_EXPLANATION", title: "📖 Simple Explanation" },
       { key: "MCQS", title: "📝 MCQs" }
     ];
-
     sections.forEach((section) => {
       if (!data.analysis[section.key]) return;
-
       const div = document.createElement("div");
       div.className = "autopilot-section";
-
       div.innerHTML = `
         <h4>${escapeHtml(section.title)}</h4>
         <p>${escapeHtml(data.analysis[section.key])}</p>
       `;
-
       result.appendChild(div);
     });
-
     result.style.display = "block";
     showToast("📄 Document analyzed successfully!", "success");
   } catch (error) {
@@ -2310,49 +1989,38 @@ async function analyzeDocument() {
     }
   }
 }
-
 // ============================================================
 // VOICE
 // ============================================================
-
 function startVoiceInput(targetId, button) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (!SpeechRecognition) {
     showToast("Voice support nahi hai.", "error");
     return;
   }
-
   const target = document.getElementById(targetId);
   if (!target) return;
-
   const recognition = new SpeechRecognition();
   recognition.lang = "hi-IN";
   recognition.interimResults = false;
   recognition.continuous = false;
-
   button?.classList.add("listening");
-
   recognition.onresult = (event) => {
     const transcript = event.results?.[0]?.[0]?.transcript || "";
     target.value += transcript;
   };
-
   recognition.onerror = () => {
     showToast("Voice input failed.", "error");
   };
-
   recognition.onend = () => {
     button?.classList.remove("listening");
   };
-
   try {
     recognition.start();
   } catch {
     button?.classList.remove("listening");
   }
 }
-
 // ============================================================
 // SPEECH
 // ============================================================
@@ -2382,32 +2050,25 @@ function speakResult() {
 // ============================================================
 // POSTER DOWNLOAD
 // ============================================================
-
 async function downloadPoster() {
   if (!window.html2canvas) {
     showToast("Image library load nahi hui.", "error");
     return;
   }
-
   const element = document.getElementById("posterPreview");
   if (!element) return;
-
   const btn = document.getElementById("downloadPosterBtn");
   const originalText = btn?.innerHTML || "Download";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Downloading...";
   }
-
   try {
     const canvas = await window.html2canvas(element, { scale: 2, useCORS: true });
     const link = document.createElement("a");
-
     link.download = `IdeaForge-Poster-${Date.now()}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
-
     showToast("🖼️ Poster downloaded!", "success");
   } catch (error) {
     console.error(error);
@@ -2419,36 +2080,28 @@ async function downloadPoster() {
     }
   }
 }
-
 // ============================================================
 // CARD DOWNLOAD
 // ============================================================
-
 async function downloadCard() {
   if (!window.html2canvas) {
     showToast("Image library load nahi hui.", "error");
     return;
   }
-
   const element = document.getElementById("cardPreview");
   if (!element) return;
-
   const btn = document.getElementById("downloadCardBtn");
   const originalText = btn?.innerHTML || "Download";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Downloading...";
   }
-
   try {
     const canvas = await window.html2canvas(element, { scale: 2, useCORS: true });
     const link = document.createElement("a");
-
     link.download = `IdeaForge-Card-${Date.now()}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
-
     showToast("📸 Card downloaded!", "success");
   } catch (error) {
     console.error(error);
@@ -2460,77 +2113,57 @@ async function downloadCard() {
     }
   }
 }
-
 // ============================================================
 // PROJECTS
 // ============================================================
-
 function getProjects() {
   return safeJsonParse(localStorage.getItem(PROJECTS_KEY), []) || [];
 }
-
 function saveProjects(projects) {
   localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
   syncToServer("projects", projects);
 }
-
 function createProject() {
   const input = document.getElementById("newProjectNameInput");
   if (!input) return;
-
   const name = input.value.trim();
-
   if (!name) {
     showToast("Project ka naam likhein!", "error");
     return;
   }
-
   const projects = getProjects();
-
   const newProject = {
     id: Date.now(),
     name,
     createdAt: new Date().toLocaleDateString("en-IN"),
     assets: []
   };
-
   projects.unshift(newProject);
   saveProjects(projects);
-
   input.value = "";
-
   const modal = document.getElementById("newProjectModal");
   if (modal) modal.style.display = "none";
-
   renderProjects();
   showToast("📁 Project Created!", "success");
 }
-
 function deleteProject(id) {
   if (!confirm("Kya aap sure hain ki is project ko delete karna hai?")) {
     return;
   }
-
   let projects = getProjects();
   projects = projects.filter((project) => project.id !== id);
-
   saveProjects(projects);
-
   if (currentProjectId === id) {
     currentProjectId = null;
   }
-
   renderProjects();
   showToast("Project deleted.", "info");
 }
-
 function renderProjects() {
   const grid = document.getElementById("projectsGrid");
   if (!grid) return;
-
   const projects = getProjects();
   grid.innerHTML = "";
-
   if (!projects.length) {
     grid.innerHTML = `
       <div class="empty-state">
@@ -2539,20 +2172,16 @@ function renderProjects() {
     `;
     return;
   }
-
   projects.forEach((project) => {
     const card = document.createElement("div");
     card.className = "project-card";
-
     const assetCount = Array.isArray(project.assets) ? project.assets.length : 0;
-
     card.innerHTML = `
       <button class="delete-btn" type="button" aria-label="Delete project">✕</button>
       <h4>${escapeHtml(project.name)}</h4>
       <p>${assetCount} assets generated</p>
       <p class="project-date">${escapeHtml(project.createdAt || "")}</p>
     `;
-
     const deleteButton = card.querySelector(".delete-btn");
 
     deleteButton?.addEventListener("click", (event) => {
@@ -2567,7 +2196,6 @@ function renderProjects() {
 
   renderHomeProjectsPreview();
 }
-
 // ============================================================
 // HOME PROJECTS PREVIEW
 // A compact, always-visible preview of recent projects on the
@@ -2576,23 +2204,18 @@ function renderProjects() {
 // is used). Kept in sync automatically since it's called from
 // inside renderProjects().
 // ============================================================
-
 const HOME_PROJECTS_PREVIEW_LIMIT = 3;
-
 function renderHomeProjectsPreview() {
   const grid = document.getElementById("homeProjectsPreviewGrid");
   if (!grid) return;
-
   const projects = getProjects();
   grid.innerHTML = "";
-
   if (!projects.length) {
     grid.innerHTML = `
       <div class="empty-state">
         Create a Project to organize all your AI assets.
       </div>
     `;
-
     const newBtn = document.createElement("button");
     newBtn.type = "button";
     newBtn.id = "homeNewProjectBtn";
@@ -2600,51 +2223,40 @@ function renderHomeProjectsPreview() {
     newBtn.style.width = "100%";
     newBtn.style.marginTop = "10px";
     newBtn.textContent = "+ New Project";
-
     newBtn.addEventListener("click", () => {
       const modal = document.getElementById("newProjectModal");
       if (modal) modal.style.display = "flex";
     });
-
     grid.appendChild(newBtn);
     return;
   }
-
   projects.slice(0, HOME_PROJECTS_PREVIEW_LIMIT).forEach((project) => {
     const card = document.createElement("div");
     card.className = "project-card";
-
     const assetCount = Array.isArray(project.assets) ? project.assets.length : 0;
-
     card.innerHTML = `
       <h4>${escapeHtml(project.name)}</h4>
       <p>${assetCount} assets generated</p>
       <p class="project-date">${escapeHtml(project.createdAt || "")}</p>
     `;
-
     const continueBtn = document.createElement("button");
     continueBtn.type = "button";
     continueBtn.style.width = "100%";
     continueBtn.style.marginTop = "10px";
     continueBtn.textContent = "Continue →";
-
     continueBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       goToProjectFromHome(project.id);
     });
-
     card.appendChild(continueBtn);
     card.addEventListener("click", () => goToProjectFromHome(project.id));
-
     grid.appendChild(card);
   });
 }
-
 function goToProjectFromHome(id) {
   openToolWorkspace("projects");
   openProject(id);
 }
-
 // ============================================================
 // FREE QUICK TOOLS
 // Calculator, QR Code, Password Generator, Unit Converter —
@@ -2653,29 +2265,23 @@ function goToProjectFromHome(id) {
 // machinery (Generate button, brand context, bilingual toggle,
 // etc.) which doesn't apply to any of these.
 // ============================================================
-
 // ---------- Calculator ----------
-
 let calcExpression = "";
-
 function calcUpdateDisplay() {
   const display = document.getElementById("calcDisplay");
   if (display) display.value = calcExpression || "0";
 }
-
 function calcHandleInput(key) {
   if (key === "C") {
     calcExpression = "";
     calcUpdateDisplay();
     return;
   }
-
   if (key === "back") {
     calcExpression = calcExpression.slice(0, -1);
     calcUpdateDisplay();
     return;
   }
-
   if (key === "=") {
     // calcExpression is built entirely from a fixed set of
     // button presses (digits, . , + - * / %), never free-typed
@@ -2683,10 +2289,8 @@ function calcHandleInput(key) {
     try {
       const sanitized = calcExpression.replace(/[^0-9+\-*/%.()]/g, "");
       if (!sanitized) return;
-
       // eslint-disable-next-line no-new-func
       const result = Function(`"use strict"; return (${sanitized})`)();
-
       if (!Number.isFinite(result)) {
         calcExpression = "Error";
       } else {
@@ -2695,44 +2299,32 @@ function calcHandleInput(key) {
     } catch {
       calcExpression = "Error";
     }
-
     calcUpdateDisplay();
     return;
   }
-
   if (calcExpression === "Error") {
     calcExpression = "";
   }
-
   calcExpression += key;
   calcUpdateDisplay();
 }
-
 // ---------- QR Code ----------
-
 let qrInstance = null;
-
 function generateQrCode() {
   const input = document.getElementById("qrTextInput");
   const output = document.getElementById("qrCodeOutput");
   const downloadBtn = document.getElementById("downloadQrBtn");
-
   if (!input || !output) return;
-
   const text = input.value.trim();
-
   if (!text) {
     showToast("QR ke liye kuch text/link likhein.", "error");
     return;
   }
-
   if (typeof QRCode === "undefined") {
     showToast("QR library load nahi hui. Internet check karein.", "error");
     return;
   }
-
   output.innerHTML = "";
-
   qrInstance = new QRCode(output, {
     text,
     width: 220,
@@ -2768,47 +2360,37 @@ function downloadQrCode() {
 }
 
 // ---------- Password Generator ----------
-
 function generatePassword() {
   const length = Number(document.getElementById("passwordLength")?.value || 14);
-
   const useUpper = document.getElementById("pwUppercase")?.checked;
   const useLower = document.getElementById("pwLowercase")?.checked;
   const useNumbers = document.getElementById("pwNumbers")?.checked;
   const useSymbols = document.getElementById("pwSymbols")?.checked;
-
   const charSets = {
     upper: "ABCDEFGHJKLMNPQRSTUVWXYZ",
     lower: "abcdefghijkmnpqrstuvwxyz",
     numbers: "23456789",
     symbols: "!@#$%^&*()_+-="
   };
-
   let pool = "";
   if (useUpper) pool += charSets.upper;
   if (useLower) pool += charSets.lower;
   if (useNumbers) pool += charSets.numbers;
   if (useSymbols) pool += charSets.symbols;
-
   if (!pool) {
     showToast("Kam se kam ek character type chunein.", "error");
     return;
   }
-
   const randomValues = new Uint32Array(length);
   crypto.getRandomValues(randomValues);
-
   let password = "";
   for (let i = 0; i < length; i++) {
     password += pool[randomValues[i] % pool.length];
   }
-
   const output = document.getElementById("passwordOutput");
   if (output) output.value = password;
 }
-
 // ---------- Unit Converter ----------
-
 const UNIT_DEFINITIONS = {
   length: {
     label: "Length",
@@ -2841,57 +2423,43 @@ const UNIT_DEFINITIONS = {
     }
   }
 };
-
 function populateUnitSelects() {
   const category = document.getElementById("unitCategorySelect")?.value || "length";
   const fromSelect = document.getElementById("unitFromSelect");
   const toSelect = document.getElementById("unitToSelect");
-
   if (!fromSelect || !toSelect) return;
-
   const units = UNIT_DEFINITIONS[category]?.units || {};
   const optionsHtml = Object.entries(units)
     .map(([key, unit]) => `<option value="${key}">${escapeHtml(unit.label)}</option>`)
     .join("");
-
   fromSelect.innerHTML = optionsHtml;
   toSelect.innerHTML = optionsHtml;
-
   // Default to two different units so the conversion isn't trivially 1:1
   const keys = Object.keys(units);
   if (keys.length > 1) toSelect.value = keys[1];
-
   runUnitConversion();
 }
-
 function convertTemperature(value, fromUnit, toUnit) {
   let celsius;
-
   if (fromUnit === "celsius") celsius = value;
   else if (fromUnit === "fahrenheit") celsius = ((value - 32) * 5) / 9;
   else celsius = value - 273.15;
-
   if (toUnit === "celsius") return celsius;
   if (toUnit === "fahrenheit") return (celsius * 9) / 5 + 32;
   return celsius + 273.15;
 }
-
 function runUnitConversion() {
   const category = document.getElementById("unitCategorySelect")?.value || "length";
   const fromUnit = document.getElementById("unitFromSelect")?.value;
   const toUnit = document.getElementById("unitToSelect")?.value;
   const fromValue = Number(document.getElementById("unitFromValue")?.value);
   const outputField = document.getElementById("unitToValue");
-
   if (!outputField || !fromUnit || !toUnit) return;
-
   if (!Number.isFinite(fromValue)) {
     outputField.value = "";
     return;
   }
-
   let result;
-
   if (category === "temperature") {
     result = convertTemperature(fromValue, fromUnit, toUnit);
   } else {
@@ -2899,38 +2467,136 @@ function runUnitConversion() {
     const baseValue = fromValue * (units[fromUnit]?.toBase || 1);
     result = baseValue / (units[toUnit]?.toBase || 1);
   }
-
   outputField.value = Number.isFinite(result) ? String(Math.round(result * 1e6) / 1e6) : "";
 }
+// ---------- Word / Character Counter ----------
+function runWordCounter() {
+  const text = document.getElementById("wordCounterInput")?.value || "";
 
-function openProject(id) {
-  currentProjectId = id;
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const chars = text.length;
+  const charsNoSpace = text.replace(/\s/g, "").length;
+  const sentences = text.trim() ? (text.match(/[.!?।]+/g) || []).length || (text.trim() ? 1 : 0) : 0;
 
-  const list = document.getElementById("projectListView");
-  const detail = document.getElementById("projectDetailView");
+  const wordsEl = document.getElementById("wcWords");
+  const charsEl = document.getElementById("wcChars");
+  const charsNoSpaceEl = document.getElementById("wcCharsNoSpace");
+  const sentencesEl = document.getElementById("wcSentences");
 
-  if (list) list.style.display = "none";
-  if (detail) detail.style.display = "block";
-
-  renderProjectDetail(id);
+  if (wordsEl) wordsEl.textContent = words;
+  if (charsEl) charsEl.textContent = chars;
+  if (charsNoSpaceEl) charsNoSpaceEl.textContent = charsNoSpace;
+  if (sentencesEl) sentencesEl.textContent = sentences;
 }
 
+// ---------- GST Calculator ----------
+function runGstCalculator() {
+  const amount = Number(document.getElementById("gstAmount")?.value);
+  const rate = Number(document.getElementById("gstRate")?.value || 18);
+  const isRemove = document.getElementById("gstRemove")?.checked;
+  const amountEl = document.getElementById("gstAmountResult");
+  const totalEl = document.getElementById("gstTotalResult");
+  if (!Number.isFinite(amount) || amount < 0) {
+    if (amountEl) amountEl.textContent = "₹0";
+    if (totalEl) totalEl.textContent = "₹0";
+    return;
+  }
+  let gstAmount;
+  let total;
+  if (isRemove) {
+    // amount already includes GST - back-calculate the base
+    const base = (amount * 100) / (100 + rate);
+    gstAmount = amount - base;
+    total = amount;
+  } else {
+    gstAmount = (amount * rate) / 100;
+    total = amount + gstAmount;
+  }
+  if (amountEl) amountEl.textContent = `₹${gstAmount.toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `₹${total.toFixed(2)}`;
+}
+// ---------- EMI Calculator ----------
+function runEmiCalculator() {
+  const principal = Number(document.getElementById("emiPrincipal")?.value);
+  const annualRate = Number(document.getElementById("emiRate")?.value);
+  const tenureMonths = Number(document.getElementById("emiTenure")?.value);
+  const monthlyEl = document.getElementById("emiMonthly");
+  const interestEl = document.getElementById("emiInterest");
+  const totalEl = document.getElementById("emiTotal");
+  if (!Number.isFinite(principal) || !Number.isFinite(annualRate) || !Number.isFinite(tenureMonths) || principal <= 0 || tenureMonths <= 0) {
+    if (monthlyEl) monthlyEl.textContent = "₹0";
+    if (interestEl) interestEl.textContent = "₹0";
+    if (totalEl) totalEl.textContent = "₹0";
+    return;
+  }
+  const monthlyRate = annualRate / 12 / 100;
+  let emi;
+  if (monthlyRate === 0) {
+    emi = principal / tenureMonths;
+  } else {
+    const factor = Math.pow(1 + monthlyRate, tenureMonths);
+    emi = (principal * monthlyRate * factor) / (factor - 1);
+  }
+  const totalPayment = emi * tenureMonths;
+  const totalInterest = totalPayment - principal;
+  if (monthlyEl) monthlyEl.textContent = `₹${emi.toFixed(2)}`;
+  if (interestEl) interestEl.textContent = `₹${totalInterest.toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `₹${totalPayment.toFixed(2)}`;
+}
+// ---------- Age Calculator ----------
+function runAgeCalculator() {
+  const dobInput = document.getElementById("ageDobInput");
+  const resultBox = document.getElementById("ageResultBox");
+  const dobValue = dobInput?.value;
+  if (!dobValue) {
+    if (resultBox) resultBox.style.display = "none";
+    return;
+  }
+  const dob = new Date(dobValue);
+  const today = new Date();
+  if (dob > today) {
+    showToast("Date of birth future me nahi ho sakti.", "error");
+    if (resultBox) resultBox.style.display = "none";
+    return;
+  }
+  let years = today.getFullYear() - dob.getFullYear();
+  let months = today.getMonth() - dob.getMonth();
+  let days = today.getDate() - dob.getDate();
+  if (days < 0) {
+    months -= 1;
+    const lastMonthDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += lastMonthDate.getDate();
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  const yearsEl = document.getElementById("ageYears");
+  const monthsEl = document.getElementById("ageMonths");
+  const daysEl = document.getElementById("ageDays");
+  if (yearsEl) yearsEl.textContent = years;
+  if (monthsEl) monthsEl.textContent = months;
+  if (daysEl) daysEl.textContent = days;
+  if (resultBox) resultBox.style.display = "block";
+}
+function openProject(id) {
+  currentProjectId = id;
+  const list = document.getElementById("projectListView");
+  const detail = document.getElementById("projectDetailView");
+  if (list) list.style.display = "none";
+  if (detail) detail.style.display = "block";
+  renderProjectDetail(id);
+}
 function renderProjectDetail(id) {
   const projects = getProjects();
   const project = projects.find((item) => item.id === id);
-
   if (!project) return;
-
   const title = document.getElementById("currentProjectTitle");
   if (title) title.textContent = project.name;
-
   const container = document.getElementById("projectAssetsContainer");
   if (!container) return;
-
   container.innerHTML = "";
-
   const assets = Array.isArray(project.assets) ? project.assets : [];
-
   if (!assets.length) {
     container.innerHTML = `
       <div class="empty-state">
@@ -2939,33 +2605,25 @@ function renderProjectDetail(id) {
     `;
     return;
   }
-
   assets.forEach((asset) => {
     const card = document.createElement("div");
     card.className = "asset-card";
-
     card.innerHTML = `
       <h4>${escapeHtml(asset.title || asset.type || "Asset")}</h4>
       <p>${escapeHtml(asset.content || "")}</p>
     `;
-
     container.appendChild(card);
   });
 }
-
 // ============================================================
 // TOOL HISTORY
 // ============================================================
-
 function getToolHistory() {
   return safeJsonParse(localStorage.getItem(TOOL_HISTORY_KEY), []) || [];
 }
-
 function saveToToolHistory(tool, input, result) {
   if (!tool || !input || !result) return;
-
   let history = getToolHistory();
-
   history.unshift({
     tool,
     input,
@@ -2973,43 +2631,31 @@ function saveToToolHistory(tool, input, result) {
     label: `${TOOL_TITLES[tool] || tool}: ${String(input).slice(0, 50)}`,
     savedAt: Date.now()
   });
-
   history = history.slice(0, 15);
-
   localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(history));
   syncToServer("toolhistory", history);
   renderToolHistory();
 }
-
 function renderToolHistory() {
   const section = document.getElementById("toolHistorySection");
   const row = document.getElementById("toolHistoryRow");
-
   if (!section || !row) return;
-
   const history = getToolHistory();
-
   if (!history.length) {
     section.style.display = "none";
     return;
   }
-
   row.innerHTML = "";
-
   history.forEach((item) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "historyItem";
     button.textContent = item.label;
-
     button.addEventListener("click", () => {
       openToolWorkspace(item.tool);
-
       const input = document.getElementById("toolInput");
       const result = document.getElementById("toolResult");
-
       if (input) input.value = item.input;
-
       currentToolResult = item.result;
       currentToolInput = item.input;
 
@@ -3027,14 +2673,11 @@ function renderToolHistory() {
 
   section.style.display = "block";
 }
-
 // ============================================================
 // BRAND
 // ============================================================
-
 function loadBrand() {
   const saved = safeJsonParse(localStorage.getItem("ideaforge_brand"), null);
-
   if (saved && typeof saved === "object") {
     userBrand = {
       name: saved.name || "",
@@ -3043,72 +2686,54 @@ function loadBrand() {
     };
   }
 }
-
 function saveBrand() {
   userBrand = {
     name: document.getElementById("brandNameInput")?.value.trim() || "",
     industry: document.getElementById("brandIndustryInput")?.value.trim() || "",
     audience: document.getElementById("brandAudienceInput")?.value.trim() || ""
   };
-
   localStorage.setItem("ideaforge_brand", JSON.stringify(userBrand));
   syncToServer("brand", userBrand);
-
   const modal = document.getElementById("brandModal");
   if (modal) modal.style.display = "none";
-
   showToast("👤 Brand Profile Saved!", "success");
 }
-
 // ============================================================
 // THEME
 // ============================================================
-
 function toggleTheme() {
   document.body.classList.toggle("light-mode");
-
   const isLight = document.body.classList.contains("light-mode");
-
   localStorage.setItem("ideaforge_theme", isLight ? "light" : "dark");
-
   const button = document.getElementById("themeToggleBtn");
   if (button) button.textContent = isLight ? "🌞" : "🌗";
 }
-
 function loadTheme() {
   const theme = localStorage.getItem("ideaforge_theme");
-
   if (theme === "light") {
     document.body.classList.add("light-mode");
-
     const button = document.getElementById("themeToggleBtn");
     if (button) button.textContent = "🌞";
   }
 }
-
 // ============================================================
 // IMAGE TOOL
 // ============================================================
-
 async function runImageTool() {
   if (!window.currentImageBase64) {
     showToast("Pehle image upload karein.", "error");
     return;
   }
-
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam!", "error");
     return;
   }
-
   const btn = document.getElementById("imageGenerateBtn");
   const originalText = btn?.innerHTML || "Analyze";
-
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Analyzing...";
   }
-
   try {
     const response = await fetch("/api/image-tool", {
       method: "POST",
@@ -3119,25 +2744,18 @@ async function runImageTool() {
         question: document.getElementById("imageQuestionInput")?.value || ""
       })
     });
-
     const data = await parseApiResponse(response);
-
     if (!data.success || !data.result) {
       throw new Error(data.error || "Image analysis failed.");
     }
-
     if (!isProUser) incrementUsage();
-
     const result = document.getElementById("imageResult");
-
     if (result) {
       result.innerHTML = formatToolResult(data.result, "image");
       result.style.display = "block";
     }
-
     const actions = document.getElementById("imageResultActions");
     if (actions) actions.style.display = "flex";
-
     showToast("🖼️ Image analyzed!", "success");
   } catch (error) {
     showToast(error.message, "error");
@@ -3148,24 +2766,18 @@ async function runImageTool() {
     }
   }
 }
-
 // ============================================================
 // DOM READY
 // ============================================================
-
 document.addEventListener("DOMContentLoaded", () => {
   isProUser = localStorage.getItem("ideaforge_pro") === "true";
-
   getUserId();
   loadBrand();
   loadTheme();
-
   applyUILanguage(localStorage.getItem("ideaforge_ui_lang") || "en");
-
   renderHistory();
   renderToolHistory();
   renderUsageBanner();
-
   // Restore from server backup if localStorage is empty (new
   // browser/device/cache-clear), or back up current local data
   // to the server if it isn't. Runs in the background; UI is
@@ -3177,40 +2789,29 @@ document.addEventListener("DOMContentLoaded", () => {
     await initSessionAndBackupCode();
     await restoreOrBackupUserData();
   })();
-
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
   document.getElementById("generateLaunchPlanBtn")?.addEventListener("click", generateLaunchPlan);
   document.getElementById("generatePitchDeckBtn")?.addEventListener("click", generatePitchDeck);
-
   document.getElementById("improveIdeaFromScoreBtn")?.addEventListener("click", () => {
     if (!currentIdeaText) {
       showToast("Pehle report generate karein.", "error");
       return;
     }
-
     openToolWorkspace("improveidea");
-
     const toolInput = document.getElementById("toolInput");
     if (toolInput) toolInput.value = currentIdeaText;
-
     runAiTool(currentIdeaText, "improveidea");
   });
-
   document.getElementById("hubAskBtn")?.addEventListener("click", () => {
     const input = document.getElementById("hubInput");
     if (!input) return;
-
     const text = input.value.trim();
     if (!text) return;
-
     const tool = smartRouteInput(text);
-
     trackEvent("hub_ask_ai", { tool_detected: tool });
     openToolWorkspace(tool);
-
     if (tool === "chat") {
       const chatInput = document.getElementById("chatInput");
-
       if (chatInput) {
         chatInput.value = text;
         sendChatMessage();
@@ -3218,79 +2819,60 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       const toolInput = document.getElementById("toolInput");
       if (toolInput) toolInput.value = text;
-
       runAiTool(text, tool);
     }
   });
-
   document.getElementById("toolGenerateBtn")?.addEventListener("click", () => {
     const input = document.getElementById("toolInput");
     if (!input) return;
-
     const text = input.value.trim();
     if (!text) return;
-
     runAiTool(text, activeTool);
   });
-
   document.getElementById("sendChatBtn")?.addEventListener("click", sendChatMessage);
-
   document.getElementById("chatInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       sendChatMessage();
     }
   });
-
   document.getElementById("askFollowupBtn")?.addEventListener("click", askIdeaFollowup);
-
   document.getElementById("followupInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       askIdeaFollowup();
     }
   });
-
   document.getElementById("clearChatBtn")?.addEventListener("click", () => {
     chatHistory = [];
-
     const container = document.getElementById("chatContainer");
     if (container) container.innerHTML = "";
-
     showToast("Chat history cleared!", "info");
   });
-
   document.getElementById("toolCopyBtn")?.addEventListener("click", () => {
     copyText(currentToolResult);
   });
-
   document.getElementById("toolRegenerateBtn")?.addEventListener("click", () => {
     if (!lastToolPayload) {
       showToast("Regenerate ke liye previous request nahi mili.", "error");
       return;
     }
-
     runAiTool(lastToolPayload.input, lastToolPayload.tool);
   });
-
   document.getElementById("remixBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("remixModal");
     if (modal) modal.style.display = "flex";
   });
-
   document.getElementById("makeBetterBtn")?.addEventListener("click", makeItBetter);
   document.getElementById("speakResultBtn")?.addEventListener("click", speakResult);
-
   document.getElementById("toolSaveBtn")?.addEventListener("click", () => {
     if (currentToolResult && currentToolInput) {
       saveToToolHistory(activeTool, currentToolInput, currentToolResult);
       showToast("⭐ Saved!", "success");
     }
   });
-
   document.getElementById("toolShareBtn")?.addEventListener("click", async () => {
     if (!currentToolResult) return;
-
     try {
       if (navigator.share) {
         await navigator.share({ title: "IdeaForgeX", text: currentToolResult });
@@ -3329,133 +2911,107 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("remixModal");
     if (modal) modal.style.display = "none";
   });
-
-  // --------------------------------------------------------
+// --------------------------------------------------------
   // BRAND MODAL
   // FIXED: "?.value = x" is invalid JS (optional chaining
   // cannot be assigned to). Replaced with a guarded assignment.
   // --------------------------------------------------------
-
   document.getElementById("openBrandBtn")?.addEventListener("click", () => {
     const nameInput = document.getElementById("brandNameInput");
     if (nameInput) nameInput.value = userBrand.name;
-
     const industryInput = document.getElementById("brandIndustryInput");
     if (industryInput) industryInput.value = userBrand.industry;
-
     const audienceInput = document.getElementById("brandAudienceInput");
     if (audienceInput) audienceInput.value = userBrand.audience;
-
     const modal = document.getElementById("brandModal");
     if (modal) modal.style.display = "flex";
   });
-
   document.getElementById("saveBrandBtn")?.addEventListener("click", saveBrand);
-
   document.getElementById("closeBrandBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("brandModal");
     if (modal) modal.style.display = "none";
   });
-
   // --------------------------------------------------------
   // BACKUP CODE MODAL
   // --------------------------------------------------------
-
   document.getElementById("openBackupBtn")?.addEventListener("click", () => {
     renderBackupCodeDisplay();
-
     const restoreInput = document.getElementById("restoreCodeInput");
     if (restoreInput) restoreInput.value = "";
-
     const modal = document.getElementById("backupModal");
     if (modal) modal.style.display = "flex";
   });
-
   document.getElementById("closeBackupBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("backupModal");
     if (modal) modal.style.display = "none";
   });
-
   document.getElementById("copyBackupCodeBtn")?.addEventListener("click", () => {
     copyText(getBackupCode());
   });
-
   document.getElementById("restoreBackupCodeBtn")?.addEventListener("click", () => {
     const input = document.getElementById("restoreCodeInput");
     restoreFromBackupCode(input?.value || "");
   });
-
   // --------------------------------------------------------
   // PROJECT MODAL
   // --------------------------------------------------------
-
   document.getElementById("newProjectBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("newProjectModal");
     if (modal) modal.style.display = "flex";
   });
-
   document.getElementById("homeProjectsViewAllBtn")?.addEventListener("click", () => {
     openToolWorkspace("projects");
   });
-
   // --------------------------------------------------------
   // FREE QUICK TOOLS
   // --------------------------------------------------------
-
   document.getElementById("openCalculatorBtn")?.addEventListener("click", () => {
     calcExpression = "";
     calcUpdateDisplay();
     const modal = document.getElementById("calculatorModal");
     if (modal) modal.style.display = "flex";
   });
-
   document.getElementById("closeCalculatorBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("calculatorModal");
     if (modal) modal.style.display = "none";
   });
-
   document.querySelectorAll(".calcBtn").forEach((btn) => {
     btn.addEventListener("click", () => {
       calcHandleInput(btn.getAttribute("data-calc"));
     });
   });
-
   document.getElementById("openQrBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("qrModal");
     if (modal) modal.style.display = "flex";
-
     const output = document.getElementById("qrCodeOutput");
     const downloadBtn = document.getElementById("downloadQrBtn");
     if (output) output.style.display = "none";
     if (downloadBtn) downloadBtn.style.display = "none";
-
     const input = document.getElementById("qrTextInput");
     if (input) input.value = "";
   });
-
   document.getElementById("closeQrBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("qrModal");
     if (modal) modal.style.display = "none";
   });
-
   document.getElementById("generateQrBtn")?.addEventListener("click", generateQrCode);
   document.getElementById("downloadQrBtn")?.addEventListener("click", downloadQrCode);
-
   document.getElementById("openPasswordBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("passwordModal");
     if (modal) modal.style.display = "flex";
     generatePassword();
   });
-
   document.getElementById("closePasswordBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("passwordModal");
     if (modal) modal.style.display = "none";
   });
-
   document.getElementById("generatePasswordBtn")?.addEventListener("click", generatePassword);
-
   document.getElementById("copyPasswordBtn")?.addEventListener("click", () => {
     const output = document.getElementById("passwordOutput");
+    copyText(output?.value || "");
+  });
+  document.getElementById("passwordLength")?.addEventListener("input", (event) => {
+    const label = document.getElementById("passwordLengthValue");
     if (label) label.textContent = event.target.value;
   });
   document.getElementById("openUnitConverterBtn")?.addEventListener("click", () => {
@@ -3471,6 +3027,50 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("unitFromSelect")?.addEventListener("change", runUnitConversion);
   document.getElementById("unitToSelect")?.addEventListener("change", runUnitConversion);
   document.getElementById("unitFromValue")?.addEventListener("input", runUnitConversion);
+  document.getElementById("openWordCounterBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("wordCounterModal");
+    if (modal) modal.style.display = "flex";
+    runWordCounter();
+  });
+  document.getElementById("closeWordCounterBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("wordCounterModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.getElementById("wordCounterInput")?.addEventListener("input", runWordCounter);
+  document.getElementById("openGstBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("gstModal");
+    if (modal) modal.style.display = "flex";
+    runGstCalculator();
+  });
+  document.getElementById("closeGstBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("gstModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.getElementById("gstAmount")?.addEventListener("input", runGstCalculator);
+  document.getElementById("gstRate")?.addEventListener("change", runGstCalculator);
+  document.getElementById("gstAdd")?.addEventListener("change", runGstCalculator);
+  document.getElementById("gstRemove")?.addEventListener("change", runGstCalculator);
+  document.getElementById("openEmiBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("emiModal");
+    if (modal) modal.style.display = "flex";
+    runEmiCalculator();
+  });
+  document.getElementById("closeEmiBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("emiModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.getElementById("emiPrincipal")?.addEventListener("input", runEmiCalculator);
+  document.getElementById("emiRate")?.addEventListener("input", runEmiCalculator);
+  document.getElementById("emiTenure")?.addEventListener("input", runEmiCalculator);
+  document.getElementById("openAgeBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("ageModal");
+    if (modal) modal.style.display = "flex";
+  });
+  document.getElementById("closeAgeBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("ageModal");
+    if (modal) modal.style.display = "none";
+  });
+  document.getElementById("ageDobInput")?.addEventListener("change", runAgeCalculator);
   document.getElementById("createProjectBtn")?.addEventListener("click", createProject);
   document.getElementById("closeNewProjectBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("newProjectModal");
@@ -3601,5 +3201,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (dailyTip) dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
 
   renderProjects();
-  console.log("🚀 IdeaForgeX v11.10 initialized successfully.");
+
+  console.log("🚀 IdeaForgeX v11.11 initialized successfully.");
 });
+
+  
+
+
+
+
+
+
+
+
+
+
