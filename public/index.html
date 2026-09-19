@@ -649,7 +649,11 @@
     #remixModal,
     #brandModal,
     #newProjectModal,
-    #backupModal {
+    #backupModal,
+    #calculatorModal,
+    #qrModal,
+    #passwordModal,
+    #unitConverterModal {
       position: fixed;
 
       inset: 0;
@@ -846,6 +850,15 @@
 
       background:
         rgba(99, 102, 241, 0.1);
+    }
+
+    /* ==============================
+       FREE QUICK TOOLS MODALS
+    ============================== */
+
+    .calcBtn {
+      padding: 14px 0;
+      font-size: 18px;
     }
 
     /* ==============================
@@ -1703,6 +1716,45 @@
     <div class="hubChip" data-tool="image" tabindex="0">
       <span class="chip-icon">🔍</span>
       <span>Analyze Img</span>
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       FREE QUICK TOOLS (client-side, no AI quota used)
+  ========================================== -->
+
+  <p
+    style="
+      color:var(--text-muted);
+      font-size:13px;
+      margin:15px 0 8px;
+    "
+  >
+    ⚡ Free Quick Tools — instant, no AI usage counted
+  </p>
+
+  <div class="hubCategories" style="margin-top:0;">
+
+    <div id="openCalculatorBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🧮</span>
+      <span>Calculator</span>
+    </div>
+
+    <div id="openQrBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🔲</span>
+      <span>QR Code</span>
+    </div>
+
+    <div id="openPasswordBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🔑</span>
+      <span>Password Gen</span>
+    </div>
+
+    <div id="openUnitConverterBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">📐</span>
+      <span>Unit Convert</span>
     </div>
 
   </div>
@@ -2856,6 +2908,315 @@
 
 
   <!-- =========================================
+       CALCULATOR MODAL (client-side, instant)
+  ========================================== -->
+
+  <div
+    id="calculatorModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="calculatorModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="calculatorModalTitle" style="color:var(--primary);">
+        🧮 Calculator
+      </h2>
+
+      <input
+        type="text"
+        id="calcDisplay"
+        readonly
+        style="
+          font-size:26px;
+          text-align:right;
+          font-weight:700;
+        "
+        value="0"
+      >
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap:8px;
+          margin-top:10px;
+        "
+      >
+        <button type="button" class="calcBtn btn-secondary" data-calc="C">C</button>
+        <button type="button" class="calcBtn btn-secondary" data-calc="back">⌫</button>
+        <button type="button" class="calcBtn btn-secondary" data-calc="%">%</button>
+        <button type="button" class="calcBtn btn-secondary" data-calc="/">÷</button>
+
+        <button type="button" class="calcBtn" data-calc="7">7</button>
+        <button type="button" class="calcBtn" data-calc="8">8</button>
+        <button type="button" class="calcBtn" data-calc="9">9</button>
+        <button type="button" class="calcBtn btn-secondary" data-calc="*">×</button>
+
+        <button type="button" class="calcBtn" data-calc="4">4</button>
+        <button type="button" class="calcBtn" data-calc="5">5</button>
+        <button type="button" class="calcBtn" data-calc="6">6</button>
+        <button type="button" class="calcBtn btn-secondary" data-calc="-">−</button>
+
+        <button type="button" class="calcBtn" data-calc="1">1</button>
+        <button type="button" class="calcBtn" data-calc="2">2</button>
+        <button type="button" class="calcBtn" data-calc="3">3</button>
+        <button type="button" class="calcBtn btn-secondary" data-calc="+">+</button>
+
+        <button type="button" class="calcBtn" data-calc="0" style="grid-column: span 2;">0</button>
+        <button type="button" class="calcBtn" data-calc=".">.</button>
+        <button type="button" class="calcBtn" data-calc="=" style="background:linear-gradient(135deg,#10b981,#059669);">=</button>
+      </div>
+
+      <button
+        id="closeCalculatorBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       QR CODE MODAL (client-side, instant)
+  ========================================== -->
+
+  <div
+    id="qrModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="qrModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="qrModalTitle" style="color:var(--primary);">
+        🔲 QR Code Generator
+      </h2>
+
+      <textarea
+        id="qrTextInput"
+        rows="3"
+        placeholder="Text, link, phone number, anything..."
+      ></textarea>
+
+      <button
+        id="generateQrBtn"
+        type="button"
+        style="width:100%;"
+      >
+        ✨ Generate QR Code
+      </button>
+
+      <div
+        id="qrCodeOutput"
+        style="
+          display:none;
+          background:white;
+          padding:15px;
+          border-radius:10px;
+          margin:15px auto;
+          width:fit-content;
+        "
+      ></div>
+
+      <button
+        id="downloadQrBtn"
+        type="button"
+        style="width:100%;display:none;margin-bottom:10px;"
+      >
+        📥 Download QR
+      </button>
+
+      <button
+        id="closeQrBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       PASSWORD GENERATOR MODAL (client-side, instant)
+  ========================================== -->
+
+  <div
+    id="passwordModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="passwordModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="passwordModalTitle" style="color:var(--primary);">
+        🔑 Password Generator
+      </h2>
+
+      <input
+        type="text"
+        id="passwordOutput"
+        readonly
+        style="font-size:16px;text-align:center;font-weight:700;"
+        value=""
+      >
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin:15px 0;
+          text-align:left;
+        "
+      >
+        <label style="color:var(--text-muted);font-size:14px;white-space:nowrap;">
+          Length: <span id="passwordLengthValue">14</span>
+        </label>
+
+        <input
+          type="range"
+          id="passwordLength"
+          min="6"
+          max="32"
+          value="14"
+          style="margin:0;"
+        >
+      </div>
+
+      <label class="checkbox-label" style="margin-bottom:8px;">
+        <input type="checkbox" id="pwUppercase" checked style="width:auto;margin:0;">
+        Uppercase (A-Z)
+      </label>
+
+      <label class="checkbox-label" style="margin-bottom:8px;">
+        <input type="checkbox" id="pwLowercase" checked style="width:auto;margin:0;">
+        Lowercase (a-z)
+      </label>
+
+      <label class="checkbox-label" style="margin-bottom:8px;">
+        <input type="checkbox" id="pwNumbers" checked style="width:auto;margin:0;">
+        Numbers (0-9)
+      </label>
+
+      <label class="checkbox-label" style="margin-bottom:15px;">
+        <input type="checkbox" id="pwSymbols" style="width:auto;margin:0;">
+        Symbols (!@#$%)
+      </label>
+
+      <div style="display:flex;gap:10px;">
+
+        <button
+          id="generatePasswordBtn"
+          type="button"
+          style="flex:1;"
+        >
+          🎲 Generate
+        </button>
+
+        <button
+          id="copyPasswordBtn"
+          type="button"
+          style="flex:1;"
+        >
+          📋 Copy
+        </button>
+
+      </div>
+
+      <button
+        id="closePasswordBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       UNIT CONVERTER MODAL (client-side, instant)
+  ========================================== -->
+
+  <div
+    id="unitConverterModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="unitConverterModalTitle"
+  >
+
+    <div class="modal-content">
+
+      <h2 id="unitConverterModalTitle" style="color:var(--primary);">
+        📐 Unit Converter
+      </h2>
+
+      <select id="unitCategorySelect">
+        <option value="length">Length</option>
+        <option value="weight">Weight</option>
+        <option value="temperature">Temperature</option>
+      </select>
+
+      <div style="display:flex;gap:10px;align-items:center;">
+
+        <input
+          type="number"
+          id="unitFromValue"
+          placeholder="Value"
+          value="1"
+          style="flex:1;"
+        >
+
+        <select id="unitFromSelect" style="flex:1;"></select>
+
+      </div>
+
+      <p style="color:var(--text-muted);margin:10px 0;">=</p>
+
+      <div style="display:flex;gap:10px;align-items:center;">
+
+        <input
+          type="text"
+          id="unitToValue"
+          readonly
+          style="flex:1;font-weight:700;"
+        >
+
+        <select id="unitToSelect" style="flex:1;"></select>
+
+      </div>
+
+      <button
+        id="closeUnitConverterBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
        NEW PROJECT MODAL
   ========================================== -->
 
@@ -3815,6 +4176,11 @@
   <script
     defer
     src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+  ></script>
+
+  <script
+    defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
   ></script>
 
   <!-- Main Application -->
