@@ -658,7 +658,8 @@
     #gstModal,
     #emiModal,
     #ageModal,
-    #jpgToPdfModal {
+    #jpgToPdfModal,
+    #pdfToImageModal {
       position: fixed;
 
       inset: 0;
@@ -864,6 +865,30 @@
     .calcBtn {
       padding: 14px 0;
       font-size: 18px;
+    }
+
+    .pdfPageResult {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .pdfPageResult img {
+      width: 60px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .pdfPageResult button {
+      padding: 8px 12px;
+      font-size: 13px;
     }
 
     /* ==============================
@@ -1785,6 +1810,11 @@
     <div id="openJpgToPdfBtn" class="hubChip" tabindex="0">
       <span class="chip-icon">📄</span>
       <span>JPG → PDF</span>
+    </div>
+
+    <div id="openPdfToImageBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">🖼️</span>
+      <span>PDF → JPG</span>
     </div>
 
   </div>
@@ -3652,6 +3682,109 @@
 
 
   <!-- =========================================
+       PDF → JPG MODAL
+  ========================================== -->
+
+  <div
+    id="pdfToImageModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pdfToImageModalTitle"
+  >
+
+    <div class="modal-content" style="max-width:480px;">
+
+      <h2 id="pdfToImageModalTitle" style="color:var(--primary);">
+        🖼️ PDF → JPG
+      </h2>
+
+      <p
+        style="
+          color:var(--text-muted);
+          font-size:13px;
+          text-align:left;
+        "
+      >
+        Ek PDF chunein — har page ki alag JPG image ban jaayegi,
+        jise ek-ek karke download kar sakte hain.
+      </p>
+
+      <div
+        id="pdfToImageUploadCard"
+        style="
+          border:2px dashed var(--border);
+          padding:20px;
+          text-align:center;
+          border-radius:10px;
+          cursor:pointer;
+          margin-bottom:15px;
+        "
+      >
+
+        <input
+          type="file"
+          id="pdfToImageInput"
+          accept="application/pdf"
+          style="display:none;"
+        >
+
+        <p id="pdfToImageUploadText">
+          📤 PDF chunne ke liye tap karein
+        </p>
+
+        <p
+          id="pdfToImageFileName"
+          style="
+            color:var(--primary);
+            font-weight:600;
+            margin-top:5px;
+          "
+        ></p>
+
+      </div>
+
+      <button
+        id="convertPdfToImageBtn"
+        type="button"
+        style="width:100%;"
+      >
+        🖼️ Convert to Images
+      </button>
+
+      <p
+        id="pdfToImageStatus"
+        style="
+          color:var(--text-muted);
+          font-size:13px;
+          margin:10px 0 0;
+        "
+      ></p>
+
+      <div
+        id="pdfToImageResults"
+        style="
+          display:none;
+          max-height:320px;
+          overflow-y:auto;
+          margin-top:15px;
+        "
+      ></div>
+
+      <button
+        id="closePdfToImageBtn"
+        class="btn-secondary"
+        type="button"
+        style="width:100%;margin-top:15px;"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
        NEW PROJECT MODAL
   ========================================== -->
 
@@ -4617,6 +4750,23 @@
     defer
     src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
   ></script>
+
+  <script
+    defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+  ></script>
+
+  <script>
+    // Runs after pdf.min.js (both deferred, so document order applies)
+    // and before app.js executes, so pdfjsLib.GlobalWorkerOptions is
+    // ready by the time the PDF → JPG tool needs it.
+    window.addEventListener("DOMContentLoaded", () => {
+      if (typeof pdfjsLib !== "undefined") {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+    });
+  </script>
 
   <!-- Main Application -->
   <script
