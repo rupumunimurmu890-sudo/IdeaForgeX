@@ -2880,6 +2880,119 @@ async function runImageTool() {
     }
   }
 }
+
+// ============================================================
+// JPG / IMAGE TO PDF
+// ============================================================
+async function convertJpgToPdf() {
+  const input = document.getElementById("jpgToPdfInput");
+
+  if (!input || !input.files || input.files.length === 0) {
+    showToast("Pehle JPG/Image select karein.", "error");
+    return;
+  }
+
+  if (!window.jspdf) {
+    showToast("PDF library load nahi hui.", "error");
+    return;
+  }
+
+  const files = Array.from(input.files).filter(file =>
+    file.type.startsWith("image/")
+  );
+
+  if (!files.length) {
+    showToast("Valid image file select karein.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("jpgToPdfBtn");
+  const originalText = btn?.innerHTML || "Convert to PDF";
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "⏳ PDF bana raha hai...";
+  }
+
+  try {
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 10;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      const imageData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Image read failed."));
+        reader.readAsDataURL(file);
+      });
+
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Image load failed."));
+
+        image.src = imageData;
+      });
+
+      const maxWidth = pageWidth - margin * 2;
+      const maxHeight = pageHeight - margin * 2;
+
+      const ratio = Math.min(
+        maxWidth / img.width,
+        maxHeight / img.height
+      );
+
+      const imgWidth = img.width * ratio;
+      const imgHeight = img.height * ratio;
+
+      const x = (pageWidth - imgWidth) / 2;
+      const y = (pageHeight - imgHeight) / 2;
+
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      const format = file.type === "image/png" ? "PNG" : "JPEG";
+
+      pdf.addImage(
+        imageData,
+        format,
+        x,
+        y,
+        imgWidth,
+        imgHeight
+      );
+    }
+
+    pdf.save(`jpg-to-pdf-${Date.now()}.pdf`);
+
+    showToast("📄 PDF successfully download ho gaya!", "success");
+
+  } catch (error) {
+    console.error("JPG to PDF Error:", error);
+    showToast("PDF banane me error hua.", "error");
+
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
 // ============================================================
 // DOM READY
 // ============================================================
