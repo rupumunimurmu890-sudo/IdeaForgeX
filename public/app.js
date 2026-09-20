@@ -3117,6 +3117,14 @@ async function convertImagesToPdf() {
 
     pdf.save(`images-to-pdf-${Date.now()}.pdf`);
     showToast("📄 PDF ban gayi!", "success");
+
+    jpgToPdfSelectedFiles = null;
+
+    const fileCount = document.getElementById("jpgToPdfFileCount");
+    if (fileCount) fileCount.textContent = "";
+
+    const fileInput = document.getElementById("jpgToPdfInput");
+    if (fileInput) fileInput.value = "";
   } catch (error) {
     console.error("JPG to PDF error:", error);
     showToast("PDF banane me error aayi.", "error");
