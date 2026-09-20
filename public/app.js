@@ -2615,6 +2615,120 @@ function renderProjectDetail(id) {
     container.appendChild(card);
   });
 }
+
+// ---------- JPG → PDF ----------
+let jpgToPdfSelectedFiles = null;
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function getImageDimensions(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+async function convertImagesToPdf() {
+  const files = jpgToPdfSelectedFiles;
+  if (!files || files.length === 0) {
+    showToast("Pehle ek ya zyada images chunein.", "error");
+    return;
+  }
+  if (!window.jspdf) {
+    showToast("PDF library load nahi hui.", "error");
+    return;
+  }
+  const btn = document.getElementById("convertJpgToPdfBtn");
+  const originalText = btn?.innerHTML || "Convert to PDF";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Converting...";
+  }
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const maxWidth = pageWidth - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const dataUrl = await readFileAsDataUrl(file);
+      const dimensions = await getImageDimensions(dataUrl);
+      const widthRatio = maxWidth / dimensions.width;
+      const heightRatio = maxHeight / dimensions.height;
+      const scale = Math.min(widthRatio, heightRatio);
+      const renderWidth = dimensions.width * scale;
+      const renderHeight = dimensions.height * scale;
+      const x = (pageWidth - renderWidth) / 2;
+      const y = (pageHeight - renderHeight) / 2;
+      if (i > 0) pdf.addPage();
+      const format = file.type.includes("png") ? "PNG" : "JPEG";
+      pdf.addImage(dataUrl, format, x, y, renderWidth, renderHeight);
+    }
+    pdf.save(`images-to-pdf-${Date.now()}.pdf`);
+    showToast("📄 PDF ban gayi!", "success");
+  } catch (error) {
+    console.error("JPG to PDF error:", error);
+    showToast("PDF banane me error aayi.", "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+function openProject(id) {
+  currentProjectId = id;
+  const list = document.getElementById("projectListView");
+  const detail = document.getElementById("projectDetailView");
+  if (list) list.style.display = "none";
+  if (detail) detail.style.display = "block";
+  renderProjectDetail(id);
+}
+function renderProjectDetail(id) {
+  const projects = getProjects();
+  const project = projects.find((item) => item.id === id);
+  if (!project) return;
+  const title = document.getElementById("currentProjectTitle");
+  if (title) title.textContent = project.name;
+
+  const container = document.getElementById("projectAssetsContainer");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const assets = Array.isArray(project.assets) ? project.assets : [];
+
+  if (!assets.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        No assets yet. Use Business Agent to generate your first pack!
+      </div>
+    `;
+    return;
+  }
+
+  assets.forEach((asset) => {
+    const card = document.createElement("div");
+    card.className = "asset-card";
+
+    card.innerHTML = `
+      <h4>${escapeHtml(asset.title || asset.type || "Asset")}</h4>
+      <p>${escapeHtml(asset.content || "")}</p>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
 // ============================================================
 // TOOL HISTORY
 // ============================================================
