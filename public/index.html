@@ -657,7 +657,8 @@
     #wordCounterModal,
     #gstModal,
     #emiModal,
-    #ageModal {
+    #ageModal,
+    #jpgToPdfModal {
       position: fixed;
 
       inset: 0;
@@ -1779,6 +1780,11 @@
     <div id="openAgeBtn" class="hubChip" tabindex="0">
       <span class="chip-icon">🎂</span>
       <span>Age Calc</span>
+    </div>
+
+    <div id="openJpgToPdfBtn" class="hubChip" tabindex="0">
+      <span class="chip-icon">📄</span>
+      <span>JPG → PDF</span>
     </div>
 
   </div>
@@ -3558,7 +3564,7 @@
     </div>
 
   </div>
-  
+
 
   <!-- =========================================
        JPG → PDF MODAL
@@ -3587,6 +3593,7 @@
         Ek ya zyada images chunein — har image PDF ke ek page par
         aayegi, jis order me chunenge usi order me.
       </p>
+
       <div
         id="jpgToPdfUploadCard"
         style="
@@ -3598,6 +3605,7 @@
           margin-bottom:15px;
         "
       >
+
         <input
           type="file"
           id="jpgToPdfInput"
@@ -3605,9 +3613,11 @@
           multiple
           style="display:none;"
         >
+
         <p id="jpgToPdfUploadText">
           📤 Images chunne ke liye tap karein
         </p>
+
         <p
           id="jpgToPdfFileCount"
           style="
@@ -3616,7 +3626,9 @@
             margin-top:5px;
           "
         ></p>
+
       </div>
+
       <button
         id="convertJpgToPdfBtn"
         type="button"
@@ -3624,6 +3636,7 @@
       >
         📄 Convert to PDF
       </button>
+
       <button
         id="closeJpgToPdfBtn"
         class="btn-secondary"
@@ -3632,9 +3645,12 @@
       >
         Close
       </button>
+
     </div>
+
   </div>
-  
+
+
   <!-- =========================================
        NEW PROJECT MODAL
   ========================================== -->
