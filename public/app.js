@@ -1,5 +1,5 @@
 // ============================================================
-// IdeaForgeX - Main JavaScript v11.12
+// IdeaForgeX - Main JavaScript v11.15
 // FIXED: "?.value = x" SyntaxError in openBrandBtn handler
 // (optional chaining cannot be used as an assignment target —
 // this was breaking the entire script from parsing/loading)
@@ -53,8 +53,6 @@ let lastToolPayload = null;
 const HISTORY_KEY = "ideaforgex_history";
 const HISTORY_LIMIT = 10;
 
-// TEMP: raised to 100 for testing to match worker.js — change
-// both back to 15 before going live.
 const FREE_DAILY_LIMIT = 15;
 const USAGE_KEY = "ideaforge_usage";
 
@@ -3118,6 +3116,9 @@ async function convertImagesToPdf() {
     pdf.save(`images-to-pdf-${Date.now()}.pdf`);
     showToast("📄 PDF ban gayi!", "success");
 
+    // Clear the selection only on success, so a failed conversion
+    // (e.g. a corrupt image) leaves the chosen files in place for
+    // the user to retry without re-picking everything.
     jpgToPdfSelectedFiles = null;
 
     const fileCount = document.getElementById("jpgToPdfFileCount");
@@ -3128,6 +3129,115 @@ async function convertImagesToPdf() {
   } catch (error) {
     console.error("JPG to PDF error:", error);
     showToast("PDF banane me error aayi.", "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
+// ---------- PDF → JPG ----------
+
+let pdfToImageSelectedFile = null;
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function convertPdfToImages() {
+  const file = pdfToImageSelectedFile;
+  const statusEl = document.getElementById("pdfToImageStatus");
+  const resultsEl = document.getElementById("pdfToImageResults");
+
+  if (!file) {
+    showToast("Pehle ek PDF chunein.", "error");
+    return;
+  }
+
+  if (typeof pdfjsLib === "undefined") {
+    showToast("PDF library load nahi hui. Internet check karein.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("convertPdfToImageBtn");
+  const originalText = btn?.innerHTML || "Convert to Images";
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Converting...";
+  }
+
+  if (resultsEl) {
+    resultsEl.innerHTML = "";
+    resultsEl.style.display = "none";
+  }
+
+  try {
+    const arrayBuffer = await readFileAsArrayBuffer(file);
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const numPages = pdf.numPages;
+
+    if (resultsEl) resultsEl.style.display = "block";
+
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      if (statusEl) statusEl.textContent = `Page ${pageNum} of ${numPages} convert ho rahi hai...`;
+
+      const page = await pdf.getPage(pageNum);
+
+      // Scale of 2 gives reasonably sharp output without producing
+      // enormous files for longer documents.
+      const viewport = page.getViewport({ scale: 2 });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const context = canvas.getContext("2d");
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+
+      if (resultsEl) {
+        const row = document.createElement("div");
+        row.className = "pdfPageResult";
+
+        const thumb = document.createElement("img");
+        thumb.src = dataUrl;
+        thumb.alt = `Page ${pageNum}`;
+
+        const label = document.createElement("span");
+        label.style.flex = "1";
+        label.textContent = `Page ${pageNum}`;
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.type = "button";
+        downloadBtn.textContent = "📥 Download";
+        downloadBtn.addEventListener("click", () => {
+          const link = document.createElement("a");
+          link.download = `${file.name.replace(/\.pdf$/i, "")}-page-${pageNum}.jpg`;
+          link.href = dataUrl;
+          link.click();
+        });
+
+        row.appendChild(thumb);
+        row.appendChild(label);
+        row.appendChild(downloadBtn);
+        resultsEl.appendChild(row);
+      }
+    }
+
+    if (statusEl) statusEl.textContent = `✅ ${numPages} page(s) ready. Har ek ko alag download karein.`;
+    showToast("🖼️ PDF images me convert ho gayi!", "success");
+  } catch (error) {
+    console.error("PDF to JPG error:", error);
+    if (statusEl) statusEl.textContent = "";
+    showToast("PDF ko images me convert nahi kar paaye. File valid PDF hai check karein.", "error");
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -3385,20 +3495,15 @@ async function runImageTool() {
 // ============================================================
 // DOM READY
 // ============================================================
-
 document.addEventListener("DOMContentLoaded", () => {
   isProUser = localStorage.getItem("ideaforge_pro") === "true";
-
   getUserId();
   loadBrand();
   loadTheme();
-
   applyUILanguage(localStorage.getItem("ideaforge_ui_lang") || "en");
-
   renderHistory();
   renderToolHistory();
   renderUsageBanner();
-
   // Restore from server backup if localStorage is empty (new
   // browser/device/cache-clear), or back up current local data
   // to the server if it isn't. Runs in the background; UI is
@@ -3410,40 +3515,29 @@ document.addEventListener("DOMContentLoaded", () => {
     await initSessionAndBackupCode();
     await restoreOrBackupUserData();
   })();
-
   document.getElementById("generateBtn")?.addEventListener("click", generateReport);
   document.getElementById("generateLaunchPlanBtn")?.addEventListener("click", generateLaunchPlan);
   document.getElementById("generatePitchDeckBtn")?.addEventListener("click", generatePitchDeck);
-
   document.getElementById("improveIdeaFromScoreBtn")?.addEventListener("click", () => {
     if (!currentIdeaText) {
       showToast("Pehle report generate karein.", "error");
       return;
     }
-
     openToolWorkspace("improveidea");
-
     const toolInput = document.getElementById("toolInput");
     if (toolInput) toolInput.value = currentIdeaText;
-
     runAiTool(currentIdeaText, "improveidea");
   });
-
   document.getElementById("hubAskBtn")?.addEventListener("click", () => {
     const input = document.getElementById("hubInput");
     if (!input) return;
-
     const text = input.value.trim();
     if (!text) return;
-
     const tool = smartRouteInput(text);
-
     trackEvent("hub_ask_ai", { tool_detected: tool });
     openToolWorkspace(tool);
-
     if (tool === "chat") {
       const chatInput = document.getElementById("chatInput");
-
       if (chatInput) {
         chatInput.value = text;
         sendChatMessage();
@@ -3451,61 +3545,46 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       const toolInput = document.getElementById("toolInput");
       if (toolInput) toolInput.value = text;
-
       runAiTool(text, tool);
     }
   });
-
   document.getElementById("toolGenerateBtn")?.addEventListener("click", () => {
     const input = document.getElementById("toolInput");
     if (!input) return;
-
     const text = input.value.trim();
     if (!text) return;
-
     runAiTool(text, activeTool);
   });
-
   document.getElementById("sendChatBtn")?.addEventListener("click", sendChatMessage);
-
   document.getElementById("chatInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       sendChatMessage();
     }
   });
-
   document.getElementById("askFollowupBtn")?.addEventListener("click", askIdeaFollowup);
-
   document.getElementById("followupInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       askIdeaFollowup();
     }
   });
-
   document.getElementById("clearChatBtn")?.addEventListener("click", () => {
     chatHistory = [];
-
     const container = document.getElementById("chatContainer");
     if (container) container.innerHTML = "";
-
     showToast("Chat history cleared!", "info");
   });
-
   document.getElementById("toolCopyBtn")?.addEventListener("click", () => {
     copyText(currentToolResult);
   });
-
   document.getElementById("toolRegenerateBtn")?.addEventListener("click", () => {
     if (!lastToolPayload) {
       showToast("Regenerate ke liye previous request nahi mili.", "error");
       return;
     }
-
     runAiTool(lastToolPayload.input, lastToolPayload.tool);
   });
-
   document.getElementById("remixBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("remixModal");
     if (modal) modal.style.display = "flex";
@@ -3534,12 +3613,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
   document.getElementById("downloadPosterBtn")?.addEventListener("click", downloadPoster);
   document.getElementById("downloadCardBtn")?.addEventListener("click", downloadCard);
+
   document.getElementById("hubMicBtn")?.addEventListener("click", function () {
     startVoiceInput("hubInput", this);
   });
+
   document.getElementById("toolMicBtn")?.addEventListener("click", function () {
     startVoiceInput("toolInput", this);
   });
+
   document.querySelectorAll(".remix-btn").forEach((button) => {
     button.addEventListener("click", () => {
       const style = button.getAttribute("data-style");
@@ -3555,7 +3637,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modal) modal.style.display = "none";
   });
 
-          // --------------------------------------------------------
+              // --------------------------------------------------------
   // BRAND MODAL
   // FIXED: "?.value = x" is invalid JS (optional chaining
   // cannot be assigned to). Replaced with a guarded assignment.
@@ -3585,13 +3667,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("backupModal");
     if (modal) modal.style.display = "flex";
   });
+
   document.getElementById("closeBackupBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("backupModal");
     if (modal) modal.style.display = "none";
   });
+
   document.getElementById("copyBackupCodeBtn")?.addEventListener("click", () => {
     copyText(getBackupCode());
   });
+
   document.getElementById("restoreBackupCodeBtn")?.addEventListener("click", () => {
     const input = document.getElementById("restoreCodeInput");
     restoreFromBackupCode(input?.value || "");
@@ -3745,6 +3830,44 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   document.getElementById("convertJpgToPdfBtn")?.addEventListener("click", convertImagesToPdf);
+  document.getElementById("openPdfToImageBtn")?.addEventListener("click", () => {
+    pdfToImageSelectedFile = null;
+    const fileName = document.getElementById("pdfToImageFileName");
+    if (fileName) fileName.textContent = "";
+    const input = document.getElementById("pdfToImageInput");
+    if (input) input.value = "";
+    const status = document.getElementById("pdfToImageStatus");
+    if (status) status.textContent = "";
+    const results = document.getElementById("pdfToImageResults");
+    if (results) {
+      results.innerHTML = "";
+      results.style.display = "none";
+    }
+    const modal = document.getElementById("pdfToImageModal");
+    if (modal) modal.style.display = "flex";
+  });
+  document.getElementById("closePdfToImageBtn")?.addEventListener("click", () => {
+    const modal = document.getElementById("pdfToImageModal");
+    if (modal) modal.style.display = "none";
+  });
+  const pdfToImageUploadCard = document.getElementById("pdfToImageUploadCard");
+  const pdfToImageInput = document.getElementById("pdfToImageInput");
+  if (pdfToImageUploadCard && pdfToImageInput) {
+    pdfToImageUploadCard.addEventListener("click", () => pdfToImageInput.click());
+    pdfToImageInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        showToast("Sirf PDF file chunein.", "error");
+        pdfToImageSelectedFile = null;
+        return;
+      }
+      pdfToImageSelectedFile = file;
+      const fileName = document.getElementById("pdfToImageFileName");
+      if (fileName) fileName.textContent = file.name;
+    });
+  }
+  document.getElementById("convertPdfToImageBtn")?.addEventListener("click", convertPdfToImages);
   document.getElementById("createProjectBtn")?.addEventListener("click", createProject);
   document.getElementById("closeNewProjectBtn")?.addEventListener("click", () => {
     const modal = document.getElementById("newProjectModal");
@@ -3849,6 +3972,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("viewAllToolsBtn")?.addEventListener("click", function () {
     const allToolsGrid = document.getElementById("allToolsGrid");
     if (!allToolsGrid) return;
+
     const isHidden = allToolsGrid.style.display === "none";
 
     allToolsGrid.style.display = isHidden ? "grid" : "none";
@@ -3875,5 +3999,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProjects();
 
-  console.log("🚀 IdeaForgeX v11.12 initialized successfully.");
-});                
+  console.log("🚀 IdeaForgeX v11.15 initialized successfully.");
+});
