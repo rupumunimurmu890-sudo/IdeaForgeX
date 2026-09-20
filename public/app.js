@@ -3502,20 +3502,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("remixModal");
     if (modal) modal.style.display = "flex";
   });
-
   document.getElementById("makeBetterBtn")?.addEventListener("click", makeItBetter);
   document.getElementById("speakResultBtn")?.addEventListener("click", speakResult);
-
   document.getElementById("toolSaveBtn")?.addEventListener("click", () => {
     if (currentToolResult && currentToolInput) {
       saveToToolHistory(activeTool, currentToolInput, currentToolResult);
       showToast("⭐ Saved!", "success");
     }
   });
-
   document.getElementById("toolShareBtn")?.addEventListener("click", async () => {
     if (!currentToolResult) return;
-
     try {
       if (navigator.share) {
         await navigator.share({ title: "IdeaForgeX", text: currentToolResult });
@@ -3540,15 +3536,18 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", () => {
       const style = button.getAttribute("data-style");
       remixContent(style);
+
       const modal = document.getElementById("remixModal");
       if (modal) modal.style.display = "none";
     });
   });
+
   document.getElementById("closeRemixModal")?.addEventListener("click", () => {
     const modal = document.getElementById("remixModal");
     if (modal) modal.style.display = "none";
   });
-  // --------------------------------------------------------
+
+          // --------------------------------------------------------
   // BRAND MODAL
   // FIXED: "?.value = x" is invalid JS (optional chaining
   // cannot be assigned to). Replaced with a guarded assignment.
@@ -3843,13 +3842,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const allToolsGrid = document.getElementById("allToolsGrid");
     if (!allToolsGrid) return;
     const isHidden = allToolsGrid.style.display === "none";
+
     allToolsGrid.style.display = isHidden ? "grid" : "none";
     this.setAttribute("aria-expanded", isHidden ? "true" : "false");
     this.innerHTML = isHidden ? "🧰 Hide Tools ▴" : "🧰 View All Tools ▾";
+
     if (isHidden) {
       allToolsGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   });
+
   const tips = [
     "Try the Business Agent! One click generates a full startup pack.",
     "Create a Project to organize all your AI assets.",
@@ -3859,8 +3861,11 @@ document.addEventListener("DOMContentLoaded", () => {
     "Use Auto-Pilot to create multiple marketing assets together.",
     "Use AI Chat when you want a normal conversation with AI."
   ];
+
   const dailyTip = document.getElementById("dailyTip");
   if (dailyTip) dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
+
   renderProjects();
+
   console.log("🚀 IdeaForgeX v11.12 initialized successfully.");
-});
+});                
