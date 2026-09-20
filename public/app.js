@@ -55,7 +55,7 @@ const HISTORY_LIMIT = 10;
 
 // TEMP: raised to 100 for testing to match worker.js — change
 // both back to 15 before going live.
-const FREE_DAILY_LIMIT = 100;
+const FREE_DAILY_LIMIT = 15;
 const USAGE_KEY = "ideaforge_usage";
 
 const PROJECTS_KEY = "ideaforge_projects_v2";
