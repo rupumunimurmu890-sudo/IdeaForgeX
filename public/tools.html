@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2450ff">
+<title>PDF & Image Tools – IdeaForge-AI</title>
+<meta name="description" content="Merge PDF, split PDF, compress, sign, image resize, OCR — सब कुछ आपके browser में, बिना upload के।">
+<style>
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --ink:#141821; --muted:#5b6474; --line:#dfe3ea;
+  --accent:#2450ff; --accent-ink:#ffffff; --soft:#e9eeff; --danger:#c62d2d; --ok:#12805c;
+  --r:12px;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0d1016; --surface:#171b23; --ink:#e9ecf2; --muted:#98a1b2; --line:#2a303b;
+         --accent:#7e98ff; --accent-ink:#0b1030; --soft:#1f2740; --danger:#ff7b7b; --ok:#4fd1a1; }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Devanagari",Roboto,"Helvetica Neue",Arial,sans-serif;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.top{
+  position:sticky; top:0; z-index:5; background:var(--bg);
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;
+  border-bottom:1px solid var(--line);
+}
+.top-in{max-width:640px; margin:0 auto; display:flex; align-items:center; gap:12px}
+.top a{color:var(--accent); text-decoration:none; font-weight:600; white-space:nowrap}
+.top h1{margin:0; font-size:18px; font-weight:700; letter-spacing:-.01em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+main{max-width:640px; margin:0 auto; padding:16px}
+.lead{margin:4px 0 16px; color:var(--muted); font-size:15px}
+.search{width:100%; margin-bottom:8px}
+h2{font-size:15px; margin:22px 0 6px; color:var(--muted); font-weight:600}
+.list{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.tool{
+  display:flex; align-items:center; gap:14px; padding:12px 14px; text-decoration:none; color:inherit;
+  border-top:1px solid var(--line);
+}
+.tool:first-child{border-top:0}
+.tool:active,.tool:hover{background:var(--soft)}
+.tool .ico{
+  width:42px; height:42px; flex:none; border-radius:10px; background:var(--soft);
+  display:grid; place-items:center; font-size:21px;
+}
+.tool b{display:block; font-size:16px}
+.tool span{display:block; color:var(--muted); font-size:14px; line-height:1.35}
+.empty{padding:22px; text-align:center; color:var(--muted)}
+
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:16px}
+.panel + .panel{margin-top:12px}
+.panel h2{margin:0 0 4px; color:var(--ink); font-size:20px}
+.panel p.d{margin:0 0 14px; color:var(--muted); font-size:14px}
+
+.drop{
+  border:2px dashed var(--line); border-radius:var(--r); padding:22px 14px; text-align:center; cursor:pointer;
+  background:var(--bg); transition:border-color .15s, background .15s;
+}
+.drop:hover,.drop.over,.drop:focus-visible{border-color:var(--accent); background:var(--soft); outline:none}
+.drop .big{font-size:30px; line-height:1}
+.drop div{font-weight:600; margin-top:6px}
+.drop small{color:var(--muted)}
+
+.field{display:block; margin-top:14px}
+.field .lbl{display:flex; justify-content:space-between; font-size:14px; font-weight:600; margin-bottom:6px}
+.ctl{display:flex; gap:8px; align-items:center}
+input[type=text],input[type=number],select,textarea{
+  width:100%; font:inherit; color:var(--ink); background:var(--bg);
+  border:1px solid var(--line); border-radius:10px; padding:10px 12px; min-height:44px;
+}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:32px}
+input[type=checkbox]{width:20px; height:20px; accent-color:var(--accent)}
+textarea{resize:vertical; line-height:1.5}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.btn{
+  font:inherit; font-weight:700; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  border-radius:10px; padding:11px 16px; min-height:46px; cursor:pointer;
+}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); width:100%; margin-top:16px}
+.btn.small{min-height:38px; padding:7px 12px; font-size:14px}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.ic{
+  width:38px; height:38px; flex:none; border:1px solid var(--line); background:var(--bg); color:var(--ink);
+  border-radius:9px; font-size:16px; cursor:pointer;
+}
+.ic:disabled{opacity:.35}
+
+.muted{color:var(--muted); font-size:14px}
+.note{margin-top:12px; padding:10px 12px; background:var(--soft); border-radius:10px; font-size:14px}
+.files,.results{margin-top:12px; display:grid; gap:8px}
+.row{display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--line); border-radius:10px; background:var(--bg)}
+.grow{flex:1; min-width:0}
+.nm{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.thumb{width:46px; height:46px; border-radius:8px; object-fit:cover; flex:none}
+.thumb.ph{display:grid; place-items:center; background:var(--soft); font-size:22px}
+.good{color:var(--ok); font-weight:600}
+.pagewrap{position:relative; margin-top:12px; border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:crosshair; background:#fff; line-height:0}
+.pagewrap canvas{width:100%; height:auto; display:block}
+.sigov{position:absolute; pointer-events:none; transform:translate(-50%,-50%); filter:drop-shadow(0 0 1px rgba(0,0,0,.25))}
+.pad{width:100%; height:auto; aspect-ratio:8/3; background:#fff; border:1px solid var(--line); border-radius:10px; touch-action:none; display:block; cursor:crosshair}
+.prev{width:100%; height:auto; border-radius:10px; border:1px solid var(--line); display:block; margin-top:12px; background:repeating-conic-gradient(#8883 0 25%,transparent 0 50%) 0 0/16px 16px}
+.pager{display:flex; gap:8px; align-items:center; margin-top:12px}
+.pager input{text-align:center; max-width:90px}
+#toast{
+  position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 20px); transform:translate(-50%,20px);
+  background:var(--ink); color:var(--bg); padding:11px 16px; border-radius:10px; font-size:14px; max-width:90vw;
+  opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:20;
+}
+#toast.show{opacity:1; transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><div class="top-in"><a id="back" href="/">← App</a><h1 id="ttl">PDF & Image tools</h1></div></div>
+<main id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><main>इन tools के लिए JavaScript ज़रूरी है।</main></noscript>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- small helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) { if (k == null || k === false) continue; e.append(k.nodeType ? k : document.createTextNode(k)); }
+  return e;
+}
+const opt = (v, t) => h('option', { value: v }, t);
+const field = (label, ...ctl) => h('label', { class: 'field' }, h('span', { class: 'lbl' }, label), h('div', { class: 'ctl' }, ...ctl));
+const range = (min, max, val, step = 1) => h('input', { type: 'range', min, max, value: val, step });
+const fmt = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB';
+const baseName = f => f.name.replace(/\.[^.]+$/, '');
+const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+const MAXPX = 16e6;
+
+let toastT;
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch { const ta = h('textarea'); ta.value = t; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast('Copy हो गया ✓');
+}
+async function withBusy(btn, fn) {
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳ हो रहा है…';
+  try { await fn(); } catch (e) { console.error(e); toast('❌ ' + (e && e.message ? e.message : 'कुछ गड़बड़ हुई')); }
+  finally { btn.disabled = false; btn.textContent = old; }
+}
+const tick = () => new Promise(r => setTimeout(r, 0));
+
+/* ---------- lazy libraries (CDN) ---------- */
+const LIBS = {
+  pdflib: 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js',
+  pdfjs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  tess: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'
+};
+const _loaded = {};
+function loadScript(src) {
+  if (_loaded[src]) return _loaded[src];
+  return _loaded[src] = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src; s.onload = res;
+    s.onerror = () => { delete _loaded[src]; rej(new Error('Library load नहीं हुई — internet जाँचकर फिर कोशिश करें')); };
+    document.head.append(s);
+  });
+}
+async function needPdfLib() { await loadScript(LIBS.pdflib); return window.PDFLib; }
+async function needPdfJs() { await loadScript(LIBS.pdfjs); window.pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.pdfjsWorker; return window.pdfjsLib; }
+
+async function loadPdfLibDoc(file) {
+  const { PDFDocument } = await needPdfLib();
+  try { return await PDFDocument.load(await file.arrayBuffer()); }
+  catch (e) {
+    if (/encrypt/i.test(e.message)) throw new Error('यह PDF password-protected है, इसे पहले unlock करना होगा');
+    throw new Error('यह PDF खुल नहीं पा रही (file खराब हो सकती है)');
+  }
+}
+async function openPdfJs(file) {
+  const lib = await needPdfJs();
+  try { return await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise; }
+  catch (e) {
+    if (e && e.name === 'PasswordException') throw new Error('यह PDF password-protected है');
+    throw new Error('यह PDF खुल नहीं पा रही');
+  }
+}
+async function renderPage(pdf, n, scale) {
+  const page = await pdf.getPage(n);
+  let vp = page.getViewport({ scale });
+  if (vp.width * vp.height > MAXPX) vp = page.getViewport({ scale: scale * Math.sqrt(MAXPX / (vp.width * vp.height)) });
+  const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  return c;
+}
+
+/* ---------- images ---------- */
+function loadImg(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), i = new Image();
+    i.onload = () => res(i); i.onerror = () => rej(new Error('Image खुल नहीं पाई: ' + file.name)); i.src = url;
+  });
+}
+function drawScaled(img, maxSide = 0, bg = null) {
+  let w = img.naturalWidth, hh = img.naturalHeight;
+  if (maxSide && Math.max(w, hh) > maxSide) { const s = maxSide / Math.max(w, hh); w = Math.round(w * s); hh = Math.round(hh * s); }
+  if (w * hh > MAXPX) { const s = Math.sqrt(MAXPX / (w * hh)); w = Math.floor(w * s); hh = Math.floor(hh * s); }
+  const c = document.createElement('canvas'); c.width = w; c.height = hh;
+  const x = c.getContext('2d'); if (bg) { x.fillStyle = bg; x.fillRect(0, 0, w, hh); }
+  x.drawImage(img, 0, 0, w, hh); return c;
+}
+async function canvasOut(c, mime, q, base) {
+  const blob = await new Promise(r => c.toBlob(r, mime, q));
+  if (!blob) throw new Error('Image export नहीं हो पाई');
+  return { blob, name: base + '.' + (EXT[blob.type] || 'png') };
+}
+
+/* ---------- UI pieces ---------- */
+function picker({ accept, multiple, label, hint, onFiles }) {
+  const ok = f => accept.split(',').some(a => {
+    a = a.trim();
+    return a.endsWith('/*') ? f.type.startsWith(a.slice(0, -1)) : a.startsWith('.') ? f.name.toLowerCase().endsWith(a) : f.type === a;
+  });
+  const input = h('input', { type: 'file', accept, multiple: !!multiple, hidden: true });
+  const zone = h('div', { class: 'drop', tabindex: '0', role: 'button' }, h('div', { class: 'big' }, '📂'), h('div', {}, label || 'File चुनें'), h('small', {}, hint || ''));
+  const handle = fs => {
+    fs = fs.filter(ok);
+    if (!fs.length) return toast('सही type की file चुनें');
+    onFiles(multiple ? fs : [fs[0]]);
+  };
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('over'); handle([...e.dataTransfer.files]); });
+  input.addEventListener('change', () => { handle([...input.files]); input.value = ''; });
+  return h('div', {}, zone, input);
+}
+function makeList(onChange) {
+  const files = [], el = h('div', { class: 'files' });
+  const move = (i, d) => { [files[i], files[i + d]] = [files[i + d], files[i]]; draw(); };
+  function draw() {
+    el.replaceChildren(...files.map((f, i) => h('div', { class: 'row' },
+      h('div', { class: 'thumb ph' }, f.type.startsWith('image/') ? '🖼️' : '📄'),
+      h('div', { class: 'grow' }, h('div', { class: 'nm' }, f.name), h('div', { class: 'muted' }, fmt(f.size))),
+      h('button', { class: 'ic', title: 'ऊपर', disabled: i === 0, onclick: () => move(i, -1) }, '↑'),
+      h('button', { class: 'ic', title: 'नीचे', disabled: i === files.length - 1, onclick: () => move(i, 1) }, '↓'),
+      h('button', { class: 'ic', title: 'हटाएँ', onclick: () => { files.splice(i, 1); draw(); } }, '✕'))));
+    onChange && onChange(files.length);
+  }
+  return { el, files, add(fs) { files.push(...fs); draw(); }, clear() { files.length = 0; draw(); } };
+}
+function resultRow({ blob, name, note }) {
+  const isImg = blob.type.startsWith('image/');
+  return h('div', { class: 'row' },
+    isImg ? h('img', { class: 'thumb', src: URL.createObjectURL(blob), alt: '' }) : h('div', { class: 'thumb ph' }, blob.type === 'application/pdf' ? '📄' : '📝'),
+    h('div', { class: 'grow' }, h('div', { class: 'nm' }, name), h('div', { class: 'muted' }, fmt(blob.size) + (note ? ' · ' + note : ''))),
+    h('button', { class: 'btn small', onclick: () => download(blob, name) }, '⬇ Save'));
+}
+function panel(title, desc, ...kids) { return h('section', { class: 'panel' }, h('h2', {}, title), h('p', { class: 'd' }, desc), ...kids); }
+const pdfBlob = bytes => new Blob([bytes], { type: 'application/pdf' });
+
+function parseRange(str, total) {
+  const out = new Set();
+  for (const part of str.split(',').map(s => s.trim()).filter(Boolean)) {
+    const m = part.match(/^(\d*)\s*-\s*(\d*)$/);
+    if (m && (m[1] || m[2])) {
+      let a = m[1] ? +m[1] : 1, b = m[2] ? +m[2] : total; if (a > b) [a, b] = [b, a];
+      for (let i = Math.max(1, a); i <= Math.min(total, b); i++) out.add(i);
+    } else if (/^\d+$/.test(part)) { const n = +part; if (n >= 1 && n <= total) out.add(n); }
+    else throw new Error('Page range गलत है: ' + part);
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
+/* ================= PDF TOOLS ================= */
+function toolMerge(root) {
+  const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'PDF जोड़ें');
+  const L = makeList(n => { btn.disabled = n < 2; });
+  const pick = picker({ accept: 'application/pdf,.pdf', multiple: true, label: 'PDF चुनें', hint: 'कई PDF एक साथ चुन सकते हैं, ↑↓ से क्रम बदलें', onFiles: fs => L.add(fs) });
+  btn.onclick = () => withBusy(btn, async () => {
+    const { PDFDocument } = await needPdfLib(); const doc = await PDFDocument.create();
+    for (const f of L.files) {
+      const src = await loadPdfLibDoc(f);
+      (await doc.copyPages(src, src.getPageIndices())).forEach(p => doc.addPage(p));
+    }
+    out.replaceChildren(resultRow({ blob: pdfBlob(await doc.save()), name: 'merged.pdf', note: doc.getPageCount() + ' pages' }));
+  });
+  root.append(panel('Merge PDF', 'कई PDF को एक file में जोड़ें।', pick, L.el, btn, out));
+}
+
+function toolPages(root, mode) {
+  let file = null, total = 0;
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' });
+  const rng = h('input', { type: 'text', placeholder: mode === 'extract' ? 'जैसे 1-3, 5, 8-' : 'जैसे 2, 4-6', autocomplete: 'off' });
+  const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, mode === 'extract' ? 'Pages निकालें' : 'Pages हटाएँ');
+  const pick = picker({
+    accept: 'application/pdf,.pdf', label: 'PDF चुनें', onFiles: async ([f]) => {
+      try { const d = await loadPdfLibDoc(f); file = f; total = d.getPageCount(); info.textContent = `${f.name} · ${total} pages · ${fmt(f.size)}`; btn.disabled = false; out.replaceChildren(); }
+      catch (e) { toast('❌ ' + e.message); }
+    }
+  });
+  btn.onclick = () => withBusy(btn, async () => {
+    const sel = parseRange(rng.value, total); if (!sel.length) throw new Error('Page number लिखें (1 से ' + total + ' के बीच)');
+    const { PDFDocument } = await needPdfLib(); const src = await PDFDocument.load(await file.arrayBuffer());
+    const keep = mode === 'extract' ? sel : src.getPageIndices().map(i => i + 1).filter(p => !sel.includes(p));
+    if (!keep.length) throw new Error('सारे pages हट जाएँगे, कुछ तो बचाएँ');
+    const doc = await PDFDocument.create();
+    (await doc.copyPages(src, keep.map(p => p - 1))).forEach(p => doc.addPage(p));
+    out.replaceChildren(resultRow({ blob: pdfBlob(await doc.save()), name: baseName(file) + (mode === 'extract' ? '-split.pdf' : '-edited.pdf'), note: keep.length + ' pages' }));
+  });
+  const t = mode === 'extract' ? ['Split PDF', 'PDF से चुने हुए pages अलग file में निकालें।'] : ['Remove PDF pages', 'PDF से गैर-ज़रूरी pages हटाएँ।'];
+  root.append(panel(t[0], t[1], pick, info, field(mode === 'extract' ? 'कौन से pages चाहिए' : 'कौन से pages हटाने हैं', rng), btn, out));
+}
+
+function toolRotate(root) {
+  let file = null, total = 0;
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' });
+  const ang = h('select', {}, opt('90', '90° दाएँ (clockwise)'), opt('180', '180° उल्टा'), opt('270', '90° बाएँ'));
+  const rng = h('input', { type: 'text', placeholder: 'खाली छोड़ें = सारे pages', autocomplete: 'off' });
+  const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Rotate करें');
+  const pick = picker({
+    accept: 'application/pdf,.pdf', label: 'PDF चुनें', onFiles: async ([f]) => {
+      try { const d = await loadPdfLibDoc(f); file = f; total = d.getPageCount(); info.textContent = `${f.name} · ${total} pages`; btn.disabled = false; out.replaceChildren(); }
+      catch (e) { toast('❌ ' + e.message); }
+    }
+  });
+  btn.onclick = () => withBusy(btn, async () => {
+    const { PDFDocument, degrees } = await needPdfLib(); const doc = await PDFDocument.load(await file.arrayBuffer());
+    const sel = rng.value.trim() ? parseRange(rng.value, total) : doc.getPageIndices().map(i => i + 1);
+    if (!sel.length) throw new Error('सही page number लिखें');
+    sel.forEach(n => { const p = doc.getPage(n - 1); p.setRotation(degrees((p.getRotation().angle + +ang.value) % 360)); });
+    out.replaceChildren(resultRow({ blob: pdfBlob(await doc.save()), name: baseName(file) + '-rotated.pdf', note: sel.length + ' pages rotate हुए' }));
+  });
+  root.append(panel('Rotate PDF', 'उल्टे या टेढ़े pages सीधे करें।', pick, info, field('कितना घुमाना है', ang), field('कौन से pages', rng), btn, out));
+}
+
+function toolJpg2Pdf(root) {
+  const out = h('div', { class: 'results' });
+  const size = h('select', {}, opt('a4', 'A4 page (सफ़ेद margin के साथ)'), opt('fit', 'Image के साइज़ का page'));
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'PDF बनाएँ');
+  const L = makeList(n => { btn.disabled = n < 1; });
+  const pick = picker({ accept: 'image/*', multiple: true, label: 'Images चुनें', hint: 'JPG, PNG, WebP — हर image एक page बनेगी', onFiles: fs => L.add(fs) });
+  btn.onclick = () => withBusy(btn, async () => {
+    const { PDFDocument } = await needPdfLib(); const doc = await PDFDocument.create();
+    for (const f of L.files) {
+      const img = await loadImg(f); const c = drawScaled(img, 0, '#fff');
+      const jb = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+      const emb = await doc.embedJpg(new Uint8Array(await jb.arrayBuffer()));
+      if (size.value === 'a4') {
+        const land = emb.width > emb.height, PW = land ? 841.89 : 595.28, PH = land ? 595.28 : 841.89, m = 24;
+        const s = Math.min((PW - 2 * m) / emb.width, (PH - 2 * m) / emb.height), w = emb.width * s, hh = emb.height * s;
+        doc.addPage([PW, PH]).drawImage(emb, { x: (PW - w) / 2, y: (PH - hh) / 2, width: w, height: hh });
+      } else {
+        const w = emb.width * 0.75, hh = emb.height * 0.75;
+        doc.addPage([w, hh]).drawImage(emb, { x: 0, y: 0, width: w, height: hh });
+      }
+    }
+    out.replaceChildren(resultRow({ blob: pdfBlob(await doc.save()), name: 'images.pdf', note: doc.getPageCount() + ' pages' }));
+  });
+  root.append(panel('JPG → PDF', 'फ़ोटो या scan को PDF में बदलें।', pick, L.el, field('Page size', size), btn, out));
+}
+
+function toolPdf2Jpg(root) {
+  let file = null;
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' });
+  const scale = h('select', {}, opt('1.5', 'Normal'), opt('2', 'High'), opt('3', 'बहुत high (बड़ी file)'));
+  scale.value = '2';
+  const rng = h('input', { type: 'text', placeholder: 'खाली छोड़ें = सारे pages', autocomplete: 'off' });
+  const out = h('div', { class: 'results' }); const prog = h('div', { class: 'muted' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'JPG बनाएँ');
+  const pick = picker({ accept: 'application/pdf,.pdf', label: 'PDF चुनें', onFiles: ([f]) => { file = f; info.textContent = `${f.name} · ${fmt(f.size)}`; btn.disabled = false; out.replaceChildren(); } });
+  btn.onclick = () => withBusy(btn, async () => {
+    const pdf = await openPdfJs(file); const total = pdf.numPages;
+    const sel = rng.value.trim() ? parseRange(rng.value, total) : Array.from({ length: total }, (_, i) => i + 1);
+    if (!sel.length) throw new Error('सही page number लिखें');
+    out.replaceChildren();
+    for (let i = 0; i < sel.length; i++) {
+      prog.textContent = `Page ${sel[i]} (${i + 1}/${sel.length})`; await tick();
+      const c = await renderPage(pdf, sel[i], +scale.value);
+      const r = await canvasOut(c, 'image/jpeg', 0.9, `${baseName(file)}-page${sel[i]}`); c.width = 0;
+      out.append(resultRow(r));
+    }
+    prog.textContent = '';
+  });
+  root.append(panel('PDF → JPG', 'PDF के हर page को image बनाएँ।', pick, info, field('Quality', scale), field('कौन से pages', rng), btn, prog, out));
+}
+
+function toolPdf2Text(root) {
+  let file = null;
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' });
+  const ta = h('textarea', { rows: '14', placeholder: 'Text यहाँ दिखेगा' });
+  const acts = h('div', { class: 'ctl', style: 'margin-top:10px', hidden: true },
+    h('button', { class: 'btn small', onclick: () => copyText(ta.value) }, 'Copy'),
+    h('button', { class: 'btn small', onclick: () => download(new Blob([ta.value], { type: 'text/plain;charset=utf-8' }), baseName(file) + '.txt') }, '⬇ .txt'));
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Text निकालें');
+  const pick = picker({ accept: 'application/pdf,.pdf', label: 'PDF चुनें', onFiles: ([f]) => { file = f; info.textContent = `${f.name} · ${fmt(f.size)}`; btn.disabled = false; } });
+  btn.onclick = () => withBusy(btn, async () => {
+    const pdf = await openPdfJs(file); let txt = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const tc = await (await pdf.getPage(i)).getTextContent();
+      txt += tc.items.map(it => it.str + (it.hasEOL ? '\n' : ' ')).join('') + '\n\n';
+      if (i % 5 === 0) await tick();
+    }
+    ta.value = txt.trim(); acts.hidden = false;
+    if (!ta.value) toast('इस PDF में text नहीं मिला। यह scan हो सकती है, OCR आज़माएँ');
+  });
+  root.append(panel('PDF → Text', 'PDF से text निकालकर copy करें।', pick, info, btn, h('div', { style: 'margin-top:12px' }, ta), acts,
+    h('div', { class: 'note' }, 'Scan की हुई PDF में text नहीं होता, उसके लिए PDF → JPG करके फिर OCR इस्तेमाल करें।')));
+}
+
+function toolCompressPdf(root) {
+  let file = null;
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' });
+  const lvl = h('select', {}, opt('bal', 'Balanced'), opt('small', 'सबसे छोटी file'), opt('good', 'बेहतर quality'));
+  const out = h('div', { class: 'results' }); const prog = h('div', { class: 'muted' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Compress करें');
+  const pick = picker({ accept: 'application/pdf,.pdf', label: 'PDF चुनें', onFiles: ([f]) => { file = f; info.textContent = `${f.name} · ${fmt(f.size)}`; btn.disabled = false; out.replaceChildren(); } });
+  const P = { bal: [1.4, 0.65], small: [1.0, 0.5], good: [1.8, 0.8] };
+  btn.onclick = () => withBusy(btn, async () => {
+    const [scale, q] = P[lvl.value]; const pdf = await openPdfJs(file); const { PDFDocument } = await needPdfLib();
+    const doc = await PDFDocument.create();
+    for (let i = 1; i <= pdf.numPages; i++) {
+      prog.textContent = `Page ${i}/${pdf.numPages}`; await tick();
+      const page = await pdf.getPage(i), v1 = page.getViewport({ scale: 1 });
+      const c = await renderPage(pdf, i, scale);
+      const jb = await new Promise(r => c.toBlob(r, 'image/jpeg', q)); c.width = 0;
+      const emb = await doc.embedJpg(new Uint8Array(await jb.arrayBuffer()));
+      doc.addPage([v1.width, v1.height]).drawImage(emb, { x: 0, y: 0, width: v1.width, height: v1.height });
+    }
+    prog.textContent = '';
+    const blob = pdfBlob(await doc.save());
+    const saved = Math.round((1 - blob.size / file.size) * 100);
+    out.replaceChildren(resultRow({ blob, name: baseName(file) + '-compressed.pdf', note: saved > 0 ? saved + '% छोटी' : 'बड़ी हो गई' }));
+    if (saved <= 0) toast('Original पहले से छोटी है, उसी को रखें');
+  });
+  root.append(panel('Compress PDF', 'PDF का साइज़ घटाएँ (email या form upload के लिए)।', pick, info, field('Level', lvl), btn, prog, out,
+    h('div', { class: 'note' }, 'हर page image बनकर दोबारा जुड़ता है, इसलिए compress के बाद text select/search नहीं हो पाएगा। Text वाली छोटी PDF पर इसकी ज़रूरत नहीं।')));
+}
+
+function toolSign(root) {
+  let buf = null, pdf = null, total = 0, pageNo = 1, fx = 0.7, fy = 0.85, sigURL = null, sigRatio = 0.4, fileName = 'signed';
+  const stage = h('div', { hidden: true });
+  const wrap = h('div', { class: 'pagewrap' });
+  const ov = h('img', { class: 'sigov', alt: '', hidden: true });
+  const pageInp = h('input', { type: 'number', min: '1', value: '1', inputmode: 'numeric' });
+  const size = range(8, 60, 28); const pen = h('select', {}, opt('#111111', 'Black'), opt('#1a3fd0', 'Blue'));
+  const out = h('div', { class: 'results' });
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' });
+
+  function place() { ov.style.left = fx * 100 + '%'; ov.style.top = fy * 100 + '%'; ov.style.width = size.value + '%'; }
+  async function showPage() {
+    const w = Math.min(wrap.parentElement.clientWidth || 360, 640) * Math.min(window.devicePixelRatio || 1, 2);
+    const base = (await pdf.getPage(pageNo)).getViewport({ scale: 1 });
+    const c = await renderPage(pdf, pageNo, w / base.width);
+    wrap.replaceChildren(c, ov); place();
+  }
+  const go = n => { pageNo = Math.min(Math.max(1, n || 1), total); pageInp.value = pageNo; showPage().catch(e => toast('❌ ' + e.message)); };
+  wrap.addEventListener('click', e => {
+    const r = wrap.getBoundingClientRect(); fx = (e.clientX - r.left) / r.width; fy = (e.clientY - r.top) / r.height; place();
+  });
+  size.oninput = place; pageInp.onchange = () => go(+pageInp.value);
+
+  const pad = h('canvas', { class: 'pad', width: '640', height: '240' });
+  const pctx = pad.getContext('2d'); pctx.lineCap = 'round'; pctx.lineJoin = 'round';
+  let drawing = false, last = null;
+  const pos = e => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * pad.width / r.width, (e.clientY - r.top) * pad.height / r.height]; };
+  pad.addEventListener('pointerdown', e => { drawing = true; pad.setPointerCapture(e.pointerId); last = pos(e); pctx.strokeStyle = pen.value; pctx.lineWidth = 5; pctx.beginPath(); pctx.moveTo(...last); pctx.lineTo(last[0] + 0.01, last[1]); pctx.stroke(); });
+  pad.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); pctx.strokeStyle = pen.value; pctx.lineWidth = 5; pctx.beginPath(); pctx.moveTo(...last); pctx.lineTo(...p); pctx.stroke(); last = p; });
+  const end = () => { if (drawing) { drawing = false; updateSig(); } };
+  pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
+  function updateSig() {
+    const W = pad.width, H = pad.height, d = pctx.getImageData(0, 0, W, H).data;
+    let x0 = W, y0 = H, x1 = 0, y1 = 0, any = false;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3] > 10) { any = true; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (!any) { sigURL = null; ov.hidden = true; return; }
+    const m = 6; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(W - 1, x1 + m); y1 = Math.min(H - 1, y1 + m);
+    const c = document.createElement('canvas'); c.width = x1 - x0 + 1; c.height = y1 - y0 + 1;
+    c.getContext('2d').drawImage(pad, x0, y0, c.width, c.height, 0, 0, c.width, c.height);
+    sigURL = c.toDataURL('image/png'); sigRatio = c.height / c.width; ov.src = sigURL; ov.hidden = false; place();
+  }
+  const clear = () => { pctx.clearRect(0, 0, pad.width, pad.height); updateSig(); };
+
+  const btn = h('button', { class: 'btn primary' }, 'Sign करके सेव करें');
+  btn.onclick = () => withBusy(btn, async () => {
+    if (!sigURL) throw new Error('पहले ऊपर के box में signature बनाएँ');
+    const { PDFDocument } = await needPdfLib(); const doc = await PDFDocument.load(buf);
+    const page = doc.getPage(pageNo - 1);
+    if (page.getRotation().angle) throw new Error('यह page rotated है। पहले Rotate PDF से सीधा करें');
+    const { width: PW, height: PH } = page.getSize();
+    const bin = atob(sigURL.split(',')[1]), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const png = await doc.embedPng(bytes);
+    const sw = PW * size.value / 100, sh = sw * sigRatio;
+    page.drawImage(png, { x: fx * PW - sw / 2, y: PH - fy * PH - sh / 2, width: sw, height: sh });
+    out.replaceChildren(resultRow({ blob: pdfBlob(await doc.save()), name: fileName + '-signed.pdf', note: 'page ' + pageNo + ' पर sign' }));
+  });
+
+  const pick = picker({
+    accept: 'application/pdf,.pdf', label: 'PDF चुनें', onFiles: async ([f]) => {
+      try {
+        buf = await f.arrayBuffer(); fileName = baseName(f);
+        pdf = await openPdfJs(f); total = pdf.numPages; pageInp.max = total; info.textContent = `${f.name} · ${total} pages`;
+        stage.hidden = false; out.replaceChildren(); go(1);
+      } catch (e) { toast('❌ ' + e.message); }
+    }
+  });
+  stage.append(
+    h('div', { class: 'note' }, 'ऊपर वाले box में उँगली या mouse से signature बनाएँ, फिर नीचे PDF पर जहाँ चाहिए वहाँ tap करें।'),
+    field('Signature बनाएँ', pen), pad,
+    h('div', { class: 'pager' }, h('button', { class: 'btn small', onclick: clear }, 'Clear'), h('span', { class: 'grow' })),
+    field('Signature का साइज़', size),
+    h('div', { class: 'pager' }, h('button', { class: 'ic', onclick: () => go(pageNo - 1) }, '‹'), pageInp, h('span', { class: 'muted' }, 'page'), h('button', { class: 'ic', onclick: () => go(pageNo + 1) }, '›')),
+    wrap, btn, out);
+  root.append(panel('Sign PDF', 'PDF पर अपने हाथ का signature लगाएँ।', pick, info, stage));
+}
+
+/* ================= IMAGE TOOLS ================= */
+function toolImgCompress(root) {
+  let files = [];
+  const q = range(30, 95, 70), qv = h('b', {}, '70%'); q.oninput = () => qv.textContent = q.value + '%';
+  const side = h('select', {}, opt('0', 'Original size'), opt('3000', 'सबसे लंबी side 3000 px'), opt('1920', '1920 px (Full HD)'), opt('1280', '1280 px'), opt('800', '800 px'));
+  const fm = h('select', {}, opt('image/jpeg', 'JPG'), opt('image/webp', 'WebP'));
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' }); const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Compress करें');
+  const pick = picker({ accept: 'image/*', multiple: true, label: 'Images चुनें', hint: 'एक साथ कई images', onFiles: fs => { files = fs; info.textContent = fs.length + ' image चुनी गई'; btn.disabled = false; out.replaceChildren(); } });
+  btn.onclick = () => withBusy(btn, async () => {
+    out.replaceChildren();
+    for (const f of files) {
+      const img = await loadImg(f); const c = drawScaled(img, +side.value, fm.value === 'image/jpeg' ? '#fff' : null);
+      const r = await canvasOut(c, fm.value, q.value / 100, baseName(f) + '-small');
+      const pct = Math.round((1 - r.blob.size / f.size) * 100);
+      out.append(resultRow({ ...r, note: pct > 0 ? pct + '% छोटी (पहले ' + fmt(f.size) + ')' : 'पहले से छोटी थी' }));
+      await tick();
+    }
+  });
+  root.append(panel('Image Compressor', 'फ़ोटो का साइज़ घटाएँ, quality लगभग वही रहती है।', pick, info, field('Quality', q, qv), field('Max साइज़', side), field('Format', fm), btn, out));
+}
+
+function toolImgResize(root) {
+  let img = null, file = null, ratio = 1;
+  const wI = h('input', { type: 'number', min: '1', inputmode: 'numeric', placeholder: 'Width' });
+  const hI = h('input', { type: 'number', min: '1', inputmode: 'numeric', placeholder: 'Height' });
+  const lock = h('input', { type: 'checkbox', checked: true });
+  const fm = h('select', {}, opt('image/jpeg', 'JPG'), opt('image/png', 'PNG'), opt('image/webp', 'WebP'));
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' }); const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Resize करें');
+  wI.oninput = () => { if (lock.checked && wI.value) hI.value = Math.round(wI.value / ratio); };
+  hI.oninput = () => { if (lock.checked && hI.value) wI.value = Math.round(hI.value * ratio); };
+  const setPct = p => { wI.value = Math.round(img.naturalWidth * p); hI.value = Math.round(img.naturalHeight * p); };
+  const quick = h('div', { class: 'ctl', style: 'margin-top:12px; flex-wrap:wrap' },
+    h('button', { class: 'btn small', onclick: () => img && setPct(0.5) }, '50%'),
+    h('button', { class: 'btn small', onclick: () => img && setPct(0.25) }, '25%'),
+    h('button', { class: 'btn small', onclick: () => { if (!img) return; wI.value = 1080; hI.value = Math.round(1080 / ratio); } }, '1080 px चौड़ी'));
+  const pick = picker({
+    accept: 'image/*', label: 'Image चुनें', onFiles: async ([f]) => {
+      try {
+        img = await loadImg(f); file = f; ratio = img.naturalWidth / img.naturalHeight;
+        wI.value = img.naturalWidth; hI.value = img.naturalHeight; btn.disabled = false; out.replaceChildren();
+        info.textContent = `${f.name} · ${img.naturalWidth}×${img.naturalHeight} px · ${fmt(f.size)}`;
+        fm.value = f.type === 'image/png' ? 'image/png' : f.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+      } catch (e) { toast('❌ ' + e.message); }
+    }
+  });
+  btn.onclick = () => withBusy(btn, async () => {
+    const w = Math.round(+wI.value), hh = Math.round(+hI.value);
+    if (!(w > 0 && hh > 0)) throw new Error('Width और height लिखें');
+    if (w * hh > MAXPX) throw new Error('साइज़ बहुत बड़ा है (16 megapixel तक)');
+    const c = document.createElement('canvas'); c.width = w; c.height = hh; const x = c.getContext('2d');
+    if (fm.value === 'image/jpeg') { x.fillStyle = '#fff'; x.fillRect(0, 0, w, hh); }
+    x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, w, hh);
+    const r = await canvasOut(c, fm.value, 0.92, baseName(file) + `-${w}x${hh}`);
+    out.replaceChildren(resultRow({ ...r, note: `${w}×${hh} px` }));
+  });
+  root.append(panel('Resize Image', 'Pixel साइज़ बदलें (जैसे form या social media के लिए)।', pick, info, quick,
+    h('div', { class: 'ctl', style: 'margin-top:12px' }, wI, h('span', {}, '×'), hI),
+    h('label', { class: 'ctl', style: 'margin-top:10px' }, lock, h('span', { class: 'muted' }, 'अनुपात (ratio) वही रखें')),
+    field('Format', fm), btn, out));
+}
+
+function toolImgConvert(root) {
+  let files = [];
+  const fm = h('select', {}, opt('image/jpeg', 'JPG'), opt('image/png', 'PNG'), opt('image/webp', 'WebP'));
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' }); const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Convert करें');
+  const pick = picker({ accept: 'image/*', multiple: true, label: 'Images चुनें', hint: 'JPG ↔ PNG ↔ WebP', onFiles: fs => { files = fs; info.textContent = fs.length + ' image चुनी गई'; btn.disabled = false; out.replaceChildren(); } });
+  btn.onclick = () => withBusy(btn, async () => {
+    out.replaceChildren();
+    for (const f of files) {
+      const img = await loadImg(f); const c = drawScaled(img, 0, fm.value === 'image/jpeg' ? '#fff' : null);
+      const r = await canvasOut(c, fm.value, 0.92, baseName(f));
+      if (r.blob.type !== fm.value) toast('इस browser में ' + fm.value.split('/')[1].toUpperCase() + ' सपोर्ट नहीं, ' + r.name.split('.').pop().toUpperCase() + ' बनी');
+      out.append(resultRow(r)); await tick();
+    }
+  });
+  root.append(panel('Image Converter', 'JPG, PNG और WebP के बीच बदलें।', pick, info, field('इसमें बदलें', fm), btn, out));
+}
+
+function toolImgCrop(root) {
+  let img = null, file = null;
+  const R = { orig: 0, '1:1': 1, '4:5': 4 / 5, '9:16': 9 / 16, '16:9': 16 / 9, '3:4': 3 / 4, passport: 35 / 45 };
+  const sel = h('select', {}, opt('orig', 'Original ratio'), opt('1:1', '1:1 (Instagram post)'), opt('4:5', '4:5 (Feed)'), opt('9:16', '9:16 (Story / Status)'), opt('16:9', '16:9 (YouTube)'), opt('3:4', '3:4'), opt('passport', 'Passport photo 35×45 mm'));
+  const zoom = range(1, 4, 1, 0.05), px = range(0, 100, 50), py = range(0, 100, 50);
+  const prev = h('canvas', { class: 'prev', hidden: true });
+  const stage = h('div', { hidden: true }); const out = h('div', { class: 'results' });
+  const btn = h('button', { class: 'btn primary' }, 'Crop करके सेव करें');
+  function rect() {
+    const iw = img.naturalWidth, ih = img.naturalHeight, ar = R[sel.value] || iw / ih; let cw, ch;
+    if (iw / ih > ar) { ch = ih; cw = ih * ar; } else { cw = iw; ch = iw / ar; }
+    const z = +zoom.value; cw /= z; ch /= z;
+    return { x: (iw - cw) * px.value / 100, y: (ih - ch) * py.value / 100, w: cw, h: ch, ar };
+  }
+  function draw() { const r = rect(); prev.width = 480; prev.height = Math.round(480 / r.ar); prev.getContext('2d').drawImage(img, r.x, r.y, r.w, r.h, 0, 0, prev.width, prev.height); }
+  [sel, zoom, px, py].forEach(e => e.addEventListener('input', () => img && draw()));
+  btn.onclick = () => withBusy(btn, async () => {
+    const r = rect(); let sw = Math.round(r.w), sh = Math.round(r.h);
+    if (sel.value === 'passport') { sw = 413; sh = 531; }
+    if (sw * sh > MAXPX) { const s = Math.sqrt(MAXPX / (sw * sh)); sw = Math.floor(sw * s); sh = Math.floor(sh * s); }
+    const c = document.createElement('canvas'); c.width = sw; c.height = sh; const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, sw, sh); x.imageSmoothingQuality = 'high'; x.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, sw, sh);
+    const png = file.type === 'image/png' || sel.value === 'passport';
+    const o = await canvasOut(c, png ? 'image/png' : 'image/jpeg', 0.95, baseName(file) + '-crop');
+    out.replaceChildren(resultRow({ ...o, note: `${sw}×${sh} px` }));
+  });
+  const pick = picker({ accept: 'image/*', label: 'Image चुनें', onFiles: async ([f]) => { try { img = await loadImg(f); file = f; prev.hidden = false; stage.hidden = false; out.replaceChildren(); draw(); } catch (e) { toast('❌ ' + e.message); } } });
+  stage.append(field('Shape', sel), field('Zoom', zoom), field('बाएँ ↔ दाएँ', px), field('ऊपर ↕ नीचे', py), btn, out,
+    h('div', { class: 'note' }, 'Passport option में photo 413×531 px (300 dpi पर 35×45 mm) बनती है, फिर भी अपने form की ज़रूरत एक बार जाँच लें।'));
+  root.append(panel('Crop Image', 'सही ratio में crop करें: Instagram, Status, Passport।', pick, prev, stage));
+}
+
+/* ================= TEXT / OCR ================= */
+function toolOcr(root) {
+  let file = null;
+  const lang = h('select', {}, opt('eng', 'English'), opt('hin', 'हिन्दी'), opt('eng+hin', 'English + हिन्दी'), opt('ben', 'বাংলা'), opt('mar', 'मराठी'), opt('guj', 'ગુજરાતી'), opt('pan', 'ਪੰਜਾਬੀ'), opt('tam', 'தமிழ்'), opt('tel', 'తెలుగు'), opt('kan', 'ಕನ್ನಡ'), opt('mal', 'മലയാളം'), opt('urd', 'اردو'), opt('nep', 'नेपाली'));
+  const info = h('div', { class: 'muted', style: 'margin-top:10px' }); const prog = h('div', { class: 'muted', style: 'margin-top:8px' });
+  const ta = h('textarea', { rows: '12', placeholder: 'Text यहाँ दिखेगा' });
+  const acts = h('div', { class: 'ctl', style: 'margin-top:10px', hidden: true },
+    h('button', { class: 'btn small', onclick: () => copyText(ta.value) }, 'Copy'),
+    h('button', { class: 'btn small', onclick: () => download(new Blob([ta.value], { type: 'text/plain;charset=utf-8' }), baseName(file) + '.txt') }, '⬇ .txt'));
+  const btn = h('button', { class: 'btn primary', disabled: true }, 'Text पढ़ें');
+  const pick = picker({ accept: 'image/*', label: 'Image चुनें', hint: 'फ़ोटो, screenshot या scan', onFiles: ([f]) => { file = f; info.textContent = `${f.name} · ${fmt(f.size)}`; btn.disabled = false; } });
+  btn.onclick = () => withBusy(btn, async () => {
+    await loadScript(LIBS.tess);
+    prog.textContent = 'Language data लोड हो रहा है (पहली बार कुछ MB)…';
+    const worker = await window.Tesseract.createWorker(lang.value.split('+'), 1, {
+      logger: m => { if (m.status === 'recognizing text') prog.textContent = 'पढ़ा जा रहा है… ' + Math.round(m.progress * 100) + '%'; }
+    });
+    try {
+      const { data } = await worker.recognize(file);
+      ta.value = (data.text || '').trim(); acts.hidden = false;
+      if (!ta.value) toast('Text नहीं मिला, साफ़ और सीधी फ़ोटो आज़माएँ');
+    } finally { prog.textContent = ''; await worker.terminate(); }
+  });
+  root.append(panel('OCR: Image → Text', 'फ़ोटो में लिखा text पढ़कर copy करें।', pick, info, field('Image में भाषा', lang), btn, prog, h('div', { style: 'margin-top:12px' }, ta), acts,
+    h('div', { class: 'note' }, 'Image आपके phone में ही पढ़ी जाती है। सिर्फ़ भाषा की data file पहली बार download होती है।')));
+}
+
+/* ================= registry + router ================= */
+const TOOLS = [
+  { id: 'merge', g: 'PDF', icon: '🧩', title: 'Merge PDF', desc: 'कई PDF को एक में जोड़ें', run: toolMerge },
+  { id: 'split', g: 'PDF', icon: '✂️', title: 'Split PDF', desc: 'चुने हुए pages अलग file में निकालें', run: r => toolPages(r, 'extract') },
+  { id: 'remove-pages', g: 'PDF', icon: '🗑️', title: 'Remove pages', desc: 'PDF से extra pages हटाएँ', run: r => toolPages(r, 'remove') },
+  { id: 'rotate', g: 'PDF', icon: '🔄', title: 'Rotate PDF', desc: 'उल्टे pages सीधे करें', run: toolRotate },
+  { id: 'sign', g: 'PDF', icon: '✍️', title: 'Sign PDF', desc: 'PDF पर अपना signature लगाएँ', run: toolSign },
+  { id: 'compress-pdf', g: 'PDF', icon: '🗜️', title: 'Compress PDF', desc: 'PDF का साइज़ घटाएँ', run: toolCompressPdf },
+  { id: 'jpg-to-pdf', g: 'PDF', icon: '🖼️', title: 'JPG → PDF', desc: 'फ़ोटो को PDF बनाएँ', run: toolJpg2Pdf },
+  { id: 'pdf-to-jpg', g: 'PDF', icon: '📷', title: 'PDF → JPG', desc: 'PDF के pages को image बनाएँ', run: toolPdf2Jpg },
+  { id: 'pdf-to-text', g: 'PDF', icon: '📝', title: 'PDF → Text', desc: 'PDF से text copy करें', run: toolPdf2Text },
+  { id: 'image-compress', g: 'Image', icon: '📉', title: 'Image Compressor', desc: 'फ़ोटो का साइज़ घटाएँ', run: toolImgCompress },
+  { id: 'image-resize', g: 'Image', icon: '📐', title: 'Resize Image', desc: 'Width/height बदलें', run: toolImgResize },
+  { id: 'image-crop', g: 'Image', icon: '🔲', title: 'Crop Image', desc: 'Instagram, Status, Passport ratio', run: toolImgCrop },
+  { id: 'image-convert', g: 'Image', icon: '🔁', title: 'JPG ↔ PNG ↔ WebP', desc: 'Image format बदलें', run: toolImgConvert },
+  { id: 'ocr', g: 'Text', icon: '🔍', title: 'OCR: Image → Text', desc: 'फ़ोटो से text पढ़ें (हिन्दी सहित)', run: toolOcr }
+];
+const GROUPS = { PDF: 'PDF tools', Image: 'Image tools', Text: 'Text tools' };
+const app = $('#app'), back = $('#back'), ttl = $('#ttl');
+
+function home() {
+  document.title = 'PDF & Image Tools – IdeaForge-AI'; ttl.textContent = 'PDF & Image tools';
+  back.textContent = '← App'; back.setAttribute('href', '/');
+  const listBox = h('div');
+  const search = h('input', { type: 'text', class: 'search', placeholder: 'Tool खोजें… (merge, compress, sign)', autocomplete: 'off', 'aria-label': 'Tool खोजें' });
+  const draw = () => {
+    const q = search.value.trim().toLowerCase(); listBox.replaceChildren(); let n = 0;
+    for (const [g, label] of Object.entries(GROUPS)) {
+      const items = TOOLS.filter(t => t.g === g && (!q || (t.title + ' ' + t.desc + ' ' + t.id).toLowerCase().includes(q)));
+      if (!items.length) continue; n += items.length;
+      listBox.append(h('h2', {}, label), h('div', { class: 'list' }, items.map(t =>
+        h('a', { class: 'tool', href: '#/' + t.id }, h('div', { class: 'ico' }, t.icon), h('div', {}, h('b', {}, t.title), h('span', {}, t.desc))))));
+    }
+    if (!n) listBox.append(h('div', { class: 'empty' }, 'कोई tool नहीं मिला'));
+  };
+  search.addEventListener('input', draw); draw();
+  app.replaceChildren(h('p', { class: 'lead' }, 'आपकी files इसी phone/browser में process होती हैं, कहीं upload नहीं होतीं।'), search, listBox);
+}
+function openTool(t) {
+  document.title = t.title + ' – IdeaForge-AI'; ttl.textContent = t.title;
+  back.textContent = '← सभी tools'; back.setAttribute('href', '#/');
+  const box = h('div'); app.replaceChildren(box);
+  try { t.run(box); } catch (e) { console.error(e); box.append(h('div', { class: 'note' }, 'Tool खुल नहीं पाया: ' + e.message)); }
+}
+function route() {
+  const id = location.hash.replace(/^#\/?/, ''); const t = TOOLS.find(x => x.id === id);
+  window.scrollTo(0, 0); t ? openTool(t) : home();
+}
+window.addEventListener('hashchange', route); route();
+})();
+</script>
+</body>
+</html>
