@@ -25,6 +25,9 @@
   function gtag(){ dataLayer.push(arguments); }
   gtag('js', new Date());
   gtag('config', 'G-4DYR62JJ4B');
+  if (location.hash.length > 2) {
+    gtag('event', 'tool_open', { tool_id: location.hash.replace(/^#\/?/, '') });
+  }
   window.addEventListener('hashchange', function () {
     var id = location.hash.replace(/^#\/?/, '');
     if (id) gtag('event', 'tool_open', { tool_id: id });
