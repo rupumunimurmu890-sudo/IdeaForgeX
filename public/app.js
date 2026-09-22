@@ -22,7 +22,153 @@
 // ============================================================
 
 "use strict";
+let activeSpeakBtn = null;
 
+function stopSpeaking() {
+  window.speechSynthesis?.cancel();
+  if (activeSpeakBtn) {
+    activeSpeakBtn.textContent = "🔊";
+    activeSpeakBtn = null;
+  }
+}
+
+function toggleSpeak(text, btn) {
+  if (!window.speechSynthesis) {
+    showToast("Voice support nahi hai.", "error");
+    return;
+  }
+  if (activeSpeakBtn === btn) {
+    stopSpeaking();
+    return;
+  }
+  stopSpeaking();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "hi-IN";
+  utterance.onend = () => {
+    if (activeSpeakBtn === btn) {
+      btn.textContent = "🔊";
+      activeSpeakBtn = null;
+    }
+  };
+  window.speechSynthesis.speak(utterance);
+  btn.textContent = "⏸";
+  activeSpeakBtn = btn;
+}
+
+function buildMessageActions(text, { onRegenerate, eventLabel } = {}) {
+  const bar = document.createElement("div");
+  bar.className = "msgActions";
+
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "msgActionBtn";
+  copyBtn.textContent = "📋";
+  copyBtn.addEventListener("click", async () => {
+    await copyText(text);
+    const old = copyBtn.textContent;
+    copyBtn.textContent = "✓";
+    setTimeout(() => { copyBtn.textContent = old; }, 1500);
+  });
+  bar.appendChild(copyBtn);
+
+  const likeBtn = document.createElement("button");
+  likeBtn.type = "button";
+  likeBtn.className = "msgActionBtn";
+  likeBtn.textContent = "👍";
+  const dislikeBtn = document.createElement("button");
+  dislikeBtn.type = "button";
+  dislikeBtn.className = "msgActionBtn";
+  dislikeBtn.textContent = "👎";
+  likeBtn.addEventListener("click", () => {
+    likeBtn.classList.toggle("active");
+    dislikeBtn.classList.remove("active");
+    trackEvent("message_feedback", { label: eventLabel || "chat", value: "like" });
+  });
+  dislikeBtn.addEventListener("click", () => {
+    dislikeBtn.classList.toggle("active");
+    likeBtn.classList.remove("active");
+    trackEvent("message_feedback", { label: eventLabel || "chat", value: "dislike" });
+  });
+  bar.appendChild(likeBtn);
+  bar.appendChild(dislikeBtn);
+
+  const speakBtn = document.createElement("button");
+  speakBtn.type = "button";
+  speakBtn.className = "msgActionBtn";
+  speakBtn.textContent = "🔊";
+  speakBtn.addEventListener("click", () => toggleSpeak(text, speakBtn));
+  bar.appendChild(speakBtn);
+
+  const shareBtn = document.createElement("button");
+  shareBtn.type = "button";
+  shareBtn.className = "msgActionBtn";
+  shareBtn.textContent = "↗";
+  shareBtn.addEventListener("click", async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "IdeaForge-AI", text });
+      } else {
+        await copyText(text);
+      }
+    } catch {}
+  });
+  bar.appendChild(shareBtn);
+
+  if (onRegenerate) {
+    const regenBtn = document.createElement("button");
+    regenBtn.type = "button";
+    regenBtn.className = "msgActionBtn";
+    regenBtn.textContent = "🔄";
+    regenBtn.addEventListener("click", onRegenerate);
+    bar.appendChild(regenBtn);
+  }
+
+  return bar;
+}
+
+async function regenerateChatReply() {
+  if (!chatHistory.length || chatHistory[chatHistory.length - 1].role !== "assistant") return;
+  chatHistory.pop();
+  const container = document.getElementById("chatContainer");
+  if (container && container.lastElementChild) container.lastElementChild.remove();
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ messages: chatHistory, brand: userBrand })
+    });
+    const data = await parseApiResponse(response);
+    if (!data.success || !data.reply) throw new Error(data.error || "Jawab nahi aaya.");
+    if (!isProUser) incrementUsage();
+    appendChatMessage("ai", data.reply);
+    chatHistory.push({ role: "assistant", content: data.reply });
+  } catch (error) {
+    showToast(error.message, "error");
+  }
+}
+
+async function regenerateFollowupReply() {
+  if (!reportFollowupHistory.length || reportFollowupHistory[reportFollowupHistory.length - 1].role !== "assistant") return;
+  reportFollowupHistory.pop();
+  const container = document.getElementById("followupContainer");
+  if (container && container.lastElementChild) container.lastElementChild.remove();
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ messages: reportFollowupHistory, brand: userBrand })
+    });
+    const data = await parseApiResponse(response);
+    if (!data.success || !data.reply) throw new Error(data.error || "Jawab nahi aaya.");
+    if (!isProUser) incrementUsage();
+    appendFollowupMessage("ai", data.reply);
+    reportFollowupHistory.push({ role: "assistant", content: data.reply });
+  } catch (error) {
+    showToast(error.message, "error");
+  }
+}
 // ============================================================
 // GLOBAL STATE
 // ============================================================
@@ -1629,7 +1775,16 @@ function appendChatMessage(role, text) {
 
   const message = document.createElement("div");
   message.className = `chat-message chat-${role}`;
-  message.textContent = String(text);
+
+  const textEl = document.createElement("div");
+  textEl.textContent = String(text);
+  message.appendChild(textEl);
+
+  if (role === "ai") {
+    message.appendChild(
+      buildMessageActions(String(text), { eventLabel: "chat", onRegenerate: regenerateChatReply })
+    );
+  }
 
   container.appendChild(message);
   container.scrollTop = container.scrollHeight;
@@ -1649,7 +1804,16 @@ function appendFollowupMessage(role, text) {
 
   const message = document.createElement("div");
   message.className = `chat-message chat-${role}`;
-  message.textContent = String(text);
+
+  const textEl = document.createElement("div");
+  textEl.textContent = String(text);
+  message.appendChild(textEl);
+
+  if (role === "ai") {
+    message.appendChild(
+      buildMessageActions(String(text), { eventLabel: "followup", onRegenerate: regenerateFollowupReply })
+    );
+  }
 
   container.appendChild(message);
   container.scrollTop = container.scrollHeight;
