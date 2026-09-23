@@ -1,28 +1,133 @@
-{
-  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
-  "name": "universal-helper",
-  "main": "worker.js",
-  "compatibility_date": "2026-08-11",
+# ============================================================
+# IdeaForgeX — Cloudflare Worker Configuration
+# Worker version: 13.0
+# ============================================================
+#
+# Deploy:
+#   npx wrangler deploy
+#
+# Local dev:
+#   npx wrangler dev
+#
+# Tail logs:
+#   npx wrangler tail
+#
+# Notes:
+# - compatibility_date must be a REAL PAST DATE. A future date
+#   forces an unstable preview runtime; past dates get the latest
+#   stable Workers runtime as of that date. When Cloudflare adds
+#   new features you want, bump this to a newer past date.
+# - run_worker_first ensures /api/* always hits the Worker
+#   before static assets. Non-API paths (HTML/CSS/JS) are served
+#   directly from public/ via the ASSETS binding — faster & cheaper.
+# ============================================================
 
-  "assets": {
-    "directory": "public",
-    "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
-  },
+name = "universal-helper"
+main = "worker.js"
+compatibility_date = "2025-01-01"
 
-  "ai": {
-    "binding": "AI"
-  },
+# ------------------------------------------------------------
+# Static Assets
+# ------------------------------------------------------------
+# Files in ./public (index.html, app.js, style.css, manifest.json,
+# tools.html, icons, etc.) are served by Cloudflare's asset
+# pipeline. Only /api/* requests are routed to the Worker first.
+# ------------------------------------------------------------
+[assets]
+directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
 
-  "kv_namespaces": [
-    {
-      "binding": "SESSIONS_KV",
-      "id": "ee7b4aa2753f43e0ac1f80be4560d7be"
-    }
-  ],
+# ------------------------------------------------------------
+# Workers AI Binding
+# ------------------------------------------------------------
+# Enables env.AI.run(...) in worker.js.
+# Models used:
+#   - @cf/meta/llama-3.3-70b-instruct-fp8-fast  (heavy)
+#   - @cf/meta/llama-3.1-8b-instruct            (medium/fast)
+#   - @cf/meta/llama-4-scout-17b-16e-instruct   (vision)
+#   - @cf/black-forest-labs/flux-1-schnell      (image gen)
+# ------------------------------------------------------------
+[ai]
+binding = "AI"
 
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  }
-}
+# ------------------------------------------------------------
+# KV Namespace — Sessions, Quota, User Data Backup
+# ------------------------------------------------------------
+# Used for:
+#   - session:<sessionId>               → session record
+#   - quota:<sessionId>:<YYYY-MM-DD>    → daily usage counter
+#   - udata:<sessionId>:<type>          → projects/history/brand/toolhistory
+#
+# NOTE: Do NOT change `id` unless you also migrate the data.
+#       To create a new namespace:
+#         npx wrangler kv namespace create SESSIONS_KV
+# ------------------------------------------------------------
+[[kv_namespaces]]
+binding = "SESSIONS_KV"
+id = "ee7b4aa2753f43e0ac1f80be4560d7be"
+
+# ------------------------------------------------------------
+# Observability
+# ------------------------------------------------------------
+# Full head sampling so errors and slow requests show up in the
+# Cloudflare dashboard / wrangler tail.
+# ------------------------------------------------------------
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# ============================================================
+# OPTIONAL: Environment-specific overrides
+# ============================================================
+#
+# Uncomment and edit if you want separate staging/production
+# environments. Each environment gets its own route / KV / AI.
+#
+# [env.staging]
+# name = "universal-helper-staging"
+# compatibility_date = "2025-01-01"
+#
+# [env.staging.assets]
+# directory = "public"
+# binding = "ASSETS"
+# run_worker_first = ["/api/*"]
+#
+# [env.staging.ai]
+# binding = "AI"
+#
+# [[env.staging.kv_namespaces]]
+# binding = "SESSIONS_KV"
+# id = "PASTE_STAGING_KV_ID_HERE"
+#
+# Deploy staging:
+#   npx wrangler deploy --env staging
+#
+# ============================================================
+
+# ============================================================
+# OPTIONAL: Custom domain
+# ============================================================
+#
+# Uncomment and edit to serve on your own domain instead of
+# *.workers.dev. Requires the domain to be on your Cloudflare
+# account.
+#
+# [[routes]]
+# pattern = "app.yourdomain.com"
+# custom_domain = true
+#
+# ============================================================
+
+# ============================================================
+# OPTIONAL: Environment variables (non-secret)
+# ============================================================
+#
+# [vars]
+# APP_ENV = "production"
+# SENTRY_DSN = "https://..."
+#
+# For secrets (API keys, tokens), use wrangler secret instead:
+#   npx wrangler secret put MY_SECRET
+#
+# ============================================================
