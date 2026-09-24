@@ -2242,7 +2242,37 @@ async function aiTool(request, env, session, body) {
       ]
     });
   }
+  
+  // ---- festivalcalendar (heavy — marketing strategy) ----
+  if (tool === "festivalcalendar") {
+    const prompt = buildFestivalCalendarPrompt(
+      input,
+      body.festival,
+      body.businessType,
+      body.language || "auto",
+      body.brand
+    );
 
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "FESTIVAL_STRATEGY",
+      temperature: 0.5,
+      maxTokens: 2800,
+      errorCode: "FESTIVAL_CALENDAR_FAILED",
+      errorMessage: "Festival marketing plan generate nahi hua. Please try again.",
+      tier: "heavy",
+      textFields: (s) => [
+        s.FESTIVAL_STRATEGY && `🎯 Festival Strategy:\n${s.FESTIVAL_STRATEGY}`,
+        s.CONTENT_CALENDAR && `📅 Content Calendar:\n${s.CONTENT_CALENDAR}`,
+        s.WHATSAPP_TEMPLATES && `💬 WhatsApp Templates:\n${s.WHATSAPP_TEMPLATES}`,
+        s.INSTAGRAM_CAPTIONS && `📸 Instagram Captions:\n${s.INSTAGRAM_CAPTIONS}`,
+        s.EMAIL_CAMPAIGN && `📧 Email Campaign:\n${s.EMAIL_CAMPAIGN}`,
+        s.OFFER_IDEAS && `🎁 Offer Ideas:\n${s.OFFER_IDEAS}`,
+        s.POSTER_TEXT && `🎨 Poster Text:\n${s.POSTER_TEXT}`,
+        s.EXPECTED_SALES && `📊 Expected Sales:\n${s.EXPECTED_SALES}`
+      ]
+    });
+  }
   // ---- moneycalc (medium) ----
   if (tool === "moneycalc") {
     const prompt = buildMoneyCalcPrompt(
