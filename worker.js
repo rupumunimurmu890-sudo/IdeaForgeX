@@ -38,8 +38,8 @@ const VERSION = "13.0";
 // Fast = instant (chat, translate, writing, calculator).
 const MODELS = {
   heavy: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  medium: "@cf/meta/llama-3-8b-instruct",
-  fast: "@cf/meta/llama-3-8b-instruct"
+  medium: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  fast: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 };
 
 const VISION_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
