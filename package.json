@@ -1,21 +1,41 @@
 {
-  "name": "universal-helper",
-  "version": "1.0.0",
-  "description": "Universal Helper - AI-powered daily task assistant",
+  "name": "ideaforgex",
+  "version": "13.0.0",
+  "description": "IdeaForgeX — AI-powered workspace for ideas, business, writing, coding, images, and documents.",
   "private": true,
   "type": "module",
+
+  "main": "worker.js",
+
   "scripts": {
-    "dev": "netlify dev",
-    "start": "netlify dev"
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "kv:list": "wrangler kv key list --binding=SESSIONS_KV",
+    "cf-typegen": "wrangler types"
   },
+
   "keywords": [
+    "cloudflare-workers",
+    "workers-ai",
     "ai",
     "assistant",
-    "task",
     "productivity",
-    "universal-helper"
+    "business",
+    "ideaforgex"
   ],
+
   "author": "Santosh Marandi",
   "license": "MIT",
-  "dependencies": {}
+
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  },
+
+  "dependencies": {},
+
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
