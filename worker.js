@@ -1390,27 +1390,21 @@ async function runJsonAI(env, prompt, maxTokens = 1800, temperature = 0.3, tier 
 
   const model = MODELS[tier] || MODELS.medium;
 
-  try {
-    const result = await env.AI.run(model, {
-      messages: [
-        {
-          role: "system",
-          content: "You always return valid JSON matching the requested schema. No markdown, no explanation, only JSON."
-        },
-        { role: "user", content: prompt }
-      ],
-      max_tokens: Math.min(safeInteger(maxTokens, 1800, 1, 4000), 4000),
-      temperature: Math.max(0, Math.min(1, Number(temperature) || 0.3)),
-      response_format: { type: "json_object" }
-    });
+  const result = await env.AI.run(model, {
+    messages: [
+      {
+        role: "system",
+        content: "You return ONLY valid JSON. No markdown, no code fences, no explanation, no greeting. Your entire response must be parseable JSON."
+      },
+      { role: "user", content: prompt }
+    ],
+    max_tokens: Math.min(safeInteger(maxTokens, 1800, 1, 4000), 4000),
+    temperature: Math.max(0, Math.min(1, Number(temperature) || 0.3)),
+    response_format: { type: "json_object" }
+  });
 
-    const response = result?.response || result?.output || "";
-    return cleanString(response, MAX_TEXT_LENGTH);
-  } catch (error) {
-    // Model may not support response_format — caller will retry plain.
-    console.warn("runJsonAI: JSON mode unavailable, falling back:", error?.message || error);
-    throw error;
-  }
+  const response = result?.response || result?.output || "";
+  return cleanString(response, MAX_TEXT_LENGTH);
 }
 
 // Chat messages array -> string (used by /api/chat non-stream path).
@@ -2257,7 +2251,7 @@ async function aiTool(request, env, session, body) {
       prompt,
       requiredKey: "FESTIVAL_STRATEGY",
       temperature: 0.5,
-      maxTokens: 2800,
+      maxTokens: 4000,
       errorCode: "FESTIVAL_CALENDAR_FAILED",
       errorMessage: "Festival marketing plan generate nahi hua. Please try again.",
       tier: "heavy",
