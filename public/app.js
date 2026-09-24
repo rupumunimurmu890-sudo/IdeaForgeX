@@ -1157,6 +1157,7 @@ const TOOL_TITLES = {
   autopilot: "🚀 Auto-Pilot",
   goalplan: "🎯 Goal Plan",
   exampredictor: "🎓 Exam Predictor",
+  festivalcalendar: "🪔 Festival Calendar",
   moneycalc: "💰 Money Calc",
   improveidea: "💡 Improve Idea",
   roast: "🦈 Roast Idea",
@@ -1268,6 +1269,7 @@ function openToolWorkspace(tool) {
     "videoOptions",
     "workflowOptions",
     "exampredictorOptions",
+    "festivalcalendarOptions",
     "emailOptions"
   ];
 
@@ -1284,10 +1286,12 @@ function openToolWorkspace(tool) {
     social: "socialOptions",
     "ai-image": "aiImageOptions",
     goalplan: "goalOptions",
+    exampredictor: "exampredictorOptions",
     moneycalc: "moneyOptions",
     poster: "posterOptions",
     video: "videoOptions",
     workflow: "workflowOptions",
+    festivalcalendar: "festivalcalendarOptions",
     email: "emailOptions"
   };
 
@@ -1587,6 +1591,59 @@ function renderExamPredictorResult(exam) {
     const p = document.createElement("p");
     p.style.whiteSpace = "pre-wrap";
     p.textContent = exam[section.key];
+
+    div.appendChild(h4);
+    div.appendChild(p);
+    container.appendChild(div);
+  });
+
+  container.style.display = "block";
+}
+// ============================================================
+// FESTIVAL CALENDAR RESULT
+// ============================================================
+
+function renderFestivalCalendarResult(data) {
+  const container = document.getElementById("toolResult");
+  if (!container || !data) return;
+
+  container.innerHTML = "";
+
+  const sections = [
+    { key: "FESTIVAL_STRATEGY", title: "🎯 Festival Strategy" },
+    { key: "CONTENT_CALENDAR", title: "📅 Content Calendar (D-15 → D+3)" },
+    { key: "WHATSAPP_TEMPLATES", title: "💬 WhatsApp Templates" },
+    { key: "INSTAGRAM_CAPTIONS", title: "📸 Instagram Captions" },
+    { key: "EMAIL_CAMPAIGN", title: "📧 Email Campaign" },
+    { key: "OFFER_IDEAS", title: "🎁 Offer Ideas" },
+    { key: "POSTER_TEXT", title: "🎨 Poster Text" },
+    { key: "EXPECTED_SALES", title: "📊 Expected Sales (estimated)" }
+  ];
+
+  const disclaimer = document.createElement("div");
+  disclaimer.className = "aiDisclaimer";
+  const strong = document.createElement("strong");
+  strong.textContent = "⚠️ AI-generated plan: ";
+  disclaimer.appendChild(strong);
+  disclaimer.appendChild(
+    document.createTextNode(
+      "यह marketing plan AI estimate है। Sales figures assumptions पर आधारित हैं — real results आपके market, pricing और execution पर depend करेंगे। Launch से पहले अपना research ज़रूर करें।"
+    )
+  );
+  container.appendChild(disclaimer);
+
+  sections.forEach((section) => {
+    if (!data[section.key]) return;
+
+    const div = document.createElement("div");
+    div.className = "autopilot-section";
+
+    const h4 = document.createElement("h4");
+    h4.textContent = section.title;
+
+    const p = document.createElement("p");
+    p.style.whiteSpace = "pre-wrap";
+    p.textContent = data[section.key];
 
     div.appendChild(h4);
     div.appendChild(p);
@@ -2206,6 +2263,10 @@ async function runAiTool(input, tool) {
     payload.subject = document.getElementById("examSubjectInput")?.value || "";
     payload.chapter = document.getElementById("examChapterInput")?.value || "";
   }
+    if (tool === "festivalcalendar") {
+    payload.festival = document.getElementById("festivalSelect")?.value || "Diwali";
+    payload.businessType = document.getElementById("festivalBusinessInput")?.value || "";
+    }
 
   if (tool === "moneycalc") {
     payload.investment = document.getElementById("moneyInvestment")?.value || "";
@@ -2301,6 +2362,12 @@ async function runAiTool(input, tool) {
       switch (effectiveTool) {
         case "goalplan":
           renderGoalResult(data.structured);
+          break;
+        case "exampredictor":
+          renderExamPredictorResult(data.structured);
+          break;
+        case "festivalcalendar":
+          renderFestivalCalendarResult(data.structured);
           break;
         case "moneycalc":
           renderMoneyResult(data.structured);
