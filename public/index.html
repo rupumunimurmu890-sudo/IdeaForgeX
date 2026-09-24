@@ -1873,6 +1873,11 @@
       <span class="chip-icon">🎯</span>
       <span>Goal Plan</span>
     </div>
+    
+    <div class="hubChip" data-tool="exampredictor" tabindex="0">
+      <span class="chip-icon">🎓</span>
+      <span>Exam Predictor</span>
+    </div>
 
     <div class="hubChip" data-tool="moneycalc" tabindex="0">
       <span class="chip-icon">💰</span>
@@ -2244,7 +2249,39 @@
 
       </select>
     </div>
+    
+    <!-- Exam Predictor Options -->
+    <div
+      id="exampredictorOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <select id="examClassSelect" aria-label="Class">
+        <option value="10">Class 10</option>
+        <option value="12">Class 12</option>
+        <option value="11">Class 11</option>
+        <option value="9">Class 9</option>
+      </select>
 
+      <select id="examBoardSelect" aria-label="Board">
+        <option value="CBSE">CBSE</option>
+        <option value="ICSE">ICSE</option>
+        <option value="State Board">State Board</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <input
+        type="text"
+        id="examSubjectInput"
+        placeholder="Subject (e.g., Physics, Math)"
+      >
+
+      <input
+        type="text"
+        id="examChapterInput"
+        placeholder="Chapter/Topic (e.g., Light, Trigonometry)"
+      >
+    </div>
 
     <!-- Email -->
     <div
