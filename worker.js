@@ -2353,7 +2353,7 @@ async function aiTool(request, env, session, body) {
       prompt,
       requiredKey: "BODY",
       temperature: 0.6,
-      maxTokens: 1200,
+      maxTokens: 4000,
       errorCode: "EMAIL_FAILED",
       errorMessage: "Email generate nahi hua. Please try again.",
       tier: "medium",
