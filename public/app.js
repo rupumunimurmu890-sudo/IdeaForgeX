@@ -1156,6 +1156,7 @@ const TOOL_TITLES = {
   assistant: "🤖 AI Assistant",
   autopilot: "🚀 Auto-Pilot",
   goalplan: "🎯 Goal Plan",
+  exampredictor: "🎓 Exam Predictor",
   moneycalc: "💰 Money Calc",
   improveidea: "💡 Improve Idea",
   roast: "🦈 Roast Idea",
@@ -1266,6 +1267,7 @@ function openToolWorkspace(tool) {
     "posterOptions",
     "videoOptions",
     "workflowOptions",
+    "exampredictorOptions",
     "emailOptions"
   ];
 
@@ -1541,6 +1543,59 @@ function renderMoneyResult(calc) {
 
   container.style.display = "block";
 }
+
+// ============================================================
+// EXAM PREDICTOR RESULT
+// ============================================================
+
+function renderExamPredictorResult(exam) {
+  const container = document.getElementById("toolResult");
+  if (!container || !exam) return;
+
+  container.innerHTML = "";
+
+  const sections = [
+    { key: "IMPORTANT_TOPICS", title: "📌 Important Topics" },
+    { key: "LIKELY_QUESTIONS", title: "❓ Likely Questions (2-3 marks)" },
+    { key: "MCQS", title: "📝 MCQs" },
+    { key: "LONG_ANSWERS", title: "✍️ Long Answer Questions (5-6 marks)" },
+    { key: "REVISION_TIPS", title: "💡 Quick Revision Tips" },
+    { key: "EXAM_STRATEGY", title: "⏰ Exam Strategy" }
+  ];
+
+  const disclaimer = document.createElement("div");
+  disclaimer.className = "aiDisclaimer";
+  const strong = document.createElement("strong");
+  strong.textContent = "⚠️ AI Prediction: ";
+  disclaimer.appendChild(strong);
+  disclaimer.appendChild(
+    document.createTextNode(
+      "यह prediction AI-generated है, official exam paper नहीं। Based on common trends. Real paper verify करने के लिए अपने teacher/textbook से cross-check करें।"
+    )
+  );
+  container.appendChild(disclaimer);
+
+  sections.forEach((section) => {
+    if (!exam[section.key]) return;
+
+    const div = document.createElement("div");
+    div.className = "autopilot-section";
+
+    const h4 = document.createElement("h4");
+    h4.textContent = section.title;
+
+    const p = document.createElement("p");
+    p.style.whiteSpace = "pre-wrap";
+    p.textContent = exam[section.key];
+
+    div.appendChild(h4);
+    div.appendChild(p);
+    container.appendChild(div);
+  });
+
+  container.style.display = "block";
+}
+
 
 // ============================================================
 // IMPROVE RESULT
@@ -2144,6 +2199,12 @@ async function runAiTool(input, tool) {
 
   if (tool === "goalplan") {
     payload.timeframe = document.getElementById("goalTimeframeSelect")?.value || "3 Months";
+  }
+    if (tool === "exampredictor") {
+    payload.examClass = document.getElementById("examClassSelect")?.value || "10";
+    payload.board = document.getElementById("examBoardSelect")?.value || "CBSE";
+    payload.subject = document.getElementById("examSubjectInput")?.value || "";
+    payload.chapter = document.getElementById("examChapterInput")?.value || "";
   }
 
   if (tool === "moneycalc") {
