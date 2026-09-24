@@ -1878,6 +1878,10 @@
       <span class="chip-icon">🎓</span>
       <span>Exam Predictor</span>
     </div>
+        <div class="hubChip" data-tool="festivalcalendar" tabindex="0">
+      <span class="chip-icon">🪔</span>
+      <span>Festival Calendar</span>
+    </div>
 
     <div class="hubChip" data-tool="moneycalc" tabindex="0">
       <span class="chip-icon">💰</span>
@@ -2280,6 +2284,37 @@
         type="text"
         id="examChapterInput"
         placeholder="Chapter/Topic (e.g., Light, Trigonometry)"
+      >
+    </div>
+        <!-- Festival Calendar Options -->
+    <div
+      id="festivalcalendarOptions"
+      class="tool-options-row"
+      style="display:none;"
+    >
+      <select id="festivalSelect" aria-label="Festival">
+        <option value="Diwali">🪔 Diwali</option>
+        <option value="Holi">🎨 Holi</option>
+        <option value="Raksha Bandhan">🎁 Raksha Bandhan</option>
+        <option value="Eid">🌙 Eid</option>
+        <option value="Navratri">💃 Navratri</option>
+        <option value="Ganesh Chaturthi">🐘 Ganesh Chaturthi</option>
+        <option value="Durga Puja">🪷 Durga Puja</option>
+        <option value="Karva Chauth">🌕 Karva Chauth</option>
+        <option value="Makar Sankranti">🪁 Makar Sankranti</option>
+        <option value="Pongal">🌾 Pongal</option>
+        <option value="Onam">🌸 Onam</option>
+        <option value="Baisakhi">🌾 Baisakhi</option>
+        <option value="Christmas">🎄 Christmas</option>
+        <option value="New Year">🎉 New Year</option>
+        <option value="Independence Day">🇮🇳 Independence Day</option>
+        <option value="Republic Day">🇮🇳 Republic Day</option>
+      </select>
+
+      <input
+        type="text"
+        id="festivalBusinessInput"
+        placeholder="Business type (e.g., Clothing, Sweets, Gym)"
       >
     </div>
 
