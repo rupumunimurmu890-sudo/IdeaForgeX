@@ -1,6 +1,6 @@
 {
   // ============================================================
-  // IdeaForgeX — Cloudflare Worker Configuration
+  // IdeaForge-AI — Cloudflare Worker Configuration
   // Worker version: 13.0
   // ============================================================
   //
@@ -19,17 +19,19 @@
 
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
 
-  "name": "universal-helper",
+  "name": "ideaforge-ai",
   "main": "worker.js",
   "compatibility_date": "2025-01-01",
 
   // ------------------------------------------------------------
   // Static Assets
   // ------------------------------------------------------------
-  // Files in ./public (index.html, app.js, style.css, etc.) are
-  // served by Cloudflare's asset pipeline. Only /api/* requests
-  // are routed to the Worker first; everything else goes straight
-  // to the asset pipeline (faster + cheaper).
+  // Files in ./public are served by Cloudflare's asset pipeline.
+  // Only /api/* requests are routed to the Worker first; all
+  // other paths go straight to the asset pipeline.
+  //
+  // REQUIRES wrangler v4.x for array syntax below.
+  // On wrangler v3.x, replace with: "run_worker_first": true
   // ------------------------------------------------------------
   "assets": {
     "directory": "public",
@@ -61,8 +63,6 @@
   //   udata:<sessionId>:<type>         → projects/history/brand/toolhistory
   //
   // DO NOT change `id` unless you also migrate the KV data.
-  // To create a new namespace:
-  //   npx wrangler kv namespace create SESSIONS_KV
   // ------------------------------------------------------------
   "kv_namespaces": [
     {
@@ -74,53 +74,8 @@
   // ------------------------------------------------------------
   // Observability
   // ------------------------------------------------------------
-  // Full head sampling so errors and slow requests show up in
-  // the Cloudflare dashboard / wrangler tail.
-  // ------------------------------------------------------------
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
   }
-
-  // ============================================================
-  // OPTIONAL: Environment-specific overrides
-  // ============================================================
-  //
-  // "env": {
-  //   "staging": {
-  //     "name": "universal-helper-staging",
-  //     "compatibility_date": "2025-01-01",
-  //     "assets": {
-  //       "directory": "public",
-  //       "binding": "ASSETS",
-  //       "run_worker_first": ["/api/*"]
-  //     },
-  //     "ai": { "binding": "AI" },
-  //     "kv_namespaces": [
-  //       { "binding": "SESSIONS_KV", "id": "PASTE_STAGING_KV_ID" }
-  //     ]
-  //   }
-  // }
-  //
-  // Deploy staging:  npx wrangler deploy --env staging
-  //
-  // ============================================================
-  // OPTIONAL: Custom domain
-  // ============================================================
-  //
-  // "routes": [
-  //   { "pattern": "app.yourdomain.com", "custom_domain": true }
-  // ]
-  //
-  // ============================================================
-  // OPTIONAL: Non-secret environment variables
-  // ============================================================
-  //
-  // "vars": {
-  //   "APP_ENV": "production"
-  // }
-  //
-  // For secrets, use:  npx wrangler secret put MY_SECRET
-  //
-  // ============================================================
 }
