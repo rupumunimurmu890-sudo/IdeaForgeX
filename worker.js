@@ -959,6 +959,87 @@ THUMBNAIL_PROMPT: A detailed AI image-generation prompt for a thumbnail.
 Each value must be a plain string (not nested objects/arrays).
 `;
 }
+// ========================================
+// FESTIVAL MARKETING CALENDAR PROMPT
+// ========================================
+
+function buildFestivalCalendarPrompt(input, festival, businessType, lang, brand) {
+  return `
+You are IdeaForgeX, an expert Indian festival marketing strategist
+with deep knowledge of how festivals drive consumer behavior across
+India (Diwali, Holi, Raksha Bandhan, Eid, Navratri, Ganesh Chaturthi,
+Karva Chauth, Makar Sankranti, Pongal, Onam, Baisakhi, Christmas,
+and more).
+
+USER REQUEST:
+"${cleanString(input)}"
+
+FESTIVAL: ${cleanString(festival || "Diwali", 100)}
+BUSINESS TYPE: ${cleanString(businessType || "General", 100)}
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Create a complete festival marketing calendar with content, offers,
+and messaging. Base recommendations on general Indian retail/festival
+marketing trends. Do NOT present estimated sales figures as verified
+facts - use qualifiers.
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "FESTIVAL_STRATEGY": "",
+  "CONTENT_CALENDAR": "",
+  "WHATSAPP_TEMPLATES": "",
+  "INSTAGRAM_CAPTIONS": "",
+  "EMAIL_CAMPAIGN": "",
+  "OFFER_IDEAS": "",
+  "POSTER_TEXT": "",
+  "EXPECTED_SALES": ""
+}
+
+FESTIVAL_STRATEGY: 2-3 sentences on the overall approach for this
+festival + business combination. What angle, tone, and timing works.
+
+CONTENT_CALENDAR: A day-wise calendar from D-15 to D+3 (days before
+and after the festival). Format each entry as:
+  D-15: <action/post type/theme>
+  D-10: <action>
+  D-7: <action>
+  D-5: <action>
+  D-3: <action>
+  D-1: <action>
+  D-Day: <action>
+  D+3: <follow-up>
+Each entry should specify what to post / send and the tone.
+
+WHATSAPP_TEMPLATES: 3 short, forwardable WhatsApp messages tuned for
+this festival (offer announcement, last-minute reminder, thank you
+after festival). Keep each under 60 words, with emojis.
+
+INSTAGRAM_CAPTIONS: 3 ready-to-use Instagram captions with relevant
+hashtags for this festival + business.
+
+EMAIL_CAMPAIGN: One email with Subject line + body (concise, festival-
+themed, non-spammy, with a clear CTA).
+
+OFFER_IDEAS: 3-4 festival-specific offer ideas (discount, bundle,
+gift-with-purchase, referral) with brief reasoning.
+
+POSTER_TEXT: Short poster-ready text (headline, subheadline, CTA)
+suited for a festival-themed visual.
+
+EXPECTED_SALES: A cautious, clearly-labeled-as-estimated sales/traction
+range for this festival period, with the assumptions stated. Never
+present as a certain number.
+
+Each value must be a plain string (not nested objects/arrays).
+If the festival or business type is unclear, still give sensible
+general guidance.
+`;
+}
 
 // ========================================
 // AUTOPILOT PROMPT
