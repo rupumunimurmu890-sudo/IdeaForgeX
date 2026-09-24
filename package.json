@@ -1,12 +1,10 @@
 {
-  "name": "ideaforgex",
+  "name": "ideaforge-ai",
   "version": "13.0.0",
-  "description": "IdeaForgeX — AI-powered workspace for ideas, business, writing, coding, images, and documents.",
+  "description": "IdeaForge-AI — AI-powered workspace for ideas, business, writing, coding, images, and documents.",
   "private": true,
   "type": "module",
-
   "main": "worker.js",
-
   "scripts": {
     "dev": "wrangler dev",
     "start": "wrangler dev",
@@ -15,7 +13,6 @@
     "kv:list": "wrangler kv key list --binding=SESSIONS_KV",
     "cf-typegen": "wrangler types"
   },
-
   "keywords": [
     "cloudflare-workers",
     "workers-ai",
@@ -23,18 +20,14 @@
     "assistant",
     "productivity",
     "business",
-    "ideaforgex"
+    "ideaforge-ai"
   ],
-
   "author": "Santosh Marandi",
   "license": "MIT",
-
   "devDependencies": {
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.0.0"
   },
-
   "dependencies": {},
-
   "engines": {
     "node": ">=18.0.0"
   }
