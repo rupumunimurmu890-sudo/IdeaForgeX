@@ -855,6 +855,70 @@ Each value must be a plain string (not nested objects/arrays).
 }
 
 // ========================================
+// EXAM PREDICTOR PROMPT
+// ========================================
+
+function buildExamPredictorPrompt(input, examClass, board, subject, chapter, lang, brand) {
+  return `
+You are an expert Indian exam preparation coach with deep knowledge of
+CBSE, ICSE, and State Board exam patterns for Classes 9-12.
+
+STUDENT REQUEST:
+"${cleanString(input)}"
+
+CLASS: ${cleanString(examClass || "10", 20)}
+BOARD: ${cleanString(board || "CBSE", 50)}
+SUBJECT: ${cleanString(subject || "General", 100)}
+CHAPTER/TOPIC: ${cleanString(chapter || input, 200)}
+
+${getBrandContext({ brand })}
+${langLine(lang)}
+${ACCURACY_RULE}
+
+Based on common exam patterns and typical question weightage, generate
+a study prediction for this chapter. This is an AI estimate based on
+general trends - NOT official exam papers. Make this clear in tone.
+
+Return ONLY valid JSON. No markdown. No code fences. No explanation outside JSON.
+
+Use EXACTLY these keys:
+{
+  "IMPORTANT_TOPICS": "",
+  "LIKELY_QUESTIONS": "",
+  "MCQS": "",
+  "LONG_ANSWERS": "",
+  "REVISION_TIPS": "",
+  "EXAM_STRATEGY": ""
+}
+
+IMPORTANT_TOPICS: 5 most likely topics/subtopics from this chapter that
+typically appear in exams. Rank by likely importance.
+
+LIKELY_QUESTIONS: 5 short-answer questions (2-3 marks each) commonly
+asked from this chapter, with brief answers.
+
+MCQS: 5 multiple choice questions with 4 options each and the correct
+answer clearly marked. Format each as:
+Q1. question text
+(a) option (b) option (c) option (d) option
+Answer: (x)
+
+LONG_ANSWERS: 2 long-answer questions (5-6 marks each) with outline
+of key points the answer should cover.
+
+REVISION_TIPS: 3-4 practical tips specific to this chapter for quick
+last-minute revision.
+
+EXAM_STRATEGY: 2-3 sentences on how to prioritize this chapter if
+preparing under time pressure.
+
+Each value must be a plain string (not nested objects/arrays).
+If the chapter/topic is unclear, still provide general guidance based
+on the subject and class level.
+`;
+}
+
+// ========================================
 // SOCIAL PACK PROMPT
 // ========================================
 
@@ -2064,6 +2128,36 @@ async function aiTool(request, env, session, body) {
         s.ACTION_PLAN && `Action Plan: ${s.ACTION_PLAN}`,
         s.RESOURCES_NEEDED && `Resources Needed: ${s.RESOURCES_NEEDED}`,
         s.POTENTIAL_OBSTACLES && `Potential Obstacles: ${s.POTENTIAL_OBSTACLES}`
+      ]
+    });
+  }
+    // ---- exampredictor (heavy — needs strong reasoning) ----
+  if (tool === "exampredictor") {
+    const prompt = buildExamPredictorPrompt(
+      input,
+      body.examClass,
+      body.board,
+      body.subject,
+      body.chapter,
+      body.language || "auto",
+      body.brand
+    );
+
+    return runStructuredToolFlow(request, env, session, quota, {
+      prompt,
+      requiredKey: "IMPORTANT_TOPICS",
+      temperature: 0.4,
+      maxTokens: 2500,
+      errorCode: "EXAM_PREDICTOR_FAILED",
+      errorMessage: "Exam prediction generate nahi hui. Please try again.",
+      tier: "heavy",
+      textFields: (s) => [
+        s.IMPORTANT_TOPICS && `📌 Important Topics:\n${s.IMPORTANT_TOPICS}`,
+        s.LIKELY_QUESTIONS && `❓ Likely Questions:\n${s.LIKELY_QUESTIONS}`,
+        s.MCQS && `📝 MCQs:\n${s.MCQS}`,
+        s.LONG_ANSWERS && `✍️ Long Answer Questions:\n${s.LONG_ANSWERS}`,
+        s.REVISION_TIPS && `💡 Revision Tips:\n${s.REVISION_TIPS}`,
+        s.EXAM_STRATEGY && `⏰ Exam Strategy:\n${s.EXAM_STRATEGY}`
       ]
     });
   }
