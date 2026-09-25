@@ -266,11 +266,18 @@ async function runStructuredToolFlow(request, env, session, quota, opts) {
   // to plain mode with retry only if the model rejects json_object.
   let structured = null;
 
+  // TEMP DEBUG: capture what actually happened on each attempt so a
+  // failure response can show it instead of just the generic message.
+  // Remove this once the real cause is found and fixed.
+  const debugAttempts = [];
+
   try {
     const raw = await runJsonAI(env, prompt, maxTokens, temperature, tier);
     structured = extractJsonObject(raw, requiredKey);
+    debugAttempts.push({ mode: "json", rawLength: raw.length, rawPreview: raw.slice(0, 500), parsed: Boolean(structured) });
   } catch (error) {
     console.error(`${logLabel || errorCode} (json mode) failed:`, error);
+    debugAttempts.push({ mode: "json", error: String(error && error.message || error) });
   }
 
   if (!structured) {
@@ -278,16 +285,22 @@ async function runStructuredToolFlow(request, env, session, quota, opts) {
       try {
         const raw = await runTextAI(env, prompt, maxTokens, temperature, tier);
         structured = extractJsonObject(raw, requiredKey);
+        debugAttempts.push({ mode: "text", attempt, rawLength: raw.length, rawPreview: raw.slice(0, 500), parsed: Boolean(structured) });
         if (structured) break;
       } catch (error) {
         console.error(`${logLabel || errorCode} attempt failed:`, error);
+        debugAttempts.push({ mode: "text", attempt, error: String(error && error.message || error) });
       }
     }
   }
 
   if (!structured) {
     await rollbackQuota(env, session);
-    return jsonResponse({ success: false, error: errorCode, message: errorMessage }, 500, request);
+    return jsonResponse(
+      { success: false, error: errorCode, message: errorMessage, debugAttempts },
+      500,
+      request
+    );
   }
 
   const readableText = textFields(structured).filter(Boolean).join("\n\n");
