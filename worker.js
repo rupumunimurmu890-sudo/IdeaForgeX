@@ -296,6 +296,7 @@ async function runStructuredToolFlow(request, env, session, quota, opts) {
 
   if (!structured) {
     await rollbackQuota(env, session);
+    console.error(`${errorCode} DEBUG:`, JSON.stringify(debugAttempts));
     return jsonResponse(
       { success: false, error: errorCode, message: errorMessage, debugAttempts },
       500,
@@ -1408,17 +1409,20 @@ async function runJsonAI(env, prompt, maxTokens = 1800, temperature = 0.3, tier 
 
   const model = MODELS[tier] || MODELS.medium;
 
+  // NOTE: response_format json_object removed — not reliably
+  // supported by all Workers AI models. Relying on the strict
+  // system prompt instead; extractJsonObject() cleans up any
+  // leftover wrapping (code fences, stray text).
   const result = await env.AI.run(model, {
     messages: [
       {
         role: "system",
-        content: "You return ONLY valid JSON. No markdown, no code fences, no explanation, no greeting. Your entire response must be parseable JSON."
+        content: "You return ONLY valid JSON. No markdown, no code fences, no explanation, no greeting, no trailing text. Your entire response must be a single parseable JSON object."
       },
       { role: "user", content: prompt }
     ],
     max_tokens: Math.min(safeInteger(maxTokens, 1800, 1, 4000), 4000),
-    temperature: Math.max(0, Math.min(1, Number(temperature) || 0.3)),
-    response_format: { type: "json_object" }
+    temperature: Math.max(0, Math.min(1, Number(temperature) || 0.3))
   });
 
   const response = result?.response || result?.output || "";
