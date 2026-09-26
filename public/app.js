@@ -184,7 +184,7 @@ let userBrand = {
 };
 
 let chatHistory = [];
-
+let chatAbortController = null;
 // Separate, per-idea conversation thread for the report's
 // "Ask a follow-up question" panel — kept apart from the main
 // AI Chat tool's chatHistory so the two don't mix context.
@@ -1312,10 +1312,12 @@ function openToolWorkspace(tool) {
     if (standardInput) standardInput.style.display = "none";
     if (resultActions) resultActions.style.display = "none";
     if (bilingual && bilingual.parentElement) bilingual.parentElement.style.display = "none";
+    document.body.classList.add("chatMode");
   } else {
     if (chatInterface) chatInterface.style.display = "none";
     if (standardInput) standardInput.style.display = "block";
     if (bilingual && bilingual.parentElement) bilingual.parentElement.style.display = "flex";
+    document.body.classList.remove("chatMode");
   }
 
   if (toolWorkspace) {
@@ -2007,6 +2009,37 @@ async function askIdeaFollowup() {
   }
 }
 
+function createEmptyAiBubble() {
+  const container = document.getElementById("chatContainer");
+  if (!container) return null;
+
+  const message = document.createElement("div");
+  message.className = "chat-message chat-ai";
+
+  const textEl = document.createElement("div");
+  textEl.className = "chatBubbleText streaming";
+  message.appendChild(textEl);
+
+  container.appendChild(message);
+  container.scrollTop = container.scrollHeight;
+
+  return { message, textEl };
+}
+
+function finalizeAiBubble(bubble, fullText) {
+  if (!bubble) return;
+  bubble.textEl.classList.remove("streaming");
+  bubble.message.appendChild(
+    buildMessageActions(fullText, { eventLabel: "chat", onRegenerate: regenerateChatReply })
+  );
+  const container = document.getElementById("chatContainer");
+  if (container) container.scrollTop = container.scrollHeight;
+}
+
+function stopChatGeneration() {
+  if (chatAbortController) chatAbortController.abort();
+}
+
 async function sendChatMessage() {
   const input = document.getElementById("chatInput");
   if (!input) return;
@@ -2023,48 +2056,91 @@ async function sendChatMessage() {
   input.value = "";
 
   chatHistory.push({ role: "user", content: text });
+  if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
-  if (chatHistory.length > 10) {
-    chatHistory = chatHistory.slice(-10);
-  }
+  const sendBtn = document.getElementById("sendChatBtn");
+  const stopBtn = document.getElementById("stopChatBtn");
 
-  const btn = document.getElementById("sendChatBtn");
-  const originalText = btn?.innerHTML || "Send";
+  if (sendBtn) sendBtn.disabled = true;
+  if (stopBtn) stopBtn.style.display = "flex";
 
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = "⏳ Thinking...";
-  }
+  chatAbortController = new AbortController();
+  const bubble = createEmptyAiBubble();
+  let fullReply = "";
 
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: getApiHeaders(),
-      body: JSON.stringify({ messages: chatHistory, brand: userBrand })
+      body: JSON.stringify({ messages: chatHistory, brand: userBrand, stream: true }),
+      signal: chatAbortController.signal
     });
 
-    const data = await parseApiResponse(response);
-
-    if (!data.success || !data.reply) {
-      throw new Error(data.error || "Chat reply nahi aaya.");
+    if (!response.ok || !response.body) {
+      throw new Error(`Request failed (${response.status})`);
     }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") continue;
+
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed.chunk) {
+            fullReply += parsed.chunk;
+            if (bubble) {
+              bubble.textEl.textContent = fullReply;
+              const container = document.getElementById("chatContainer");
+              if (container) container.scrollTop = container.scrollHeight;
+            }
+          }
+        } catch {
+          // incomplete chunk, ignore
+        }
+      }
+    }
+
+    if (!fullReply) throw new Error("Chat reply nahi aaya.");
 
     if (!isProUser) incrementUsage();
 
-    appendChatMessage("ai", data.reply);
-    chatHistory.push({ role: "assistant", content: data.reply });
+    finalizeAiBubble(bubble, fullReply);
+    chatHistory.push({ role: "assistant", content: fullReply });
 
-    currentToolResult = data.reply;
+    currentToolResult = fullReply;
     currentToolInput = text;
 
-    trackEvent("chat_message", { success: true });
+    trackEvent("chat_message", { success: true, streamed: true });
   } catch (error) {
-    showToast(error.message, "error");
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+    if (error.name === "AbortError") {
+      if (fullReply) {
+        finalizeAiBubble(bubble, fullReply);
+        chatHistory.push({ role: "assistant", content: fullReply });
+      } else if (bubble) {
+        bubble.message.remove();
+      }
+    } else {
+      console.error("Chat stream error:", error);
+      if (bubble) bubble.message.remove();
+      showToast(error.message || "Chat reply nahi aaya.", "error");
     }
+  } finally {
+    chatAbortController = null;
+    if (sendBtn) sendBtn.disabled = false;
+    if (stopBtn) stopBtn.style.display = "none";
   }
 }
 
@@ -3848,6 +3924,7 @@ document.addEventListener("DOMContentLoaded", () => {
     runAiTool(text, activeTool);
   });
   document.getElementById("sendChatBtn")?.addEventListener("click", sendChatMessage);
+  document.getElementById("stopChatBtn")?.addEventListener("click", stopChatGeneration);
   document.getElementById("chatInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
