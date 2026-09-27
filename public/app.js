@@ -1321,7 +1321,7 @@ function openToolWorkspace(tool) {
   }
 
   if (toolWorkspace) {
-    toolWorkspace.style.display = "block";
+    toolWorkspace.style.display = tool === "chat" ? "flex" : "block";
     toolWorkspace.scrollIntoView({ behavior: "smooth" });
   }
 
@@ -1329,6 +1329,7 @@ function openToolWorkspace(tool) {
     document.getElementById("toolInput")?.focus();
   }
 }
+
 
 // ============================================================
 // USAGE
