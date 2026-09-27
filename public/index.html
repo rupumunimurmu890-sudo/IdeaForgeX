@@ -1696,23 +1696,15 @@
   border-radius: 50%;
 }
 
-body.chatMode {
-  overflow: hidden;
-}
-
 body.chatMode #toolWorkspace {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100dvh;
-  height: 100vh;
   z-index: 700;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
   margin: 0;
+  padding: 0;
   border-radius: 0;
   border: none;
   background: var(--bg-color);
@@ -1720,32 +1712,35 @@ body.chatMode #toolWorkspace {
 }
 
 body.chatMode #toolWorkspaceTitle {
-  flex-shrink: 0;
-  padding: 12px 16px 0;
-  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  position: absolute;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  margin: 0;
+  background: var(--bg-color);
+  z-index: 2;
 }
 
 body.chatMode #chatInterface {
+  position: absolute;
+  top: calc(56px + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 0;
-  padding: 10px 12px 0;
+  padding: 0 12px;
 }
 
 body.chatMode #chatContainer {
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 0;
+  flex: 1;
+  overflow-y: auto;
 }
 
 body.chatMode .chat-input-area {
-  position: sticky;
-  bottom: 0;
-  background: var(--bg-color);
+  flex-shrink: 0;
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
-  align-items: flex-end;
 }
 
 .chatBubbleText {
