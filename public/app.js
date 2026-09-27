@@ -1308,7 +1308,7 @@ function openToolWorkspace(tool) {
   const bilingual = document.getElementById("bilingualToggle");
 
   if (tool === "chat") {
-    if (chatInterface) chatInterface.style.display = "block";
+    if (chatInterface) chatInterface.style.display = "flex";
     if (standardInput) standardInput.style.display = "none";
     if (resultActions) resultActions.style.display = "none";
     if (bilingual && bilingual.parentElement) bilingual.parentElement.style.display = "none";
