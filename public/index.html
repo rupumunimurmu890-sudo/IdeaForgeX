@@ -1755,6 +1755,34 @@ body.chatMode .chat-input-area {
 @keyframes blink {
   50% { opacity: 0; }
 }
+    .chatAttachPreview {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.chatAttachPreview img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.chatAttachPreview span {
+  flex: 1;
+  font-size: 13px !important;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
   </style>
 </head>
 
@@ -2628,7 +2656,35 @@ body.chatMode .chat-input-area {
         class="chat-container"
       ></div>
 
+      <div id="chatAttachPreview" class="chatAttachPreview">
+        <img id="chatAttachThumb" src="" alt="Attached image">
+        <span id="chatAttachName"></span>
+        <button
+          id="chatAttachRemoveBtn"
+          type="button"
+          class="chatIconBtn"
+          style="width:32px;height:32px;font-size:14px !important;"
+          aria-label="Remove attachment"
+          title="Remove attachment"
+        >✕</button>
+      </div>
+
       <div class="chat-input-area">
+
+        <input
+          type="file"
+          id="chatFileInput"
+          accept="image/*"
+          style="display:none;"
+        >
+
+        <button
+          id="chatAttachBtn"
+          type="button"
+          class="chatIconBtn"
+          aria-label="Attach image"
+          title="Attach image"
+        >📎</button>
 
         <textarea
           id="chatInput"
