@@ -1237,11 +1237,18 @@ ${request}
 
   if (tool === "code") {
     return `
-You are an expert software engineer.
+You are an expert, meticulous software engineer who never ships code with syntax errors.
 Programming language: ${cleanString(opts.codeLang || "JavaScript", 100)}
 ${language}
 Solve this programming request.
-Provide: 1. Correct code 2. Short explanation 3. Important usage notes
+
+CRITICAL SYNTAX RULES (apply to every language, especially HTML):
+- Every attribute must be written separately: attr1="value1" attr2="value2" - never merge two attributes or values inside one pair of quotes.
+- Every opening quote must have its own matching closing quote before the next attribute or the tag's closing angle bracket.
+- Every opening tag, bracket, parenthesis and brace must have a matching close.
+- Before writing your final answer, mentally re-read the whole code once, attribute by attribute and bracket by bracket, and fix anything broken. Only output code you have verified this way.
+
+Provide: 1. Correct, verified code 2. Short explanation 3. Important usage notes
 
 REQUEST:
 ${request}
@@ -2530,11 +2537,15 @@ async function aiTool(request, env, session, body) {
   const fastTools = ["writing", "translate", "student", "calculator", "auto", "assistant"];
   const tier = fastTools.includes(tool) ? "fast" : "medium";
 
+  // Code needs low temperature (precision over creativity) - other
+  // medium-tier tools keep their existing, more flexible setting.
+  const temperature = tool === "code" ? 0.15 : (tier === "fast" ? 0.7 : 0.5);
+
   let resultText = "";
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      resultText = await runTextAI(env, prompt, 1800, tier === "fast" ? 0.7 : 0.5, tier);
+      resultText = await runTextAI(env, prompt, 1800, temperature, tier);
       if (resultText.length > 3) break;
     } catch (error) {
       console.error("AI tool attempt failed:", error);
@@ -2550,6 +2561,37 @@ async function aiTool(request, env, session, body) {
     );
   }
 
+  // Code tool gets a second, cheap validation pass: send the
+  // generated response back to the model and ask it to find and
+  // fix any syntax errors (malformed HTML attributes being the
+  // most common failure) before it reaches the user. Falls back
+  // to the first-pass result if this second call fails.
+  if (tool === "code") {
+    try {
+      const validationPrompt = `
+You are a meticulous code reviewer. Below is a response containing code and explanation, generated for this request:
+
+"${cleanString(input)}"
+
+Carefully re-check EVERY line of the code for syntax errors - especially malformed HTML attributes (an attribute's quote must open and close correctly, and each attribute must be written separately: attr1="value1" attr2="value2", never merged), unmatched brackets/parentheses/braces, and unclosed tags.
+
+If you find any errors, output the FULL corrected response (code + explanation + notes) in the same format, with all errors fixed.
+If there are no errors, output the response EXACTLY as given, unchanged.
+Do not add any commentary about what you checked or changed - output ONLY the (corrected or unchanged) response itself.
+
+RESPONSE TO CHECK:
+${resultText}
+`;
+
+      const validated = await runTextAI(env, validationPrompt, 2000, 0.1, tier);
+      if (validated && validated.length > 3) {
+        resultText = validated;
+      }
+    } catch (error) {
+      console.error("Code validation pass failed (using first-pass result):", error);
+    }
+  }
+  
   let detectedRoute = null;
 
   if (tool === "auto") {
