@@ -185,6 +185,7 @@ let userBrand = {
 
 let chatHistory = [];
 let chatAbortController = null;
+let chatAttachedImage = null;
 // Separate, per-idea conversation thread for the report's
 // "Ask a follow-up question" panel — kept apart from the main
 // AI Chat tool's chatHistory so the two don't mix context.
@@ -1884,12 +1885,23 @@ function renderEmailResult(email) {
 // CHAT
 // ============================================================
 
-function appendChatMessage(role, text) {
+function appendChatMessage(role, text, imageDataUrl) {
   const container = document.getElementById("chatContainer");
   if (!container) return;
 
   const message = document.createElement("div");
   message.className = `chat-message chat-${role}`;
+
+  if (imageDataUrl) {
+    const img = document.createElement("img");
+    img.src = imageDataUrl;
+    img.alt = "Attached image";
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "10px";
+    img.style.marginBottom = "6px";
+    img.style.display = "block";
+    message.appendChild(img);
+  }
 
   const textEl = document.createElement("div");
   textEl.textContent = String(text);
@@ -2040,23 +2052,84 @@ function finalizeAiBubble(bubble, fullText) {
 function stopChatGeneration() {
   if (chatAbortController) chatAbortController.abort();
 }
+function updateChatAttachPreview() {
+  const preview = document.getElementById("chatAttachPreview");
+  const thumb = document.getElementById("chatAttachThumb");
+  const name = document.getElementById("chatAttachName");
+
+  if (!preview) return;
+
+  if (chatAttachedImage) {
+    if (thumb) thumb.src = chatAttachedImage.dataUrl;
+    if (name) name.textContent = chatAttachedImage.name;
+    preview.style.display = "flex";
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+function clearChatAttachment() {
+  chatAttachedImage = null;
+  updateChatAttachPreview();
+  const fileInput = document.getElementById("chatFileInput");
+  if (fileInput) fileInput.value = "";
+}
+
+async function analyzeChatImage(imageDataUrl, question) {
+  const response = await fetch("/api/image-tool", {
+    method: "POST",
+    headers: getApiHeaders(),
+    body: JSON.stringify({
+      imageBase64: imageDataUrl,
+      action: question ? "ask" : "full-analysis",
+      question: question || ""
+    })
+  });
+
+  const data = await parseApiResponse(response);
+
+  if (!data.success || !data.result) {
+    throw new Error(data.error || "Image analysis failed.");
+  }
+
+  return data.result;
+}
 
 async function sendChatMessage() {
   const input = document.getElementById("chatInput");
   if (!input) return;
 
   const text = input.value.trim();
-  if (!text) return;
+  const attachedImage = chatAttachedImage;
+
+  if (!text && !attachedImage) return;
 
   if (!hasUsageRemaining()) {
     showToast("Free Plan limit khatam! Pro lein.", "error");
     return;
   }
 
-  appendChatMessage("user", text);
-  input.value = "";
+  let messageForApi = text;
+  const displayText = text || "[Image attached]";
 
-  chatHistory.push({ role: "user", content: text });
+  appendChatMessage("user", displayText, attachedImage?.dataUrl);
+  input.value = "";
+  clearChatAttachment();
+
+  if (attachedImage) {
+    try {
+      const imageDescription = await analyzeChatImage(attachedImage.dataUrl, text);
+      messageForApi = text
+        ? `${text}\n\n[Attached image analysis: ${imageDescription}]`
+        : `[User sent an image. Analysis: ${imageDescription}]`;
+      if (!isProUser) incrementUsage();
+    } catch (error) {
+      showToast(error.message || "Image analyze nahi ho payi.", "error");
+      messageForApi = text || "[Image attach hui thi lekin analyze nahi ho payi]";
+    }
+  }
+
+  chatHistory.push({ role: "user", content: messageForApi });
   if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
   const sendBtn = document.getElementById("sendChatBtn");
@@ -3926,7 +3999,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("sendChatBtn")?.addEventListener("click", sendChatMessage);
   document.getElementById("stopChatBtn")?.addEventListener("click", stopChatGeneration);
-  document.getElementById("chatInput")?.addEventListener("keydown", (event) => {
+  document.getElementById("chatAttachBtn")?.addEventListener("click", () => {
+  document.getElementById("chatFileInput")?.click();
+});
+
+document.getElementById("chatFileInput")?.addEventListener("change", (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    showToast("Sirf image file chunein.", "error");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (loadEvent) => {
+    chatAttachedImage = {
+      dataUrl: loadEvent.target.result,
+      name: file.name
+    };
+    updateChatAttachPreview();
+  };
+  reader.readAsDataURL(file);
+});
+  document.getElementById("chatAttachRemoveBtn")?.addEventListener("click", clearChatAttachment);
+ document.getElementById("chatInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       sendChatMessage();
