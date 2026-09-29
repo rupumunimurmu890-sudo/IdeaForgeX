@@ -2541,11 +2541,16 @@ async function aiTool(request, env, session, body) {
   // medium-tier tools keep their existing, more flexible setting.
   const temperature = tool === "code" ? 0.15 : (tier === "fast" ? 0.7 : 0.5);
 
+  // Code responses (especially multi-file HTML/CSS/JS requests) need
+  // more headroom than the shared 1800-token default, or they get
+  // cut off mid-file before the validation pass even runs.
+  const maxTokens = tool === "code" ? 3500 : 1800;
+
   let resultText = "";
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      resultText = await runTextAI(env, prompt, 1800, temperature, tier);
+      resultText = await runTextAI(env, prompt, maxTokens, temperature, tier);
       if (resultText.length > 3) break;
     } catch (error) {
       console.error("AI tool attempt failed:", error);
@@ -2583,7 +2588,7 @@ RESPONSE TO CHECK:
 ${resultText}
 `;
 
-      const validated = await runTextAI(env, validationPrompt, 2000, 0.1, tier);
+      const validated = await runTextAI(env, validationPrompt, 3500, 0.1, tier);
       if (validated && validated.length > 3) {
         resultText = validated;
       }
