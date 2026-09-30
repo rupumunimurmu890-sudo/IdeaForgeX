@@ -2068,6 +2068,50 @@ function updateChatAttachPreview() {
   }
 }
 
+// Resizes/compresses an image before it ever leaves the browser,
+// so large camera photos (often 3-6MB+) don't get rejected by the
+// backend's 8MB base64 image limit or silently fail analysis.
+// Caps the longest side at 1600px and re-encodes as JPEG at 0.8
+// quality - plenty for OCR/vision analysis while keeping the
+// payload small.
+function compressImageFile(file, maxDimension = 1600, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (loadEvent) => {
+      const img = new Image();
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      img.onerror = () => reject(new Error("Image load failed."));
+      img.src = loadEvent.target.result;
+    };
+
+    reader.onerror = () => reject(new Error("File read failed."));
+    reader.readAsDataURL(file);
+  });
+}
 function clearChatAttachment() {
   chatAttachedImage = null;
   updateChatAttachPreview();
@@ -4003,7 +4047,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("chatFileInput")?.click();
 });
 
-document.getElementById("chatFileInput")?.addEventListener("change", (event) => {
+document.getElementById("chatFileInput")?.addEventListener("change", async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
 
@@ -4012,15 +4056,17 @@ document.getElementById("chatFileInput")?.addEventListener("change", (event) => 
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = (loadEvent) => {
+  try {
+    const compressedDataUrl = await compressImageFile(file);
     chatAttachedImage = {
-      dataUrl: loadEvent.target.result,
+      dataUrl: compressedDataUrl,
       name: file.name
     };
     updateChatAttachPreview();
-  };
-  reader.readAsDataURL(file);
+  } catch (error) {
+    console.error("Image compression failed:", error);
+    showToast("Image process nahi ho payi. Dusri image try karein.", "error");
+  }
 });
   document.getElementById("chatAttachRemoveBtn")?.addEventListener("click", clearChatAttachment);
  document.getElementById("chatInput")?.addEventListener("keydown", (event) => {
