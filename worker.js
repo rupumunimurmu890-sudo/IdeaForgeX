@@ -2596,6 +2596,28 @@ ${resultText}
       console.error("Code validation pass failed (using first-pass result):", error);
     }
   }
+  // Detect likely truncation: a code response that ends mid-way
+  // through an unfinished statement/function is a strong sign the
+  // model hit its generation ceiling (~4000 tokens) before
+  // finishing - this happens on requests for large, multi-feature
+  // tools (e.g. a full scientific calculator with a custom
+  // expression parser) that simply don't fit in one response.
+  // Rather than silently ship broken/incomplete code, flag it.
+  if (tool === "code") {
+    const trimmedEnd = resultText.trimEnd();
+    const lastCodeBlockOpen = (resultText.match(/```/g) || []).length % 2 === 1;
+
+    const endsMidStatement =
+      lastCodeBlockOpen ||
+      /[{(\[,]\s*$/.test(trimmedEnd) ||
+      /=\s*$/.test(trimmedEnd) ||
+      /\b(const|let|var|function|if|else|for|while|return)\s*$/.test(trimmedEnd);
+
+    if (endsMidStatement) {
+      resultText +=
+        "\n\n⚠️ **Yeh code adhoora lag raha hai** - request bahut bada/complex tha aur ek hi response mein poora nahi aa paaya. Kripya ise chhote hisson mein maangein - jaise pehle sirf HTML/UI, phir alag se JS logic (functions), phir alag se advanced features (jaise scientific functions, history, DEG/RAD mode).";
+    }
+  }
   
   let detectedRoute = null;
 
