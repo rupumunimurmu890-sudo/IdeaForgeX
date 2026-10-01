@@ -2003,7 +2003,7 @@ async function chatHandler(request, env, session, body) {
     try {
       const streamResult = await env.AI.run(MODELS.fast, {
         messages: chatMessages,
-        max_tokens: 1200,
+        max_tokens: 3000,
         temperature: 0.7,
         stream: true
       });
@@ -2075,7 +2075,8 @@ async function chatHandler(request, env, session, body) {
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      reply = await runChatAI(env, chatMessages, 1200, 0.7);
+      try {
+      reply = await runChatAI(env, chatMessages, 3000, 0.7);
       if (reply.length > 0) break;
     } catch (error) {
       console.error("Chat attempt failed:", error);
