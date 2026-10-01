@@ -2075,7 +2075,7 @@ async function chatHandler(request, env, session, body) {
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      try {
+      
       reply = await runChatAI(env, chatMessages, 3000, 0.7);
       if (reply.length > 0) break;
     } catch (error) {
