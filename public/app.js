@@ -200,7 +200,7 @@ let lastToolPayload = null;
 const HISTORY_KEY = "ideaforgex_history";
 const HISTORY_LIMIT = 10;
 
-const FREE_DAILY_LIMIT = 15;
+const FREE_DAILY_LIMIT = 100;
 const USAGE_KEY = "ideaforge_usage";
 
 const PROJECTS_KEY = "ideaforge_projects_v2";
